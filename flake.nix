@@ -22,6 +22,7 @@
 
       devPkgs = with pkgs; [
         maven
+        jdk21
         just
       ];
     in {
