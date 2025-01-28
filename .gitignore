@@ -1,0 +1,61 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Java
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+
+# IDE - VS Code
+.vscode/
+.settings/
+.project
+.classpath
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# IDE - Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+.loadpath
+.recommenders
+
+# Nix
+result
+.direnv/
+flake-inputs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Keep .gitkeep files
+!.gitkeep
