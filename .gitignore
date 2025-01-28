@@ -59,3 +59,4 @@ logs/
 
 # Keep .gitkeep files
 !.gitkeep
+.git
