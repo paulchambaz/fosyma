@@ -1,8 +1,5 @@
 run *ARGS:
-  @mvn -q compile exec:java -Dexec.args="{{ ARGS }}"
-
-debug-run *ARGS:
-  mvn compile exec:java -Dexec.args="{{ ARGS }}"
+  @cd dedale-etu && mvn -q compile exec:java -Dexec.mainClass="eu.su.mas.dedaleEtu.princ.Principal" -Dexec.args="{{ ARGS }}"
 
 clean:
   mvn clean
