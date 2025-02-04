@@ -60,3 +60,8 @@ logs/
 # Keep .gitkeep files
 !.gitkeep
 .git
+
+# TODO: remove
+# Don't push the pdf while we write it
+paper/paper.pdf
+paper/pres.pdf
