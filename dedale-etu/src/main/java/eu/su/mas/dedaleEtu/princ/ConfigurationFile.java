@@ -53,7 +53,7 @@ public final class ConfigurationFile {
 	/**
 	 * The environment is either manually designed, or generated with a specific generator
 	 */
-	public static GeneratorType GENERATOR_TYPE=GeneratorType.MANUAL;
+	public static GeneratorType GENERATOR_TYPE=GeneratorType.GS_GRID;
 
 	/**
 	 * 	The GateKeeper is in charge of the Platform and of the agents within, do not change its name.
@@ -169,10 +169,8 @@ public final class ConfigurationFile {
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/map2019-entitiesExam1";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/monoAgent-entities";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/mapInterlocking2-entities";
+
 	//public static String INSTANCE_CONFIGURATION_ENTITIES=null;
-	
-
-
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentExplo";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/agentExploSolo";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/agentExploCoop-2";	
@@ -182,5 +180,4 @@ public final class ConfigurationFile {
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentGolem";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentTankerCollect";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2019-entitiesExam1";
-
 }
