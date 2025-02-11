@@ -321,8 +321,8 @@ public class Principal {
 
     /************************************************************************************************
      * The main container (now) exist, we deploy the agent(s) on  their local containers
-     *They will have to find the gatekeeper's container to deploy themselves in the environment.
-     *This is automatically performed by all agent that extends AbstractDedaleAgent
+     * They will have to find the gatekeeper's container to deploy themselves in the environment.
+     * This is automatically performed by all agent that extends AbstractDedaleAgent
      ************************************************************************************************/
     AgentController ag;
 
@@ -347,7 +347,7 @@ public class Principal {
     // 				Object [] entityParameters={"My parameters"};
     //
     // 				// 4) Give the class name of your agent to let the system instantiate it
-    // 				ag=createNewDedaleAgent(c, agentName, ControlledAgent.class.getName(), entityParameters);
+    // 				ag = createNewDedaleAgent(c, agentName, ControlledAgent.class.getName(), entityParameters);
     // 				agentList.add(ag);
     /*********
      * GOLEM
