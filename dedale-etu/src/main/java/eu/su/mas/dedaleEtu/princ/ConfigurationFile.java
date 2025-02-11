@@ -75,17 +75,17 @@ public final class ConfigurationFile {
 	 */
 	//public static String INSTANCE_TOPOLOGY=null;
 	
-	//public static String INSTANCE_TOPOLOGY="resources/topology/map2020-topologyExam1-graph.dgs";
-	//public static String INSTANCE_TOPOLOGY="resources/topology/HouatTopology";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/map2020-topologyExam1-graph.dgs";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/HouatTopology";
 	public static String INSTANCE_TOPOLOGY="resources/topology/map2018-topology";
-	//public static String INSTANCE_TOPOLOGY="resources/topology/map2021-topologyExam1-tree.dgs";
-	//public static String INSTANCE_TOPOLOGY="resources/interlocking/mapInterlocking2-topology";
-	//public static String INSTANCE_TOPOLOGY="resources/topology/map2023-topologyExam.dgs";
-	//public static String INSTANCE_TOPOLOGY="resources/topology/map2020-topologyExam1-graph.dgs";
-	//public static String INSTANCE_TOPOLOGY="resources/map2018-topology";
-	//public static String INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam1-draft.dgs";
-	//public static String INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam-V2b.dgs";
-	//public static String INSTANCE_TOPOLOGY="resources/map2019-topologyExam1";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/map2021-topologyExam1-tree.dgs";
+	// public static String INSTANCE_TOPOLOGY="resources/interlocking/mapInterlocking2-topology";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/map2023-topologyExam.dgs";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/map2020-topologyExam1-graph.dgs";
+	// public static String INSTANCE_TOPOLOGY="resources/map2018-topology";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam1-draft.dgs";
+	// public static String INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam-V2b.dgs";
+	// public static String INSTANCE_TOPOLOGY="resources/map2019-topologyExam1";
 
 
 	
@@ -93,16 +93,16 @@ public final class ConfigurationFile {
 	 * Give the elements available on the map, if any
 	 */
 	// If the environment is loaded but you do not want to define elements on the map
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/distributedExploration/emptyMap";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/distributedExploration/emptyMap";
 	
 	// otherwise
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2019-elementsExam1";
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/Houat-elements";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2019-elementsExam1";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/Houat-elements";
 	public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2018-elements.json";
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/interlocking/mapInterlocking2-elements";
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/map2018-elements";
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/mapInterlocking2-elements";
-	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2023-elements";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/interlocking/mapInterlocking2-elements";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/map2018-elements";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/mapInterlocking2-elements";
+	// public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2023-elements";
 	
 	
 	/************************************
@@ -118,8 +118,11 @@ public final class ConfigurationFile {
 	 */
 	public static Integer ENVIRONMENT_SIZE=4;
 	// Parameters required for some generators (see dedale.gitlab.io)
-	public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1=1;//used by the BARABASI_ALBERT generator to know the number of childs
-	public static Integer[] GENERATOR_PARAMETERS= {ENVIRONMENT_SIZE,OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1};
+	public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1=1; // used by the BARABASI_ALBERT generator to know the number of childs
+	public static Integer[] GENERATOR_PARAMETERS= {
+    ENVIRONMENT_SIZE,
+    OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1
+  };
 
 	/**
 	 * Wumpus proximity detection radius
