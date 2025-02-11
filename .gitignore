@@ -63,7 +63,8 @@ logs/
 
 # TODO: remove
 # Don't push the pdf while we write it
-paper/paper.pdf
-paper/pres.pdf
+# paper/paper.pdf
+# paper/pres.pdf
+*.pdf
 
 dedale-etu/doc
