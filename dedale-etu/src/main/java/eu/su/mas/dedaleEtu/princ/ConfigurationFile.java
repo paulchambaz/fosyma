@@ -116,10 +116,10 @@ public final class ConfigurationFile {
 	/**
 	 * Size of the generated environment, mandatory
 	 */
-	public static Integer ENVIRONMENT_SIZE=4;
+	public static Integer ENVIRONMENT_SIZE = 10;
 	// Parameters required for some generators (see dedale.gitlab.io)
-	public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1=1; // used by the BARABASI_ALBERT generator to know the number of childs
-	public static Integer[] GENERATOR_PARAMETERS= {
+	public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1 = 1; // used by the BARABASI_ALBERT generator to know the number of childs
+	public static Integer[] GENERATOR_PARAMETERS = {
     ENVIRONMENT_SIZE,
     OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1
   };
@@ -133,15 +133,15 @@ public final class ConfigurationFile {
 	/**
 	 * 	Agents communication radius
 	 */
-	public static Integer DEFAULT_COMMUNICATION_REACH=3;
+	public static Integer DEFAULT_COMMUNICATION_REACH = 1;
 
 	/**
 	 * Elements on the map
 	 */
 	
-	public static boolean ACTIVE_WELL=false;
-	public static boolean ACTIVE_GOLD=false;
-	public static boolean ACTIVE_DIAMOND=false;
+	public static boolean ACTIVE_WELL = false;
+	public static boolean ACTIVE_GOLD = true;
+	public static boolean ACTIVE_DIAMOND = true;
 
 	/************************************
 	 ************************************
