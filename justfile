@@ -7,5 +7,8 @@ clean:
 compile:
   mvn compile
 
+fmt:
+  find . -name '*.java' | xargs google-java-format --replace
+
 package:
   mvn clean package

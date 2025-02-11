@@ -24,6 +24,7 @@
         maven
         jdk21
         just
+        google-java-format
       ];
     in {
       devShell = pkgs.mkShell {
