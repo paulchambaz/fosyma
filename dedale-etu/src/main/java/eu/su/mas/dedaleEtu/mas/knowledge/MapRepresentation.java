@@ -40,6 +40,7 @@ import eu.su.mas.dedale.env.Observation;
 // and edges represent connections between locations. The class also maintains information about
 // treasures, agents, and special locations like silos.
 public class MapRepresentation implements Serializable {
+  private static final long serialVersionUID = -1333959882640838272L;
 
   // MapAttribute represents the possible states of a node in the map
   // - agent: Node is currently occupied by an agent
@@ -50,8 +51,6 @@ public class MapRepresentation implements Serializable {
     open,
     closed;
   }
-
-  private static final long serialVersionUID = -1333959882640838272L;
 
   private String defaultNodeStyle =
       "node {fill-color: black; size-mode:fit;text-alignment:under;"
@@ -176,7 +175,7 @@ public class MapRepresentation implements Serializable {
   // ageTreasureData ages all treasure data by incrementing their counters.
   // Should be called regularly to track data freshness.
   public synchronized void ageTreasureData() {
-    for (TreasureData treasure : this treasures.values()) {
+    for (TreasureData treasure : this.treasures.values()) {
       treasure.incrementCounter();
     }
   }
@@ -201,24 +200,28 @@ public class MapRepresentation implements Serializable {
       .collect(Collectors.toList());
   }
 
+  public synchronized List<TreasureData> getFreashestTreasures() {
+    return this.treasures.values().stream()
+      .sorted(Comparator.comparing(TreasureData::getUpdateCounter))
+      .collect(Collectors.toList());
+  }
+
   // updateAgentPosition tracks the current position of an agent in the environment.
   // Creates a new agent record if it doesn't exist or updates an existing one.
   public synchronized void updateAgentPosition(String agentName, String nodeId) {
     if (!this.agents.containsKey(agentName)) {
       this.agents.put(agentName, new AgentData(nodeId));
-    } else{
-      this.agents.get(agentName).setPosition(nodeId);
+    } else {
+      AgentData agentData = this.agents.get(agentName);
+      agentData.setPosition(nodeId);
+      agentData.resetCounter();
     }
   }
 
   // updateAgentExpertise records the expertise levels of an agent for different treasure types.
   // Expertise determines an agent's efficiency in handling specific treasures.
   public synchronized void updateAgentExpertise(String agentName, Map<Observation, Integer> expertise) {
-    if (!this.agents.containsKey(agentName)) {
-      AgentData data = new AgentData(null);
-      data.setExpertise(expertise);
-      this.agents.put(agentName, data);
-    } else {
+    if (this.agents.containsKey(agentName)) {
       this.agents.get(agentName).setExpertise(expertise);
     }
   }
@@ -226,15 +229,22 @@ public class MapRepresentation implements Serializable {
   // updateAgentBackpack updates information about an agent's carrying capacity and available space.
   // Important for planning treasure collection strategies.
   public synchronized void updateAgentBackpack(String agentName, int capacity, int freeSpace) {
-    if (!this.agents.containsKey(agentName)) {
-      AgentData data = new AgentData(null);
-      data.setBackpackCapacity(capacity);
-      data.setBackpackFreeSpace(freeSpace);
-    } else {
+    if (this.agents.containsKey(agentName)) {
       AgentData data = this.agents.get(agentName);
       data.setBackpackCapacity(capacity);
       data.setBackpackFreeSpace(freeSpace);
-      data.resetCounter();
+    }
+  }
+
+  public synchronized void updateAgentStatus(String agentName, String status) {
+    if (this.agents.containsKey(agentName)) {
+      this.agents.get(agentName).setStatus(status);
+    }
+  }
+
+  public synchronized void ageAgentData() {
+    for (AgentData agent : this.agents.values()) {
+      agent.incrementCounter();
     }
   }
 
@@ -252,6 +262,20 @@ public class MapRepresentation implements Serializable {
       .collect(Collectors.toList());
   }
 
+  public synchronized List<String> getAgentsWithLockpickingStrength(int requiredStrength) {
+    return this.agents.entrySet().stream()
+      .filter(entry -> entry.getValue().canOpenLock(requiredStrength))
+      .map(Map.Entry::getKey)
+      .collect(Collectors.toList());
+  }
+
+  public synchronized List<String> getAgentsWithCarryingStrength(int requiredStrength) {
+    return this.agents.entrySet().stream()
+      .filter(entry -> entry.getValue().canPickTreasure(requiredStrength))
+      .map(Map.Entry::getKey)
+      .collect(Collectors.toList());
+  }
+
   // setSiloPosition marks the location of a silo in the environment.
   // Silos are special locations where treasures can be deposited.
   // The node is visually highlighted in orange and labeled as "SILO".
@@ -265,12 +289,19 @@ public class MapRepresentation implements Serializable {
     }
   }
 
+  public synchronized void ageSiloData() {
+    if (this.siloPosition != null) {
+      int currentCounter = this.siloPosition.getRight();
+      this.siloPosition = new Couple<>(this.siloPosition.getLeft(), currentCounter + 1);
+    }
+  }
+
   // getSiloPosition retrieves the location of the silo.
   public synchronized String getSiloPosition() {
     return (siloPosition != null) ? siloPosition.getLeft() : null;
   }
 
-  public synchronized int getSiloPositionCounter() {
+  public synchronized int getSiloUpdateCounter() {
     return (siloPosition != null) ? siloPosition.getRight() : -1;
   }
 
@@ -279,6 +310,43 @@ public class MapRepresentation implements Serializable {
   public synchronized List<String> getShortestPathToSilo(String currentPosition) {
     if (siloPosition == null) return null;
     return getShortestPath(currentPosition, siloPosition.getLeft());
+  }
+
+  public synchronized void setGolemPosition(String nodeId) {
+    this.golemPosition = new Couple<>(nodeId, 0);
+
+    if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
+      Node currentNode = this.worldGraph.getNode(nodeId);
+      currentNode.setAttribute("ui.style", "fill-color: red; size: 20px;");
+      currentNode.setAttribute("ui.label", "GOLEM");
+    }
+  }
+
+  public synchronized void ageGolemData() {
+    if (this.golemPosition != null) {
+      int currentCounter = this.golemPosition.getRight();
+      this.golemPosition = new Couple<>(this.golemPosition.getLeft(), currentCounter + 1);
+    }
+  }
+
+  public synchronized String getGolemPosition() {
+    return (golemPosition != null) ? golemPosition.getLeft() : null;
+  }
+
+  public synchronized int getGolemUpdateCounter() {
+    return (golemPosition != null) ? golemPosition.getRight() : -1;
+  }
+
+  public synchronized boolean isGolemNearby(String nodeId, int maxDistance) {
+    int MAX_AGE = 10;
+    if (golemPosition == null || golemPosition.getRight() > MAX_AGE) {
+      return false;
+    }
+
+    List<String> path = getShortestPath(nodeId, golemPosition.getLeft());
+    if (path == null) return false;
+
+    return path.size() <= maxDistance;
   }
 
   // getShortestPath calculates the most efficient path between any two nodes.
@@ -291,7 +359,12 @@ public class MapRepresentation implements Serializable {
     dijkstra.setSource(this.worldGraph.getNode(idFrom));
     dijkstra.compute();
 
-    List<Node> path = dijkstra.getPath(this.worldGraph.getNode(idTo)).getNodePath();
+    List<Node> path;
+    try {
+      path = dijkstra.getPath(this.worldGraph.getNode(idTo)).getNodePath();
+    } catch (Exception e) {
+      return null;
+    }
 
     Iterator<Node> iter = path.iterator();
     while (iter.hasNext()) {
@@ -311,19 +384,13 @@ public class MapRepresentation implements Serializable {
   // getShortestPathToClosestOpenNode finds the closest unexplored node.
   // Useful for efficient exploration of the environment.
   public List<String> getShortestPathToClosestOpenNode(String myPosition) {
-    List<String> opennodes = getOpenNodes();
+    List<String> openNodes = getOpenNodes();
 
-    List<Couple<String, Integer>> pathDistances = opennodes.stream()
-      .map(on ->
-        (getShortestPath(myPosition, on) != null)
-          ? new Couple<String, Integer>(on, getShortestPath(myPosition, on).size())
-          : new Couple<String, Integer>(on, Integer.MAX_VALUE)
-      )
-      .collect(Collectors.toList());
-
-    Optional<Couple<String, Integer>> closest = pathDistances.stream().min(Comparator.comparing(Couple::getRight));
-
-    return getShortestPath(myPosition, closest.get().getLeft());
+    return openNodes.stream()
+        .map(currentNode -> getShortestPath(myPosition, currentNode))
+        .filter(path -> path != null)
+        .min(Comparator.comparing(List::size))
+        .orElse(null);
   }
 
   // getOpenNodes retrieves all nodes marked as open (discovered but not fully explored).
@@ -340,9 +407,7 @@ public class MapRepresentation implements Serializable {
   // Serializes the graph topology and closes the visualization.
   public void prepareMigration() {
     serializeGraphTopology();
-
     closeGui();
-
     this.worldGraph = null;
   }
 
@@ -351,10 +416,13 @@ public class MapRepresentation implements Serializable {
   private void serializeGraphTopology() {
     this.serializableGraph = new SerializableSimpleGraph<String, MapAttribute>();
 
-    Iterator<Node> iter = this.worldGraph.iterator();
-    while (iter.hasNext()) {
-      Node currentNode = iter.next();
-      this.serializableGraph.addNode(currentNode.getId(), MapAttribute.valueOf((String) currentNode.getAttribute("ui.class")));
+    Iterator<Node> nodeIterator = this.worldGraph.iterator();
+    while (nodeIterator.hasNext()) {
+      Node currentNode = nodeIterator.next();
+      this.serializableGraph.addNode(
+        currentNode.getId(),
+        MapAttribute.valueOf((String) currentNode.getAttribute("ui.class"))
+      );
     }
 
     Iterator<Edge> edgeIterator = this.worldGraph.edges().iterator();
@@ -449,6 +517,55 @@ public class MapRepresentation implements Serializable {
       }
     }
   }
+  
+  public void mergeTreasures(Map<String, TreasureData> treasures) {
+    for (Map.Entry<String, TreasureData> entry : treasures.entrySet()) {
+      String nodeId = entry.getKey();
+      TreasureData receivedTreasure = entry.getValue();
+
+      if (!treasures.containsKey(nodeId) || treasures.get(nodeId).getUpdateCounter() > receivedTreasure.getUpdateCounter()) {
+        this.treasures.put(nodeId, receivedTreasure);
+      }
+    }
+  }
+
+  public void mergeAgents(Map<String, AgentData> agents) {
+    for (Map.Entry<String, AgentData> entry : agents.entrySet()) {
+      String agentName = entry.getKey();
+      AgentData receivedAgent = entry.getValue();
+
+      if (!agents.containsKey(agentName) || agents.get(agentName).getUpdateCounter() > receivedAgent.getUpdateCounter()) {
+        this.agents.put(agentName, receivedAgent);
+      }
+    }
+  }
+
+  public void mergeSilo(Couple<String, Integer> siloPosition) {
+    if (siloPosition != null && (this.siloPosition != null || this.siloPosition.getRight() > siloPosition.getRight())) {
+      this.siloPosition = siloPosition;
+    }
+  }
+
+  public void mergeGolem(Couple<String, Integer> golemPosition) {
+    if (golemPosition != null && (this.golemPosition != null || this.golemPosition.getRight() > golemPosition.getRight())) {
+      this.golemPosition = golemPosition;
+    }
+  }
+
+  public void mergeKnowledge(
+    SerializableSimpleGraph<String, MapAttribute> serializableGraph, 
+    Map<String, TreasureData> treasures,
+    Map<String, AgentData> agents,
+    Couple<String, Integer> siloPosition,
+    Couple<String, Integer> golemPosition
+  ) {
+    mergeMap(serializableGraph);
+    mergeTreasures(treasures);
+    mergeAgents(agents);
+    mergeSilo(siloPosition);
+    mergeGolem(golemPosition);
+  }
+
 
   // hasOpenNode checks if any unexplored nodes remain in the graph.
   // Used to determine if exploration should continue.
