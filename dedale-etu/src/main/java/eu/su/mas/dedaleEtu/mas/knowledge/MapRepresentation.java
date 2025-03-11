@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import org.graphstream.algorithm.Dijkstra;
@@ -20,22 +22,29 @@ import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.view.Viewer;
+import eu.su.mas.dedale.env.Observation;
 
-/**
- * This simple topology representation only deals with the graph, not its content.</br> The
- * knowledge representation is not well written (at all), it is just given as a minimal
- * example.</br> The viewer methods are not independent of the data structure, and the dijkstra is
- * recomputed every-time.
- *
- * @author hc
- */
+// MapRepresentation serves as the agent's internal model of the environment in a multi-agent 
+// exploration system. It maintains a graph representation of discovered locations, tracks
+// treasure information, agent positions, and provides pathfinding capabilities.
+// 
+// The class provides functionality to:
+// - Build and visualize a graph-based map of the environment
+// - Track treasure locations, types, quantities and state
+// - Monitor agent positions and capabilities
+// - Calculate optimal paths between nodes
+// - Serialize the map for agent communication
+// - Merge maps from other agents
+//
+// Each node in the graph represents a location that can be in different states (open, closed, agent)
+// and edges represent connections between locations. The class also maintains information about
+// treasures, agents, and special locations like silos.
 public class MapRepresentation implements Serializable {
 
-  /**
-   * A node is open, closed, or agent
-   *
-   * @author hc
-   */
+  // MapAttribute represents the possible states of a node in the map
+  // - agent: Node is currently occupied by an agent
+  // - open: Node is discovered but not fully explored
+  // - closed: Node is fully explored with no further actions needed
   public enum MapAttribute {
     agent,
     open,
@@ -43,10 +52,6 @@ public class MapRepresentation implements Serializable {
   }
 
   private static final long serialVersionUID = -1333959882640838272L;
-
-  /*********************************
-   * Parameters for graph rendering
-   ********************************/
 
   private String defaultNodeStyle =
       "node {fill-color: black; size-mode:fit;text-alignment:under;"
@@ -56,73 +61,64 @@ public class MapRepresentation implements Serializable {
   private String nodeStyle_agent = "node.open {" + "fill-color: blue;" + "}";
   private String nodeStyle = defaultNodeStyle + nodeStyle_agent + nodeStyle_open;
 
-  private Graph g; // data structure non serializable
-  private Viewer viewer; // ref to the display,  non serializable
-  private Integer nbEdges; // used to generate the edges ids
+  private Graph worldGraph;
+  private Viewer viewer;
+  private Integer nbEdges;
+  private SerializableSimpleGraph<String, MapAttribute> serializableGraph;
 
-  private SerializableSimpleGraph<String, MapAttribute>
-      sg; // used as a temporary dataStructure during migration
+  private Map<String, TreasureData> treasures;
+  private Map<String, AgentData> agents;
+  private Couple<String, Integer> siloPosition;
+  private Couple<String, Integer> golemPosition;
 
   public MapRepresentation() {
-    // System.setProperty("org.graphstream.ui.renderer","org.graphstream.ui.j2dviewer.J2DGraphRenderer");
     System.setProperty("org.graphstream.ui", "javafx");
-    this.g = new SingleGraph("My world vision");
-    this.g.setAttribute("ui.stylesheet", nodeStyle);
+    this.worldGraph = new SingleGraph("My world vision");
+    this.worldGraph.setAttribute("ui.stylesheet", nodeStyle);
 
-    Platform.runLater(
-        () -> {
-          openGui();
-        });
-    // this.viewer = this.g.display();
+    Platform.runLater(() -> {
+      openGui();
+    });
 
     this.nbEdges = 0;
+
+    this.treasures = new HashMap<>();
+    this.agents = new HashMap<>();
+    this.siloPosition = null;
+    this.golemPosition = null;
   }
 
-  /**
-   * Add or replace a node and its attribute
-   *
-   * @param id unique identifier of the node
-   * @param mapAttribute attribute to process
-   */
+  // addNode adds or updates a node in the graph with the specified attribute.
+  // The node will be visually styled according to its attribute type.
   public synchronized void addNode(String id, MapAttribute mapAttribute) {
-    Node n;
-    if (this.g.getNode(id) == null) {
-      n = this.g.addNode(id);
+    Node currentNode;
+    if (this.worldGraph.getNode(id) == null) {
+      currentNode = this.worldGraph.addNode(id);
     } else {
-      n = this.g.getNode(id);
+      currentNode = this.worldGraph.getNode(id);
     }
-    n.clearAttributes();
-    n.setAttribute("ui.class", mapAttribute.toString());
-    n.setAttribute("ui.label", id);
+    currentNode.clearAttributes();
+    currentNode.setAttribute("ui.class", mapAttribute.toString());
+    currentNode.setAttribute("ui.label", id);
   }
 
-  /**
-   * Add a node to the graph. Do nothing if the node already exists. If new, it is labeled as open
-   * (non-visited)
-   *
-   * @param id id of the node
-   * @return true if added
-   */
+  // addNewNode attempts to add a new node to the graph with the open attribute.
+  // Returns true if node was newly added, false if it already existed.
   public synchronized boolean addNewNode(String id) {
-    if (this.g.getNode(id) == null) {
+    if (this.worldGraph.getNode(id) == null) {
       addNode(id, MapAttribute.open);
       return true;
     }
     return false;
   }
 
-  /**
-   * Add an undirect edge if not already existing.
-   *
-   * @param idNode1 unique identifier of node1
-   * @param idNode2 unique identifier of node2
-   */
+  // addEdge creates a connection between two nodes identified by their IDs.
+  // This represents a navigable path between locations in the environment.
   public synchronized void addEdge(String idNode1, String idNode2) {
     this.nbEdges++;
     try {
-      this.g.addEdge(this.nbEdges.toString(), idNode1, idNode2);
+      this.worldGraph.addEdge(this.nbEdges.toString(), idNode1, idNode2);
     } catch (IdAlreadyInUseException e1) {
-      System.err.println("ID existing");
       System.exit(1);
     } catch (EdgeRejectedException e2) {
       this.nbEdges--;
@@ -131,197 +127,336 @@ public class MapRepresentation implements Serializable {
     }
   }
 
-  /**
-   * Compute the shortest Path from idFrom to IdTo. The computation is currently not very efficient
-   *
-   * @param idFrom id of the origin node
-   * @param idTo id of the destination node
-   * @return the list of nodes to follow, null if the targeted node is not currently reachable
-   */
+  // addTreasure records the discovery of a treasure at a specific node, tracking its
+  // type, quantity, lock and pick strength requirements.
+  // The node is visually highlighted in yellow with the treasure type displayed.
+  public synchronized void addTreasure(String nodeId, Observation type, int quantity, int lockStrength, int pickStrength) {
+    if (this.treasures.containsKey(nodeId)) {
+      TreasureData existing = this.treasures.get(nodeId);
+      existing.setNodeId(nodeId);
+      if (existing.getUpdateCounter() > 0) {
+        existing.resetCounter();
+
+        if (quantity > 0) {
+          existing.setQuantity(quantity);
+        }
+      }
+    } else {
+      TreasureData treasure = new TreasureData(nodeId, type, quantity, quantity > 0, lockStrength, pickStrength);
+      this.treasures.put(nodeId, treasure);
+    }
+
+    if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
+      Node currentNode = this.worldGraph.getNode(nodeId);
+      currentNode.setAttribute("ui.style", "fill-color: yellow;");
+      currentNode.setAttribute("ui.label", nodeId + "-" + type);
+    }
+  }
+
+  // updateTreasureState updates whether a treasure at the specified node is open (accessible).
+  // Used when agents successfully unlock a treasure chest.
+  public synchronized void updateTreasureState(String nodeId, boolean isLocked) {
+    if (this.treasures.containsKey(nodeId)) {
+      TreasureData treasure = this.treasures.get(nodeId);
+      treasure.setLocked(isLocked);
+      treasure.resetCounter();
+    }
+  }
+
+  // updateTreasureQuantity decreases the quantity of treasure at a node by the specified amount.
+  // Used when agents collect treasures from a location.
+  public synchronized void updateTreasureQuantity(String nodeId, int quantityPicked) {
+    if (this.treasures.containsKey(nodeId)) {
+      TreasureData treasure = this.treasures.get(nodeId);
+      treasure.decreaseQuantity(quantityPicked);
+      treasure.resetCounter();
+    }
+  }
+
+  // ageTreasureData ages all treasure data by incrementing their counters.
+  // Should be called regularly to track data freshness.
+  public synchronized void ageTreasureData() {
+    for (TreasureData treasure : this.treasures.values()) {
+      treasure.incrementCounter();
+    }
+  }
+
+  // hasTreasure checks if a node contains any remaining treasure.
+  // Returns true if treasure exists and quantity is greater than zero.
+  public synchronized boolean hasTreasure(String nodeId) {
+    return this.treasures.containsKey(nodeId) && this.treasures.get(nodeId).getQuantity() > 0;
+  }
+
+  // getTreasureData retrieves all information about a treasure at a specific node.
+  public synchronized TreasureData getTreasureData(String nodeId) {
+    return this.treasures.get(nodeId);
+  }
+
+  // getNodesWithTreasureType finds all nodes containing a specific type of treasure with quantity > 0.
+  // Useful for targeting specific treasure types during exploration.
+  public synchronized List<String> getNodesWithTreasureType(Observation type) {
+    return this.treasures.entrySet().stream()
+      .filter(entry -> entry.getValue().getType() == type && entry.getValue().getQuantity() > 0)
+      .map(Map.Entry::getKey)
+      .collect(Collectors.toList());
+  }
+
+  // updateAgentPosition tracks the current position of an agent in the environment.
+  // Creates a new agent record if it doesn't exist or updates an existing one.
+  public synchronized void updateAgentPosition(String agentName, String nodeId) {
+    if (!this.agents.containsKey(agentName)) {
+      this.agents.put(agentName, new AgentData(nodeId));
+    } else{
+      this.agents.get(agentName).setPosition(nodeId);
+    }
+  }
+
+  // updateAgentExpertise records the expertise levels of an agent for different treasure types.
+  // Expertise determines an agent's efficiency in handling specific treasures.
+  public synchronized void updateAgentExpertise(String agentName, Map<Observation, Integer> expertise) {
+    if (!this.agents.containsKey(agentName)) {
+      AgentData data = new AgentData(null);
+      data.setExpertise(expertise);
+      this.agents.put(agentName, data);
+    } else {
+      this.agents.get(agentName).setExpertise(expertise);
+    }
+  }
+
+  // updateAgentBackpack updates information about an agent's carrying capacity and available space.
+  // Important for planning treasure collection strategies.
+  public synchronized void updateAgentBackpack(String agentName, int capacity, int freeSpace) {
+    if (!this.agents.containsKey(agentName)) {
+      AgentData data = new AgentData(null);
+      data.setBackpackCapacity(capacity);
+      data.setBackpackFreeSpace(freeSpace);
+    } else {
+      AgentData data = this.agents.get(agentName);
+      data.setBackpackCapacity(capacity);
+      data.setBackpackFreeSpace(freeSpace);
+      data.resetCounter();
+    }
+  }
+
+  // getAgentData retrieves all information about a specific agent.
+  public synchronized AgentData getAgentData(String agentName) {
+    return this.agents.get(agentName);
+  }
+
+  // getAgentAtPosition finds all agents currently located at a specific node.
+  // Useful for coordinating actions between agents in proximity.
+  public synchronized List<String> getAgentAtPosition(String nodeId) {
+    return this.agents.entrySet().stream()
+      .filter(entry -> nodeId.equals(entry.getValue().getPosition()))
+      .map(Map.Entry::getKey)
+      .collect(Collectors.toList());
+  }
+
+  // setSiloPosition marks the location of a silo in the environment.
+  // Silos are special locations where treasures can be deposited.
+  // The node is visually highlighted in orange and labeled as "SILO".
+  public synchronized void setSiloPosition(String nodeId) {
+    this.siloPosition = new Couple<>(nodeId, 0);
+
+    if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
+        Node currentNode = this.worldGraph.getNode(nodeId);
+        currentNode.setAttribute("ui.style", "fill-color: orange; size: 20px;");
+        currentNode.setAttribute("ui.label", "SILO");
+    }
+  }
+
+  // getSiloPosition retrieves the location of the silo.
+  public synchronized String getSiloPosition() {
+    return (siloPosition != null) ? siloPosition.getLeft() : null;
+  }
+
+  public synchronized int getSiloPositionCounter() {
+    return (siloPosition != null) ? siloPosition.getRight() : -1;
+  }
+
+  // getShortestPathToSilo calculates the most efficient path from a given position to the silo.
+  // Important for optimizing treasure delivery.
+  public synchronized List<String> getShortestPathToSilo(String currentPosition) {
+    if (siloPosition == null) return null;
+    return getShortestPath(currentPosition, siloPosition.getLeft());
+  }
+
+  // getShortestPath calculates the most efficient path between any two nodes.
+  // Uses Dijkstra's algorithm to find the optimal route.
   public synchronized List<String> getShortestPath(String idFrom, String idTo) {
     List<String> shortestPath = new ArrayList<String>();
 
-    Dijkstra dijkstra = new Dijkstra(); // number of edge
-    dijkstra.init(g);
-    dijkstra.setSource(g.getNode(idFrom));
-    dijkstra.compute(); // compute the distance to all nodes from idFrom
-    List<Node> path =
-        dijkstra.getPath(g.getNode(idTo)).getNodePath(); // the shortest path from idFrom to idTo
+    Dijkstra dijkstra = new Dijkstra();
+    dijkstra.init(this.worldGraph);
+    dijkstra.setSource(this.worldGraph.getNode(idFrom));
+    dijkstra.compute();
+
+    List<Node> path = dijkstra.getPath(this.worldGraph.getNode(idTo)).getNodePath();
+
     Iterator<Node> iter = path.iterator();
     while (iter.hasNext()) {
       shortestPath.add(iter.next().getId());
     }
+
     dijkstra.clear();
-    if (shortestPath.isEmpty()) { // The openNode is not currently reachable
+
+    if (shortestPath.isEmpty()) {
       return null;
-    } else {
-      shortestPath.remove(0); // remove the current position
     }
+
+    shortestPath.remove(0);
     return shortestPath;
   }
 
+  // getShortestPathToClosestOpenNode finds the closest unexplored node.
+  // Useful for efficient exploration of the environment.
   public List<String> getShortestPathToClosestOpenNode(String myPosition) {
-    // 1) Get all openNodes
     List<String> opennodes = getOpenNodes();
 
-    // 2) select the closest one
-    List<Couple<String, Integer>> lc =
-        opennodes.stream()
-            .map(
-                on ->
-                    (getShortestPath(myPosition, on) != null)
-                        ? new Couple<String, Integer>(on, getShortestPath(myPosition, on).size())
-                        : new Couple<String, Integer>(
-                            on,
-                            Integer.MAX_VALUE)) // some nodes my be unreachable if the agents do not
-            // share at least one common node.
-            .collect(Collectors.toList());
+    List<Couple<String, Integer>> pathDistances = opennodes.stream()
+      .map(on ->
+        (getShortestPath(myPosition, on) != null)
+          ? new Couple<String, Integer>(on, getShortestPath(myPosition, on).size())
+          : new Couple<String, Integer>(on, Integer.MAX_VALUE)
+      )
+      .collect(Collectors.toList());
 
-    Optional<Couple<String, Integer>> closest =
-        lc.stream().min(Comparator.comparing(Couple::getRight));
-    // 3) Compute shorterPath
+    Optional<Couple<String, Integer>> closest = pathDistances.stream().min(Comparator.comparing(Couple::getRight));
 
     return getShortestPath(myPosition, closest.get().getLeft());
   }
 
+  // getOpenNodes retrieves all nodes marked as open (discovered but not fully explored).
+  // Helps prioritize exploration efforts.
   public List<String> getOpenNodes() {
-    return this.g
+    return this.worldGraph
         .nodes()
-        .filter(x -> x.getAttribute("ui.class") == MapAttribute.open.toString())
+        .filter(currentNode -> currentNode.getAttribute("ui.class") == MapAttribute.open.toString())
         .map(Node::getId)
         .collect(Collectors.toList());
   }
 
-  /**
-   * Before the migration we kill all non serializable components and store their data in a
-   * serializable form
-   */
+  // prepareMigration prepares the map for serialization before agent movement.
+  // Serializes the graph topology and closes the visualization.
   public void prepareMigration() {
     serializeGraphTopology();
 
     closeGui();
 
-    this.g = null;
+    this.worldGraph = null;
   }
 
-  /** Before sending the agent knowledge of the map it should be serialized. */
+  // getSerializableGraph creates a serializable version of the map for communication.
+  // Enables sharing of map information between agents.
   private void serializeGraphTopology() {
-    this.sg = new SerializableSimpleGraph<String, MapAttribute>();
-    Iterator<Node> iter = this.g.iterator();
+    this.serializableGraph = new SerializableSimpleGraph<String, MapAttribute>();
+
+    Iterator<Node> iter = this.worldGraph.iterator();
     while (iter.hasNext()) {
-      Node n = iter.next();
-      sg.addNode(n.getId(), MapAttribute.valueOf((String) n.getAttribute("ui.class")));
+      Node currentNode = iter.next();
+      this.serializableGraph.addNode(currentNode.getId(), MapAttribute.valueOf((String) currentNode.getAttribute("ui.class")));
     }
-    Iterator<Edge> iterE = this.g.edges().iterator();
-    while (iterE.hasNext()) {
-      Edge e = iterE.next();
-      Node sn = e.getSourceNode();
-      Node tn = e.getTargetNode();
-      sg.addEdge(e.getId(), sn.getId(), tn.getId());
+
+    Iterator<Edge> edgeIterator = this.worldGraph.edges().iterator();
+    while (edgeIterator.hasNext()) {
+      Edge currentEdge = edgeIterator.next();
+      Node sourceNode = currentEdge.getSourceNode();
+      Node targetNode = currentEdge.getTargetNode();
+      this.serializableGraph.addEdge(currentEdge.getId(), sourceNode.getId(), targetNode.getId());
     }
   }
 
   public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializableGraph() {
     serializeGraphTopology();
-    return this.sg;
+    return this.serializableGraph;
   }
 
-  /**
-   * After migration we load the serialized data and recreate the non serializable components
-   * (Gui,..)
-   */
+  // loadSavedData reconstructs the map from a serialized representation.
+  // Used when receiving map information from other agents.
   public synchronized void loadSavedData() {
-
-    this.g = new SingleGraph("My world vision");
-    this.g.setAttribute("ui.stylesheet", nodeStyle);
+    this.worldGraph = new SingleGraph("My world vision");
+    this.worldGraph.setAttribute("ui.stylesheet", nodeStyle);
 
     openGui();
 
-    Integer nbEd = 0;
-    for (SerializableNode<String, MapAttribute> n : this.sg.getAllNodes()) {
-      this.g.addNode(n.getNodeId()).setAttribute("ui.class", n.getNodeContent().toString());
-      for (String s : this.sg.getEdges(n.getNodeId())) {
-        this.g.addEdge(nbEd.toString(), n.getNodeId(), s);
-        nbEd++;
+    Integer edgeCounter = 0;
+    for (SerializableNode<String, MapAttribute> currentNode : this.serializableGraph.getAllNodes()) {
+      this.worldGraph
+        .addNode(currentNode.getNodeId())
+        .setAttribute("ui.class", currentNode.getNodeContent().toString());
+
+      for (String s : this.serializableGraph.getEdges(currentNode.getNodeId())) {
+        this.worldGraph.addEdge(edgeCounter.toString(), currentNode.getNodeId(), s);
+        edgeCounter++;
       }
     }
+
     System.out.println("Loading done");
   }
 
-  /** Method called before migration to kill all non serializable graphStream components */
   private synchronized void closeGui() {
-    // once the graph is saved, clear non serializable components
-    if (this.viewer != null) {
-      // Platform.runLater(() -> {
-      try {
-        this.viewer.close();
-      } catch (NullPointerException e) {
-        System.err.println(
-            "Bug graphstream viewer.close() work-around -"
-                + " https://github.com/graphstream/gs-core/issues/150");
-      }
-      // });
-      this.viewer = null;
+    if (this.viewer == null) {
+      return;
     }
+
+    try {
+      this.viewer.close();
+    } catch (NullPointerException e) {
+      System.err.println("Bug graphstream viewer.close() work-around -" + " https://github.com/graphstream/gs-core/issues/150"); 
+    }
+    this.viewer = null;
   }
 
-  /** Method called after a migration to reopen GUI components */
   private synchronized void openGui() {
-    this.viewer =
-        new FxViewer(
-            this.g, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD); // GRAPH_IN_GUI_THREAD)
+    this.viewer = new FxViewer(this.worldGraph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
     viewer.enableAutoLayout();
     viewer.setCloseFramePolicy(FxViewer.CloseFramePolicy.CLOSE_VIEWER);
     viewer.addDefaultView(true);
 
-    g.display();
+    this.worldGraph.display();
   }
 
+  // mergeMap integrates map information received from another agent.
+  // Combines node and edge information while preserving the most updated state.
   public void mergeMap(SerializableSimpleGraph<String, MapAttribute> sgreceived) {
-    // System.out.println("You should decide what you want to save and how");
-    // System.out.println("We currently blindy add the topology");
-
-    for (SerializableNode<String, MapAttribute> n : sgreceived.getAllNodes()) {
-      // System.out.println(n);
+    for (SerializableNode<String, MapAttribute> currentNode : sgreceived.getAllNodes()) {
       boolean alreadyIn = false;
-      // 1 Add the node
       Node newnode = null;
+
       try {
-        newnode = this.g.addNode(n.getNodeId());
+        newnode = this.worldGraph.addNode(currentNode.getNodeId());
       } catch (IdAlreadyInUseException e) {
         alreadyIn = true;
-        // System.out.println("Already in"+n.getNodeId());
       }
+
       if (!alreadyIn) {
         newnode.setAttribute("ui.label", newnode.getId());
-        newnode.setAttribute("ui.class", n.getNodeContent().toString());
+        newnode.setAttribute("ui.class", currentNode.getNodeContent().toString());
       } else {
-        newnode = this.g.getNode(n.getNodeId());
-        // 3 check its attribute. If it is below the one received, update it.
-        if (((String) newnode.getAttribute("ui.class")) == MapAttribute.closed.toString()
-            || n.getNodeContent().toString() == MapAttribute.closed.toString()) {
+        newnode = this.worldGraph.getNode(currentNode.getNodeId());
+        if (
+          ((String) newnode.getAttribute("ui.class")) == MapAttribute.closed.toString()
+          || currentNode.getNodeContent().toString() == MapAttribute.closed.toString()
+        ) {
           newnode.setAttribute("ui.class", MapAttribute.closed.toString());
         }
       }
     }
 
-    // 4 now that all nodes are added, we can add edges
-    for (SerializableNode<String, MapAttribute> n : sgreceived.getAllNodes()) {
-      for (String s : sgreceived.getEdges(n.getNodeId())) {
-        addEdge(n.getNodeId(), s);
+    for (SerializableNode<String, MapAttribute> currentNode : sgreceived.getAllNodes()) {
+      for (String s : sgreceived.getEdges(currentNode.getNodeId())) {
+        addEdge(currentNode.getNodeId(), s);
       }
     }
-    // System.out.println("Merge done");
   }
 
-  /**
-   * @return true if there exist at least one openNode on the graph
-   */
+  // hasOpenNode checks if any unexplored nodes remain in the graph.
+  // Used to determine if exploration should continue.
   public boolean hasOpenNode() {
-    return (this.g
-            .nodes()
-            .filter(n -> n.getAttribute("ui.class") == MapAttribute.open.toString())
-            .findAny())
-        .isPresent();
+    return (this.worldGraph
+      .nodes()
+      .filter(currentNode -> currentNode.getAttribute("ui.class") == MapAttribute.open.toString())
+      .findAny()
+    ).isPresent();
   }
 }

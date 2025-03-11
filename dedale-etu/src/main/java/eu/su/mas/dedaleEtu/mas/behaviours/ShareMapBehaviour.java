@@ -23,6 +23,7 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
   private MapRepresentation myMap;
   private List<String> receivers;
+  private boolean finished = false;
 
   /**
    * The agent periodically share its map. It blindly tries to send all its graph to its friend(s)
@@ -30,12 +31,11 @@ public class ShareMapBehaviour extends SimpleBehaviour {
    * subgraph would be shared.
    *
    * @param a the agent
-   * @param period the periodicity of the behaviour (in ms)
    * @param mymap (the map to share)
    * @param receivers the list of agents to send the map to
    */
-  public ShareMapBehaviour(Agent a, long period, MapRepresentation mymap, List<String> receivers) {
-    super(a, period);
+  public ShareMapBehaviour(Agent a, MapRepresentation mymap, List<String> receivers) {
+    super(a);
     this.myMap = mymap;
     this.receivers = receivers;
   }
@@ -44,7 +44,7 @@ public class ShareMapBehaviour extends SimpleBehaviour {
   private static final long serialVersionUID = -568863390879327961L;
 
   @Override
-  protected void action() {
+  public void action() {
     // 4) At each time step, the agent blindly send all its graph to its surrounding to illustrate
     // how to share its knowledge (the topology currently) with the the others agents.
     // If it was written properly, this sharing action should be in a dedicated behaviour set, the
@@ -64,5 +64,10 @@ public class ShareMapBehaviour extends SimpleBehaviour {
       e.printStackTrace();
     }
     ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
+  }
+
+  @Override
+  public boolean done() {
+    return finished;
   }
 }
