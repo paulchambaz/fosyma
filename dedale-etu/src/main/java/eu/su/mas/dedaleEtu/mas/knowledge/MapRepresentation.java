@@ -138,14 +138,12 @@ public class MapRepresentation implements Serializable {
         existing.resetCounter();
 
         if (quantity > 0) {
-          // TODO; we should just have an updateQuantity
-          existing.decreaseQuantity(existing.getQuantity());
-          existing.decreaseQuantity(-quantity);
+          existing.setQuantity(quantity);
         }
       }
     } else {
       TreasureData treasure = new TreasureData(nodeId, type, quantity, quantity > 0, lockStrength, pickStrength);
-      this.treasures.put(nodeId, treasures);
+      this.treasures.put(nodeId, treasure);
     }
 
     if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
@@ -169,7 +167,17 @@ public class MapRepresentation implements Serializable {
   // Used when agents collect treasures from a location.
   public synchronized void updateTreasureQuantity(String nodeId, int quantityPicked) {
     if (this.treasures.containsKey(nodeId)) {
-      this.treasures.get(nodeId).decreaseQuantity(quantityPicked);
+      TreasureData treasure = this.treasures.get(nodeId);
+      treasure.decreaseQuantity(quantityPicked);
+      treasure.resetCounter();
+    }
+  }
+
+  // ageTreasureData ages all treasure data by incrementing their counters.
+  // Should be called regularly to track data freshness.
+  public synchronized void ageTreasureData() {
+    for (TreasureData treasure : this treasures.values()) {
+      treasure.incrementCounter();
     }
   }
 
@@ -218,12 +226,12 @@ public class MapRepresentation implements Serializable {
   // updateAgentBackpack updates information about an agent's carrying capacity and available space.
   // Important for planning treasure collection strategies.
   public synchronized void updateAgentBackpack(String agentName, int capacity, int freeSpace) {
-    if (!this.agent(containsKey(agentName)) {
-      AgentData data = new AgentData(agentName, null);
+    if (!this.agents.containsKey(agentName)) {
+      AgentData data = new AgentData(null);
       data.setBackpackCapacity(capacity);
       data.setBackpackFreeSpace(freeSpace);
     } else {
-      AgentData data = this.agent.get(agentName);
+      AgentData data = this.agents.get(agentName);
       data.setBackpackCapacity(capacity);
       data.setBackpackFreeSpace(freeSpace);
       data.resetCounter();

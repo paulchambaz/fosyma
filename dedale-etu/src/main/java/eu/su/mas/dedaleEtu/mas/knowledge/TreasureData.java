@@ -35,6 +35,7 @@ public class TreasureData implements Serializable {
   public void setNodeId(String nodeId) { this.nodeId = nodeId; }
   public void setLocked(boolean locked) { this.isLocked = locked; }
   public void setUpdateCounter(int counter) { this.updateCounter = counter; }
+  public void setQuantity(int quantity) { this.quantity = quantity; }
 
   public void decreaseQuantity(int amount) {
     this.quantity = Math.max(0, this.quantity - amount);
