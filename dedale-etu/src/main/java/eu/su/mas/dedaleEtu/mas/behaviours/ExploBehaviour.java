@@ -17,24 +17,11 @@ import java.util.List;
 
 /**
  *
- *
- * <pre>
- * This behaviour allows an agent to explore the environment and learn the associated topological map.
- * The algorithm is a pseudo - DFS computationally consuming because its not optimised at all.
- *
- * When all the nodes around him are visited, the agent randomly select an open node and go there to restart its dfs.
- * This (non optimal) behaviour is done until all nodes are explored.
- *
- * Warning, this behaviour does not save the content of visited nodes, only the topology.
- * Warning, the sub-behaviour ShareMap periodically share the whole map
- * </pre>
- *
- * @author hc
+ * ExploBehaviour
  */
-public class ExploCoopBehaviour extends SimpleBehaviour {
+public class ExploBehaviour extends SimpleBehaviour {
 
   private static final long serialVersionUID = 8567689731496787661L;
-
   private boolean finished = false;
 
   /** Current knowledge of the agent regarding the environment */
@@ -47,7 +34,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
    * @param myMap known map of the world the agent is living in
    * @param agentNames name of the agents to share the map with
    */
-  public ExploCoopBehaviour(
+  public ExploBehaviour(
       final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
     super(myagent);
     this.myMap = myMap;
@@ -85,16 +72,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = lobs.iterator();
       while (iter.hasNext()) {
         Location accessibleNode = iter.next().getLeft();
-        <Couple<Observation, String>> observations = iter.next().getRight().iterator();
-
-        // Testing if the observations have an Agent in them
-        while (observations.hasNext() && (observations.getLeft() == Observation.agentName)){
-          // recupere tous les agents auour
-          
-          // envoie a tous les agents
-          
-        }
-        
         boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
         // the node may exist, but not necessarily the edge
         if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
