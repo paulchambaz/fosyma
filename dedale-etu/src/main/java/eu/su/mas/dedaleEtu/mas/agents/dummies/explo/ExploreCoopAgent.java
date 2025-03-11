@@ -8,88 +8,48 @@ import jade.core.behaviours.Behaviour;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- *
- * <pre>
- * ExploreCoop agent.
- * Basic example of how to "collaboratively" explore the map
- *  - It explore the map using a DFS algorithm and blindly tries to share the topology with the agents within reach.
- *  - The shortestPath computation is not optimized
- *  - Agents do not coordinate themselves on the node(s) to visit, thus progressively creating a single file. It's bad.
- *  - The agent sends all its map, periodically, forever. Its bad x3.
- *  - You should give him the list of agents'name to send its map to in parameter when creating the agent.
- *   Object [] entityParameters={"Name1","Name2};
- *   ag=createNewDedaleAgent(c, agentName, ExploreCoopAgent.class.getName(), entityParameters);
- *
- * It stops when all nodes have been visited.
- *
- *
- *  </pre>
- *
- * @author hc
- */
+// ExploreCoopAgent manages cooperative exploration between multiple agents in
+// a Dedale environment. It initializes with a list of cooperating agents and
+// manages map representation and exploration behavior.
 public class ExploreCoopAgent extends AbstractDedaleAgent {
-
   private static final long serialVersionUID = -7969469610241668140L;
+
   private MapRepresentation myMap;
 
-  /**
-   * This method is automatically called when "agent".start() is executed. Consider that Agent is
-   * launched for the first time. 1) set the agent attributes 2) add the behaviours
-   */
+  // setup initializes the agent with required behaviors and collaborator list.
+  // Arguments must include at least the agent names to cooperate with.
   protected void setup() {
-
     super.setup();
 
-    // get the parameters added to the agent at creation (if any)
     final Object[] args = getArguments();
-
-    List<String> list_agentNames = new ArrayList<String>();
-
     if (args.length == 0) {
-      System.err.println("Error while creating the agent, names of agent to contact expected");
+      System.err.println("Error while creating agent");
       System.exit(-1);
-    } else {
-      int i =
-          2; // WARNING YOU SHOULD ALWAYS START AT 2. This will be corrected in the next release.
-      while (i < args.length) {
-        list_agentNames.add((String) args[i]);
-        i++;
-      }
     }
 
-    List<Behaviour> lb = new ArrayList<Behaviour>();
+    List<String> agentNames = new ArrayList<String>();
+    for (int i = 2; i < args.length; i++) {
+      agentNames.add((String) args[i]);
+    }
 
-    /************************************************
-     *
-     * ADD the behaviours of the Dummy Moving Agent
-     *
-     ************************************************/
+    List<Behaviour> behaviours = new ArrayList<Behaviour>();
+    behaviours.add(new ExploCoopBehaviour(this, this.myMap, agentNames));
 
-    lb.add(new ExploCoopBehaviour(this, this.myMap, list_agentNames));
-
-    /***
-     * MANDATORY TO ALLOW YOUR AGENT TO BE DEPLOYED CORRECTLY
-     */
-
-    addBehaviour(new StartMyBehaviours(this, lb));
-
-    System.out.println("the  agent " + this.getLocalName() + " is started");
+    addBehaviour(new StartMyBehaviours(this, behaviours));
   }
 
-  /** This method is automatically called after doDelete() */
+  // takeDown performs cleanup when the agent is destroyed
   protected void takeDown() {
     super.takeDown();
   }
 
+  // beforeMove executes actions before agent migration between containers
   protected void beforeMove() {
     super.beforeMove();
-    // System.out.println("I migrate");
   }
 
+  // afterMove executes actions after agent migration between containers
   protected void afterMove() {
     super.afterMove();
-    // System.out.println("I migrated");
   }
 }
