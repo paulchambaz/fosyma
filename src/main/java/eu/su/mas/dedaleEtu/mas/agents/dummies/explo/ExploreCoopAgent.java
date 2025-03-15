@@ -15,6 +15,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
   private static final long serialVersionUID = -7969469610241668140L;
 
   private Knowledge knowledge;
+  private List<Integer> myHashList;
 
   // setup initializes the agent with required behaviors and collaborator list.
   // Arguments must include at least the agent names to cooperate with.
@@ -33,7 +34,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
     }
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
-    behaviours.add(new ExploCoopBehaviour(this, this.knowledge, agentNames));
+    behaviours.add(new ExploCoopBehaviour(this, this.knowledge, agentNames, this.myHashList));
 
     addBehaviour(new StartMyBehaviours(this, behaviours));
   }

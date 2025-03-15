@@ -30,20 +30,22 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
   private boolean finished = false;
   private Knowledge knowledge;
   private List<String> agentNames;
+  private List<Integer> myHashList;
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
-  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge, List<String> agentNames) {
+  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge, List<String> agentNames, List<Integer> myHashList) {
     super(myagent);
     this.knowledge = knowledge;
     this.agentNames = agentNames;
+    this.myHashList = myHashList;
   }
 
   @Override
   public void action() {
-    if (this.knowledge == null) {
-      this.knowledge = new Knowledge();
-      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.knowledge, agentNames));
+    if (this.myMap == null) {
+      this.myMap = new Knowledge();
+      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.knowledge, agentNames, this.myHashList));
     }
 
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
@@ -81,7 +83,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
         switch (observeKind) {
           case AGENTNAME:
-            receiversAgents.add(observed);
 
             if (observed.startsWith("Silo")) {
               this.knowledge.setSiloPosition(accessibleNode.getLocationId());
@@ -177,6 +178,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       this.knowledge.mergeKnowledge(knowledgeReceived);
     }
 
+    // mise a jour hashList
+    int myHashCode = this.myMap.hashCode();
+    myHashList.add(myHashCode);
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
   }
 
