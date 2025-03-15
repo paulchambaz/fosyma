@@ -1,77 +1,199 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>xyz.chambaz</groupId>
-  <artifactId>fosyma</artifactId>
-  <version>0.1.0</version>
-  <name>fosyma</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>eu.su.mas</groupId>
+	<artifactId>dedale-etu</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Dedale-etu</name>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+	<description>Project used for both research and teaching around distributed systems and multi-agents systems</description>
 
-  <!-- Required for JADE from GitLab -->
-  <repositories>
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-  </repositories>
+	<organization>
+		<name>SU-LIP6-SMA</name>
+		<url>http://www.lip6.fr/recherche/team.php?id=380</url>
+	</organization>
 
-  <dependencies>
-    <!-- JADE dependency -->
-    <dependency>
-      <groupId>com.gitlab.jade-project</groupId>
-      <artifactId>jade</artifactId>
-      <version>master-SNAPSHOT</version>
-    </dependency>
+	<distributionManagement>
+		<downloadUrl>http://dedale.gitlab.io</downloadUrl>
+	</distributionManagement>
 
-    <!-- Commons Codec -->
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.15</version>
-    </dependency>
+	<developers>
+		<developer>
+			<name>Cédric HERPSON</name>
+			<id>hc</id>
+			<email>cedric.herpson@lip6.fr</email>
+		</developer>
+	</developers>
 
-    <!-- JUnit -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven-compiler.version>3.12.1</maven-compiler.version>
+		<junit.version>4.13.2</junit.version>
+		<plantuml.version>1.2023.10</plantuml.version>
+		<javafx.version>21.0.2</javafx.version>
+		<gs-core.version>2.0</gs-core.version>
+		<jackson.version>2.14.3</jackson.version>
+	</properties>
 
-    <!-- Jackson for JSON -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.12.3</version>
-    </dependency>
-  </dependencies>
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 
-  <build>
-    <plugins>
-      <!-- Compiler plugin -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
+	<dependencies>
+		<!-- from Jdk11, javaFx is no longer part of JVM -->
 
-      <!-- Exec plugin for running the app -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.1.0</version>
-        <configuration>
-          <mainClass>xyz.chambaz.App</mainClass>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx</artifactId>
+			<version>${javafx.version}</version>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-web</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-swing</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-media</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+<!--
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+ -->
+		<!--  Jade -->
+		<dependency>
+    		<groupId>com.gitlab.jade-project</groupId>
+    		<artifactId>jade</artifactId>
+    		<version>master-SNAPSHOT</version>
+		</dependency>
+
+		<!-- GraphStream -->
+
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-core</artifactId>
+			<version>${gs-core.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-algo</artifactId>
+			<version>${gs-core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-ui-javafx</artifactId>
+			<version>${gs-core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.graphstream</groupId>
+			<artifactId>gs-ui-swing</artifactId>
+			<version>${gs-core.version}</version>
+		</dependency>
+
+		<!-- PlantUml -->
+		<dependency>
+			<groupId>net.sourceforge.plantuml</groupId>
+			<artifactId>plantuml</artifactId>
+			<version>${plantuml.version}</version>
+		</dependency>
+
+		<!-- Junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+
+		<!-- dedaleRoot and Delta -->
+		<!--
+		<dependency>
+			<groupId>eu.su.mas</groupId>
+			<artifactId>dedale</artifactId>
+			<version>1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/dedale/dedale.jar</systemPath>
+		</dependency>
+		-->
+		<dependency>
+		    <groupId>com.gitlab.dedale</groupId>
+	    	<artifactId>dedale</artifactId>
+	    	<version>-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.gitlab.deltas</groupId>
+	    	<artifactId>mas</artifactId>
+	    	<version>-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.gitlab.herpsonc</groupId>
+			<artifactId>tools</artifactId>
+			<version>-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler.version}</version>
+				<configuration>
+					<source>21</source>
+					<target>21</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>

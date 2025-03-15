@@ -1,8 +1,8 @@
 run *ARGS:
-  @cd dedale-etu && mvn -q compile exec:java -Dexec.mainClass="eu.su.mas.dedaleEtu.princ.Principal" -Dexec.args="{{ ARGS }}"
+  mvn -q compile exec:java -Dexec.mainClass="eu.su.mas.dedaleEtu.princ.Principal" -Dexec.args="{{ ARGS }}"
 
 build:
-  @cd dedale-etu && mvn -q compile
+  mvn -q compile
 
 clean:
   mvn clean

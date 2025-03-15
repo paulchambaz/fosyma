@@ -44,7 +44,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     }
 
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-
     if (myPosition == null) {
       return;
     }
@@ -81,15 +80,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
           case AGENTNAME:
             receiversAgents.add(observed);
 
-            // TODO: this is probably wrong - must test - it may also be "Tanker"
             if (observed.startsWith("Silo")) {
               this.myMap.setSiloPosition(accessibleNode.getLocationId());
-              // TODO: it would be good to use the proper logs on the gui that operates in proper sync time
               System.out.println("Found silo agent at : " + accessibleNode.getLocationId());
-            // TODO: this is probably wrong - must test - it may also be "Wumpus"
             } else if (observed.startsWith("Golem")) {
               this.myMap.setGolemPosition(accessibleNode.getLocationId());
-              // TODO: it would be good to use the proper logs on the gui that operates in proper sync time
               System.out.println("Found golem agent at : " + accessibleNode.getLocationId());
             } else {
               this.myMap.updateAgentPosition(observed, accessibleNode.getLocationId());
