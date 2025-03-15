@@ -36,12 +36,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     this.agentNames = agentNames;
   }
 
-  // action performs one step of the exploration algorithm:
-  // - initializes map if needed
-  // - collects observations from current position
-  // - updates map with new nodes and edges
-  // - processes topology info from other agents
-  // - moves to next unexplored location
   @Override
   public void action() {
     if (this.myMap == null) {
@@ -59,35 +53,87 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
     try {
       this.myAgent.doWait(500);
-    } catch (Exception e) {
+    } catch(Exception e) {
       e.printStackTrace();
     }
 
     this.myMap.addNode(myPosition.getLocationId(), MapAttribute.closed);
 
+    // iterate on observations in order to handle them correctly
     String nextNodeId = null;
-    Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = observations.iterator();
-
     List<String> receiversAgents = new ArrayList<>();
-    while (iter.hasNext()) {
-      var entry = iter.next();
+    for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
       Location accessibleNode = entry.getLeft();
 
-      // add new nodes directly to map representation
+      // add new nodes to map representation
       boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
       if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
         this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
         if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
       }
 
-      // recuperate the lits of agents
-      entry.getRight().stream()
-        .filter(obs -> obs.getLeft() == Observation.AGENTNAME)
-        .map(Couple::getRight)
-        .forEach(receiversAgents::add);
-      // remove duplicates
-      receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
+      // collect agent names
+      for (Couple<Observation, String> observation : entry.getRight()) {
+        Observation observeKind = observation.getLeft();
+        String observed = observation.getRight();
+
+        switch (observeKind) {
+          case AGENTNAME:
+            receiversAgents.add(observed);
+
+            // TODO: this is probably wrong - must test - it may also be "Tanker"
+            if (observed.startsWith("Silo")) {
+              this.myMap.setSiloPosition(accessibleNode.getLocationId());
+              // TODO: it would be good to use the proper logs on the gui that operates in proper sync time
+              System.out.println("Found silo agent at : " + accessibleNode.getLocationId());
+            // TODO: this is probably wrong - must test - it may also be "Wumpus"
+            } else if (observed.startsWith("Golem")) {
+              this.myMap.setGolemPosition(accessibleNode.getLocationId());
+              // TODO: it would be good to use the proper logs on the gui that operates in proper sync time
+              System.out.println("Found golem agent at : " + accessibleNode.getLocationId());
+            } else {
+              this.myMap.updateAgentPosition(observed, accessibleNode.getLocationId());
+            }
+            break;
+
+          case GOLD:
+          case DIAMOND:
+            // handle treasure observations
+            int treasureValue = Integer.parseInt(observed);
+            this.myMap.addTreasure(
+              accessibleNode.getLocationId(),
+              observeKind,
+              treasureValue,
+              -1, // default lock strength until we observe it
+              -1 // default pick strength until we observe it
+            );
+            break;
+
+          case STENCH:
+          case WIND:
+            // TODO: handle environmental cues
+            // TODO: it would be good to use the proper logs on the gui that operates in proper sync time
+            System.out.println("Environmental cue detected: " + observeKind);
+            break;
+
+          case LOCKSTATUS:
+            // TODO: handle lock status - figure out why this does not return
+            // any values
+            // TODO: it would be good to use the proper logs on the gui that
+            // operates in proper sync time
+            System.out.println("Lock status observed: " + observed);
+            break;
+
+          default:
+            // TODO: remove assert in production - agents should ignore by
+            // default in case of crashing - but this is useful to detect new
+            // observations
+            assert false : "Unhandled observation type: " + observeKind;
+        }
+      }
     }
+
+    receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
 
     // Envoie de la carte
     if (!(receiversAgents.isEmpty())){
