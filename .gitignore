@@ -67,7 +67,7 @@ logs/
 # paper/pres.pdf
 *.pdf
 
-dedale-etu/doc
-docs
-dedale-etu/APDescription.txt
-dedale-etu/MTPs-Main-Container.txt
+doc/
+docs/
+APDescription.txt
+MTPs-Main-Container.txt
