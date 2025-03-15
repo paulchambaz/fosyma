@@ -365,7 +365,7 @@ public class Knowledge implements Serializable {
           edge.getTargetNode().getId()
         );
       } catch (Exception e) {
-        // TODO: print error
+        e.printStackTrace();
       }
     });
 
@@ -392,7 +392,7 @@ public class Knowledge implements Serializable {
       try {
         tempGraph.removeNode(nodeId);
       } catch (ElementNotFoundException e) {
-        // Node might already be removed or doesn't exist
+        e.printStackTrace();
       }
     }
 
@@ -409,6 +409,7 @@ public class Knowledge implements Serializable {
     try {
       path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
     } catch (Exception e) {
+      e.printStackTrace();
       return null;
     }
 
@@ -543,6 +544,7 @@ public class Knowledge implements Serializable {
     try {
       this.viewer.close();
     } catch (NullPointerException e) {
+      e.printStackTrace();
       System.err.println("Bug graphstream viewer.close() work-around -" + " https://github.com/graphstream/gs-core/issues/150"); 
     }
     this.viewer = null;
