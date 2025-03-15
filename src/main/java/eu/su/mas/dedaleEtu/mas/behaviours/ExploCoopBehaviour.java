@@ -27,20 +27,22 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
   private boolean finished = false;
   private MapRepresentation myMap;
   private List<String> agentNames;
+  private List<Integer> myHashList;
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
-  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
+  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames, List<Integer> myHashList) {
     super(myagent);
     this.myMap = myMap;
     this.agentNames = agentNames;
+    this.myHashList = myHashList;
   }
 
   @Override
   public void action() {
     if (this.myMap == null) {
       this.myMap = new MapRepresentation();
-      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.myMap, agentNames));
+      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.myMap, agentNames, this.myHashList));
     }
 
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
@@ -78,7 +80,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
         switch (observeKind) {
           case AGENTNAME:
-            receiversAgents.add(observed);
 
             if (observed.startsWith("Silo")) {
               this.myMap.setSiloPosition(accessibleNode.getLocationId());
@@ -128,29 +129,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       }
     }
 
-    receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
-
-    // Envoie de la carte
-    if (!(receiversAgents.isEmpty())){
-      // Ajout du comportement ici ?
-      ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-      msg.setProtocol("SHARE-TOPO");
-      msg.setSender(this.myAgent.getAID());
-      for (String agentName : receiversAgents) {
-        msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-      }
-
-      SerializableSimpleGraph<String, MapAttribute> sg = this.myMap.getSerializableGraph();
-      try {
-        msg.setContentObject(sg);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
-    }
-    // Fin de l'envoi de la carte
-
-
     if (!this.myMap.hasOpenNode()) {
       finished = true;
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
@@ -162,8 +140,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     }
 
     MessageTemplate msgTemplate = MessageTemplate.and(
-            MessageTemplate.MatchProtocol("SHARE-TOPO"),
-            MessageTemplate.MatchPerformative(ACLMessage.INFORM)
+      MessageTemplate.MatchProtocol("SHARE-TOPO"),
+      MessageTemplate.MatchPerformative(ACLMessage.INFORM)
     );
 
     ACLMessage msgReceived = this.myAgent.receive(msgTemplate);
@@ -177,6 +155,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       this.myMap.mergeMap(sgreceived);
     }
 
+    // mise a jour hashList
+    int myHashCode = this.myMap.hashCode();
+    myHashList.add(myHashCode);
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
   }
 

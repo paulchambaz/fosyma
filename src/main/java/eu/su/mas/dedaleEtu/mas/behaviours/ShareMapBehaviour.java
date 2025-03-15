@@ -25,11 +25,13 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
   private MapRepresentation myMap;
   private List<String> receiverAgents;
+  private List<Integer> myHashList;
 
-  public ShareMapBehaviour(Agent agent, MapRepresentation myMap, List<String> receiverAgents) {
+  public ShareMapBehaviour(Agent agent, MapRepresentation myMap, List<String> receiverAgents, List<Integer> myHashList) {
     super(agent);
     this.myMap = myMap;
     this.receiverAgents = receiverAgents;
+    this.myHashList = myHashList;
   }
 
   // this behaviour sends the full map
@@ -56,55 +58,75 @@ public class ShareMapBehaviour extends SimpleBehaviour {
       }
     }
 
-    // Envoie de la carte
     if (!(receivers.isEmpty())){
       SerializableSimpleGraph<String, MapAttribute> sg = this.myMap.getSerializableGraph();
-      int myHashCode = sg.hashCode();
+      int myHashCode = this.myMap.hashCode();
 
       // Message de ping
       ACLMessage msgPing = new ACLMessage(ACLMessage.INFORM);
       msgPing.setSender(this.myAgent.getAID());
-      msgPing.setProtocol("ASK-SHARE");
+      msgPing.setProtocol("PING");
       msgPing.setContent(String.valueOf(myHashCode));
-      
       for (String agentName : receivers) {
         msgPing.addReceiver(new AID(agentName, AID.ISLOCALNAME));
       }
-      // System.out.println("Agent "+this.myAgent.getLocalName()+ " is trying to reach its friends");
-      ((AbstractDedaleAgent) this.myAgent).sendMessage(msgPing);
       
-      // Reponse
-      MessageTemplate msgTemplate = MessageTemplate.and(
-            MessageTemplate.MatchProtocol("ASK-SHARE"),
-            MessageTemplate.MatchPerformative(ACLMessage.INFORM)
-      );
+      // System.out.println("Agent " + this.myAgent.getLocalName() + " is trying to reach its friends");
+      ((AbstractDedaleAgent) this.myAgent).sendMessage(msgPing);
 
-      ACLMessage msgReceived = this.myAgent.receive(msgTemplate);
-      if (msgReceived != null) {
-        int hashReceived = 0;
+      MessageTemplate msgTemplatePing = MessageTemplate.and(
+        MessageTemplate.MatchProtocol("PING"),
+        MessageTemplate.MatchPerformative(ACLMessage.INFORM)
+      );
+      // Attends une reponse de requete (en Milllisecondes)
+      ACLMessage msgReceivedPing = this.myAgent.blockingReceive(msgTemplatePing, 100);
+      
+      if (msgReceivedPing != null) {
+        int hashPing = 0;
         try {
-          hashReceived = Integer.parseInt(msgReceived.getContent());
+          hashPing = Integer.parseInt(msgReceivedPing.getContent());
         } catch (NumberFormatException e) {
           e.printStackTrace();
         }
 
-        if (hashReceived!= myHashCode){
-        // Message d'envoie de carte
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-        msg.setProtocol("SHARE-TOPO");
-        msg.setSender(this.myAgent.getAID());
-        for (String agentName : receivers) {
-          msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
+        if (myHashList.contains(hashPing)){
+          // Message de requete pour envoi de la carte
+          ACLMessage msgRequest = new ACLMessage(ACLMessage.INFORM);
+          msgRequest.setSender(this.myAgent.getAID());
+          msgRequest.setProtocol("REQUEST-SEND-MAP");
+          msgRequest.setContent("liste des noeuds ouverts");
+          for (String agentName : receivers) {
+            msgRequest.addReceiver(new AID(agentName, AID.ISLOCALNAME));
+          }
+
+          // System.out.println("Agent " + this.myAgent.getLocalName() + " is sending a request");
+          ((AbstractDedaleAgent) this.myAgent).sendMessage(msgRequest);
         }
 
-        try {
-          msg.setContentObject(sg);
-        } catch (IOException e) {
-          e.printStackTrace();
+
+        else {
+          MessageTemplate msgTemplateRequest = MessageTemplate.and(
+            MessageTemplate.MatchProtocol("REQUEST-SEND-MAP"),
+            MessageTemplate.MatchPerformative(ACLMessage.INFORM)
+          );
+          ACLMessage msgReceivedRequest = this.myAgent.blockingReceive(msgTemplateRequest, 100);
+
+          // Message d'envoie de carte
+          ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+          msg.setProtocol("SHARE-TOPO");
+          msg.setSender(this.myAgent.getAID());
+          for (String agentName : receivers) {
+            msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
+          }
+
+          try {
+            msg.setContentObject(sg);
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+          // System.out.println("Agent " + this.myAgent.getLocalName() + " is sending its map");
+          ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
         }
-        // System.out.println("Agent "+this.myAgent.getLocalName()+ " is sending its map");
-        ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
-      }
       }
     }
   }
