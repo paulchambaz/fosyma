@@ -47,7 +47,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
   public void action() {
     if (this.myMap == null) {
       this.myMap = new MapRepresentation();
-      //this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, 500, this.myMap, list_agentNames));
+      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.myMap, list_agentNames));
     }
 
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
@@ -77,44 +77,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       Location accessibleNode = observationsOnNode.getLeft();
       boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
 
-      // Récupèration de la liste des observations à cette position
-      List<Couple<Observation, String>> nodeObservations = observationsOnNode.getRight();
-      Iterator<Couple<Observation, String>> iterObservations = nodeObservations.iterator();
-
-      // Test si un agent est observé à la position
-      while (iterObservations.hasNext()){
-        Couple<Observation,String> observe = iterObservations.next();
-        if(observe.getLeft() == Observation.AGENTNAME){
-          receivers.add(observe.getRight());
-        }
-      }
-      
       if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
         this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
         if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
       }
     }
-
-    // Envoie de la carte
-    if (!(receivers.isEmpty())){
-      // Ajout du comportement ici ?
-      ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-      msg.setProtocol("SHARE-TOPO");
-      msg.setSender(this.myAgent.getAID());
-      for (String agentName : receivers) {
-        msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-      }
-
-      SerializableSimpleGraph<String, MapAttribute> sg = this.myMap.getSerializableGraph();
-      try {
-        msg.setContentObject(sg);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
-    }
-    // Fin de l'envoi de la carte
-
 
     if (!this.myMap.hasOpenNode()) {
       finished = true;

@@ -5,6 +5,7 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 
 /**
@@ -12,10 +13,11 @@ import jade.lang.acl.ACLMessage;
  *
  * @author hc
  */
-public class SayHelloBehaviour extends TickerBehaviour {
+public class SayHelloBehaviour extends SimpleBehaviour {
 
   /** */
   private static final long serialVersionUID = -2058134622078521998L;
+  private boolean finished = false;
 
   /**
    * An agent tries to contact its friend and to give him its current position
@@ -23,12 +25,12 @@ public class SayHelloBehaviour extends TickerBehaviour {
    * @param myagent the agent who posses the behaviour
    */
   public SayHelloBehaviour(final Agent myagent) {
-    super(myagent, 3000);
-    // super(myagent);
+    // super(myagent, 3000);
+    super(myagent);
   }
 
   @Override
-  public void onTick() {
+  public void action() {
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 
     // A message is defined by : a performative, a sender, a set of receivers, (a protocol),(a
@@ -39,8 +41,7 @@ public class SayHelloBehaviour extends TickerBehaviour {
     msg.setProtocol("UselessProtocol");
 
     if (myPosition != null && myPosition.getLocationId() != "") {
-      // System.out.println("Agent "+this.myAgent.getLocalName()+ " is trying to reach its
-      // friends");
+      System.out.println("Agent "+this.myAgent.getLocalName()+ " is trying to reach its friends");
       msg.setContent("Hello World, I'm at " + myPosition);
 
       msg.addReceiver(new AID("Collect1", AID.ISLOCALNAME));
@@ -50,5 +51,10 @@ public class SayHelloBehaviour extends TickerBehaviour {
       // reachable or not)
       ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
     }
+  }
+
+  @Override
+  public boolean done() {
+    return finished;
   }
 }
