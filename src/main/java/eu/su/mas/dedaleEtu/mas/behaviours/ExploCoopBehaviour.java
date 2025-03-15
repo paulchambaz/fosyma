@@ -19,6 +19,8 @@ import jade.core.AID;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import eu.su.mas.dedaleEtu.princ.Utils;
+
 // ExploCoopBehaviour implements cooperative exploration logic for agents
 // to discover and map an environment while sharing topological information.
 public class ExploCoopBehaviour extends SimpleBehaviour {
@@ -130,25 +132,15 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
     receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
 
-    // Envoie de la carte
     if (!(receiversAgents.isEmpty())){
-      // Ajout du comportement ici ?
-      ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-      msg.setProtocol("SHARE-TOPO");
-      msg.setSender(this.myAgent.getAID());
-      for (String agentName : receiversAgents) {
-        msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-      }
-
-      SerializableSimpleGraph<String, MapAttribute> sg = this.myMap.getSerializableGraph();
-      try {
-        msg.setContentObject(sg);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
+      ACLMessage message = Utils.createACLMessage(
+        this.myAgent,
+        "SHARE-TOPO",
+        receiversAgents,
+        this.myMap.getSerializableGraph()
+      );
+      ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
     }
-    // Fin de l'envoi de la carte
 
 
     if (!this.myMap.hasOpenNode()) {
