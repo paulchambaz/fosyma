@@ -7,6 +7,7 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -130,14 +131,14 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       }
     }
 
+    // if there are neighbours - it initiates the knowledge exchange protocol
     receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
-
     if (!(receiversAgents.isEmpty())){
       ACLMessage message = Utils.createACLMessage(
         this.myAgent,
-        "share-knowledge",
+        "knowledge-exchange",
         receiversAgents,
-        this.knowledge.getSerializableGraph()
+        this.knowledge.getSerializableKnowledge()
       );
 
       // ACLMessage message = Utils.createACLMessage(
@@ -150,30 +151,32 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     }
 
 
+    // if there are no more nodes to be learnt about the graph, then we should switch to a simpler protocol
     if (!this.knowledge.hasOpenNode()) {
       finished = true;
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
       return;
     }
 
+    // if there are still nodes to be learned 
     if (nextNodeId == null) {
       nextNodeId = this.knowledge.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
     }
 
-    MessageTemplate msgTemplate = MessageTemplate.and(
-            MessageTemplate.MatchProtocol("SHARE-TOPO"),
-            MessageTemplate.MatchPerformative(ACLMessage.INFORM)
+    MessageTemplate messageTemplate = MessageTemplate.and(
+      MessageTemplate.MatchProtocol("knowledge-exchange"),
+      MessageTemplate.MatchPerformative(ACLMessage.INFORM)
     );
 
-    ACLMessage msgReceived = this.myAgent.receive(msgTemplate);
-    if (msgReceived != null) {
-      SerializableSimpleGraph<String, MapAttribute> sgreceived = null;
+    ACLMessage messageReceived = this.myAgent.receive(messageTemplate);
+    if (messageReceived != null) {
+      SerializableKnowledge knowledgeReceived = null;
       try {
-        sgreceived = (SerializableSimpleGraph<String, MapAttribute>) msgReceived.getContentObject();
+        knowledgeReceived = (SerializableKnowledge) messageReceived.getContentObject();
       } catch (UnreadableException e) {
         e.printStackTrace();
       }
-      this.knowledge.mergeMap(sgreceived);
+      this.knowledge.mergeKnowledge(knowledgeReceived);
     }
 
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));

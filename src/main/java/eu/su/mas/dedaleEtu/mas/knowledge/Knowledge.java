@@ -350,23 +350,71 @@ public class Knowledge implements Serializable {
   // getShortestPath calculates the most efficient path between any two nodes.
   // Uses Dijkstra's algorithm to find the optimal route.
   public synchronized List<String> getShortestPath(String idFrom, String idTo) {
-    List<String> shortestPath = new ArrayList<String>();
+    Graph tempGraph = new SingleGraph("Temporary path graph");
+
+    this.worldGraph.nodes().forEach(node -> {
+      tempGraph.addNode(node.getId());
+      tempGraph.getNode(node.getId()).setAttribute("ui.class", node.getAttribute("ui.class"));
+    });
+
+    this.worldGraph.edges().forEach(edge -> {
+      try {
+        tempGraph.addEdge(
+          edge.getId(),
+          edge.getSourceNode().getId(),
+          edge.getTargetNode().getId()
+        );
+      } catch (Exception e) {
+        // TODO: print error
+      }
+    });
+
+    List<String> nodesToRemove = new ArrayList<>();
+
+    for (AgentData agent : this.agents.values()) {
+      String position = agent.getPosition();
+      if (position != null && !position.equals(idFrom) && !position.equals(idTo)) {
+        nodesToRemove.add(position);
+      }
+    }
+
+    if (this.silo != null && this.silo.getPosition() != null && !this.silo.getPosition().equals(idFrom) && !this.silo.getPosition().equals(idTo)) {
+      nodesToRemove.add(this.silo.getPosition());
+    }
+
+    if (this.golem != null && this.golem.getPosition() != null && !this.golem.getPosition().equals(idFrom) && !this.golem.getPosition().equals(idTo)) {
+      nodesToRemove.add(this.golem.getPosition());
+    }
+
+    // TODO: filter doubly removed nodes
+
+    for (String nodeId : nodesToRemove) {
+      try {
+        tempGraph.removeNode(nodeId);
+      } catch (ElementNotFoundException e) {
+        // Node might already be removed or doesn't exist
+      }
+    }
+
+    if (tempGraph.getNode(idFrom) == null || tempGraph.getNode(idTo) == null) {
+      return null;
+    }
 
     Dijkstra dijkstra = new Dijkstra();
-    dijkstra.init(this.worldGraph);
-    dijkstra.setSource(this.worldGraph.getNode(idFrom));
+    dijkstra.init(tempGraph);
+    dijkstra.setSource(tempGraph.getNode(idFrom));
     dijkstra.compute();
 
     List<Node> path;
     try {
-      path = dijkstra.getPath(this.worldGraph.getNode(idTo)).getNodePath();
+      path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
     } catch (Exception e) {
       return null;
     }
 
-    Iterator<Node> iter = path.iterator();
-    while (iter.hasNext()) {
-      shortestPath.add(iter.next().getId());
+    List<String> shortestPath = new ArrayList<String>();
+    for (Node entry : path) {
+      shortestPath.add(entry.getId());
     }
 
     dijkstra.clear();
@@ -580,17 +628,13 @@ public class Knowledge implements Serializable {
   }
 
   public void mergeKnowledge(
-    SerializableSimpleGraph<String, MapAttribute> serializableGraph, 
-    Map<String, TreasureData> treasures,
-    Map<String, AgentData> agents,
-    SiloData silo,
-    GolemData golem
+    SerializableKnowledge knowledge
   ) {
-    mergeMap(serializableGraph);
-    mergeTreasures(treasures);
-    mergeAgents(agents);
-    mergeSilo(silo);
-    mergeGolem(golem);
+    mergeMap(knowledge.getGraph());
+    mergeTreasures(knowledge.getTreasures());
+    mergeAgents(knowledge.getAgents());
+    mergeSilo(knowledge.getSilo());
+    mergeGolem(knowledge.getGolem());
   }
 
 
