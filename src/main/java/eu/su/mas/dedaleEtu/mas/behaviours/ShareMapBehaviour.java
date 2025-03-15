@@ -16,6 +16,7 @@ import jade.lang.acl.ACLMessage;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 
@@ -34,33 +35,13 @@ public class ShareMapBehaviour extends SimpleBehaviour {
     this.myHashList = myHashList;
   }
 
-  // this behaviour sends the full map
   @Override
   public void action() {
-    // 4) At each time step, the agent blindly send all its graph to its surrounding to illustrate
-    // how to share its knowledge (the topology currently) with the the others agents.
-    // If it was written properly, this sharing action should be in a dedicated behaviour set, the
-    // receivers be automatically computed, and only a subgraph would be shared.
-    
-    List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent).observe();
-
-    // Liste agents observés
-    List<String> receivers = new ArrayList<String>();
-
-    for (Couple<Location, List<Couple<Observation, String>>> observation : observations ) {
-      List<Couple<Observation, String>> nodeObservations = observation.getRight();
-
-      // Test si un agent est observé à la position
-      for (Couple<Observation, String> iter : nodeObservations){
-        if(iter.getLeft() == Observation.AGENTNAME){
-          receivers.add(iter.getRight());
-        }
-      }
-    }
+    List<String> receivers = getReceivers();
 
     if (!(receivers.isEmpty())){
       SerializableSimpleGraph<String, MapAttribute> sg = this.knowledge.getSerializableGraph();
-      int myHashCode = this.knowledge.hashCode();
+      int myHashCode = this.knowledge.getSerializableKnowledge().hashCode();
 
       // Message de ping
       ACLMessage msgPing = new ACLMessage(ACLMessage.INFORM);
@@ -101,10 +82,7 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
           // System.out.println("Agent " + this.myAgent.getLocalName() + " is sending a request");
           ((AbstractDedaleAgent) this.myAgent).sendMessage(msgRequest);
-        }
-
-
-        else {
+        } else {
           MessageTemplate msgTemplateRequest = MessageTemplate.and(
             MessageTemplate.MatchProtocol("REQUEST-SEND-MAP"),
             MessageTemplate.MatchPerformative(ACLMessage.INFORM)
@@ -129,6 +107,25 @@ public class ShareMapBehaviour extends SimpleBehaviour {
         }
       }
     }
+  }
+
+  private List<String> getReceivers() {
+    List<String> receivers = new ArrayList<>();
+
+    List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent).observe();
+
+    for (Couple<Location, List<Couple<Observation, String>>> observation : observations ) {
+      List<Couple<Observation, String>> nodeObservations = observation.getRight();
+
+      // Test si un agent est observé à la position
+      for (Couple<Observation, String> iter : nodeObservations){
+        if(iter.getLeft() == Observation.AGENTNAME){
+          receivers.add(iter.getRight());
+        }
+      }
+    }
+    receivers = new ArrayList<>(new HashSet<>(receivers));
+    return receivers;
   }
 
   @Override

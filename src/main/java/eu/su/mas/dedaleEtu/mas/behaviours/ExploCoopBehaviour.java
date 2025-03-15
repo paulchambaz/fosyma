@@ -43,8 +43,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   @Override
   public void action() {
-    if (this.myMap == null) {
-      this.myMap = new Knowledge();
+    if (this.knowledge == null) {
+      this.knowledge = new Knowledge();
       this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.knowledge, agentNames, this.myHashList));
     }
 
@@ -179,7 +179,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     }
 
     // mise a jour hashList
-    int myHashCode = this.myMap.hashCode();
+    int myHashCode = this.knowledge.getSerializableKnowledge().hashCode();
     myHashList.add(myHashCode);
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
   }
