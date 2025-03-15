@@ -5,8 +5,8 @@ import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
@@ -23,12 +23,12 @@ public class ShareMapBehaviour extends SimpleBehaviour {
   private static final long serialVersionUID = -568863390879327961L;
   private boolean finished = false;
 
-  private MapRepresentation myMap;
+  private Knowledge knowledge;
   private List<String> receiverAgents;
 
-  public ShareMapBehaviour(Agent agent, MapRepresentation myMap, List<String> receiverAgents) {
+  public ShareMapBehaviour(Agent agent, Knowledge knowledge, List<String> receiverAgents) {
     super(agent);
-    this.myMap = myMap;
+    this.knowledge = knowledge;
     this.receiverAgents = receiverAgents;
   }
 
@@ -58,7 +58,7 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
     // Envoie de la carte
     if (!(receivers.isEmpty())){
-      SerializableSimpleGraph<String, MapAttribute> sg = this.myMap.getSerializableGraph();
+      SerializableSimpleGraph<String, MapAttribute> sg = this.knowledge.getSerializableGraph();
       int myHashCode = sg.hashCode();
 
       // Message de ping

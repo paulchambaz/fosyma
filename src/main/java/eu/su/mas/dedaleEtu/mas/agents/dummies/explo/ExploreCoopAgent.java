@@ -3,7 +3,7 @@ package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
 import jade.core.behaviours.Behaviour;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 public class ExploreCoopAgent extends AbstractDedaleAgent {
   private static final long serialVersionUID = -7969469610241668140L;
 
-  private MapRepresentation myMap;
+  private Knowledge knowledge;
 
   // setup initializes the agent with required behaviors and collaborator list.
   // Arguments must include at least the agent names to cooperate with.
@@ -33,7 +33,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
     }
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
-    behaviours.add(new ExploCoopBehaviour(this, this.myMap, agentNames));
+    behaviours.add(new ExploCoopBehaviour(this, this.knowledge, agentNames));
 
     addBehaviour(new StartMyBehaviours(this, behaviours));
   }

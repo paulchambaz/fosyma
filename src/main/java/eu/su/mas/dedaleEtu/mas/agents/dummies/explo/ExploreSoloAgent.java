@@ -3,7 +3,7 @@ package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploSoloBehaviour;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
 import jade.core.behaviours.Behaviour;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.List;
 public class ExploreSoloAgent extends AbstractDedaleAgent {
 
   private static final long serialVersionUID = -6431752665590433727L;
-  private MapRepresentation myMap;
+  private Knowledge knowledge;
 
   /**
    * This method is automatically called when "agent".start() is executed. Consider that Agent is
@@ -40,7 +40,7 @@ public class ExploreSoloAgent extends AbstractDedaleAgent {
      *
      ************************************************/
 
-    lb.add(new ExploSoloBehaviour(this, this.myMap));
+    lb.add(new ExploSoloBehaviour(this, this.knowledge));
 
     /***
      * MANDATORY TO ALLOW YOUR AGENT TO BE DEPLOYED CORRECTLY

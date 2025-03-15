@@ -6,8 +6,8 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -27,22 +27,22 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
   private static final long serialVersionUID = 8567689731496787661L;
 
   private boolean finished = false;
-  private MapRepresentation myMap;
+  private Knowledge knowledge;
   private List<String> agentNames;
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
-  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
+  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge, List<String> agentNames) {
     super(myagent);
-    this.myMap = myMap;
+    this.knowledge = knowledge;
     this.agentNames = agentNames;
   }
 
   @Override
   public void action() {
-    if (this.myMap == null) {
-      this.myMap = new MapRepresentation();
-      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.myMap, agentNames));
+    if (this.knowledge == null) {
+      this.knowledge = new Knowledge();
+      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.knowledge, agentNames));
     }
 
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
@@ -58,7 +58,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       e.printStackTrace();
     }
 
-    this.myMap.addNode(myPosition.getLocationId(), MapAttribute.closed);
+    this.knowledge.addNode(myPosition.getLocationId(), MapAttribute.closed);
 
     // iterate on observations in order to handle them correctly
     String nextNodeId = null;
@@ -67,9 +67,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       Location accessibleNode = entry.getLeft();
 
       // add new nodes to map representation
-      boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
+      boolean isNewNode = this.knowledge.addNewNode(accessibleNode.getLocationId());
       if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
-        this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
+        this.knowledge.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
         if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
       }
 
@@ -83,13 +83,13 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
             receiversAgents.add(observed);
 
             if (observed.startsWith("Silo")) {
-              this.myMap.setSiloPosition(accessibleNode.getLocationId());
+              this.knowledge.setSiloPosition(accessibleNode.getLocationId());
               System.out.println("Found silo agent at : " + accessibleNode.getLocationId());
             } else if (observed.startsWith("Golem")) {
-              this.myMap.setGolemPosition(accessibleNode.getLocationId());
+              this.knowledge.setGolemPosition(accessibleNode.getLocationId());
               System.out.println("Found golem agent at : " + accessibleNode.getLocationId());
             } else {
-              this.myMap.updateAgentPosition(observed, accessibleNode.getLocationId());
+              this.knowledge.updateAgentPosition(observed, accessibleNode.getLocationId());
             }
             break;
 
@@ -97,7 +97,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
           case DIAMOND:
             // handle treasure observations
             int treasureValue = Integer.parseInt(observed);
-            this.myMap.addTreasure(
+            this.knowledge.addTreasure(
               accessibleNode.getLocationId(),
               observeKind,
               treasureValue,
@@ -135,22 +135,29 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     if (!(receiversAgents.isEmpty())){
       ACLMessage message = Utils.createACLMessage(
         this.myAgent,
-        "SHARE-TOPO",
+        "share-knowledge",
         receiversAgents,
-        this.myMap.getSerializableGraph()
+        this.knowledge.getSerializableGraph()
       );
-      ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+
+      // ACLMessage message = Utils.createACLMessage(
+      //   this.myAgent,
+      //   "SHARE-TOPO",
+      //   receiversAgents,
+      //   this.knowledge.getSerializableGraph()
+      // );
+      // ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
     }
 
 
-    if (!this.myMap.hasOpenNode()) {
+    if (!this.knowledge.hasOpenNode()) {
       finished = true;
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
       return;
     }
 
     if (nextNodeId == null) {
-      nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
+      nextNodeId = this.knowledge.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
     }
 
     MessageTemplate msgTemplate = MessageTemplate.and(
@@ -166,7 +173,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       } catch (UnreadableException e) {
         e.printStackTrace();
       }
-      this.myMap.mergeMap(sgreceived);
+      this.knowledge.mergeMap(sgreceived);
     }
 
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));

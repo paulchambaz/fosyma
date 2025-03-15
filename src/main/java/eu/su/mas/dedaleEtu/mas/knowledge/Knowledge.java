@@ -39,18 +39,8 @@ import eu.su.mas.dedale.env.Observation;
 // Each node in the graph represents a location that can be in different states (open, closed, agent)
 // and edges represent connections between locations. The class also maintains information about
 // treasures, agents, and special locations like silos.
-public class MapRepresentation implements Serializable {
+public class Knowledge implements Serializable {
   private static final long serialVersionUID = -1333959882640838272L;
-
-  // MapAttribute represents the possible states of a node in the map
-  // - agent: Node is currently occupied by an agent
-  // - open: Node is discovered but not fully explored
-  // - closed: Node is fully explored with no further actions needed
-  public enum MapAttribute {
-    agent,
-    open,
-    closed;
-  }
 
   private String defaultNodeStyle =
       "node {fill-color: black; size-mode:fit;text-alignment:under;"
@@ -70,7 +60,7 @@ public class MapRepresentation implements Serializable {
   private SiloData silo;
   private GolemData golem;
 
-  public MapRepresentation() {
+  public Knowledge() {
     System.setProperty("org.graphstream.ui", "javafx");
     this.worldGraph = new SingleGraph("My world vision");
     this.worldGraph.setAttribute("ui.stylesheet", nodeStyle);
@@ -419,8 +409,6 @@ public class MapRepresentation implements Serializable {
     this.worldGraph = null;
   }
 
-  // getSerializableGraph creates a serializable version of the map for communication.
-  // Enables sharing of map information between agents.
   private void serializeGraphTopology() {
     this.serializableGraph = new SerializableSimpleGraph<String, MapAttribute>();
 
@@ -442,9 +430,37 @@ public class MapRepresentation implements Serializable {
     }
   }
 
+  // getSerializableGraph creates a serializable version of the map for communication.
+  // Enables sharing of map information between agents.
   public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializableGraph() {
     serializeGraphTopology();
     return this.serializableGraph;
+  }
+
+  public synchronized Map<String, TreasureData> getTreasures() {
+    return this.treasures;
+  }
+
+  public synchronized Map<String, AgentData> getAgents() {
+    return this.agents;
+  }
+
+  public synchronized SiloData getSilo() {
+    return this.silo;
+  }
+
+  public synchronized GolemData getGolem() {
+    return this.golem;
+  }
+
+  public synchronized SerializableKnowledge getSerializableKnowledge() {
+    return new SerializableKnowledge(
+      this.getSerializableGraph(),
+      this.getTreasures(),
+      this.getAgents(),
+      this.getSilo(),
+      this.getGolem()
+    );
   }
 
   // loadSavedData reconstructs the map from a serialized representation.

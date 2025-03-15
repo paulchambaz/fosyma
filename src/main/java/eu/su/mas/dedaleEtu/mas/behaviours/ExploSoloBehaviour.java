@@ -5,8 +5,8 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import jade.core.behaviours.SimpleBehaviour;
 import java.util.Iterator;
 import java.util.List;
@@ -34,17 +34,17 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
   private boolean finished = false;
 
   /** Current knowledge of the agent regarding the environment */
-  private MapRepresentation myMap;
+  private Knowledge knowledge;
 
-  public ExploSoloBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap) {
+  public ExploSoloBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge) {
     super(myagent);
-    this.myMap = myMap;
+    this.knowledge = knowledge;
   }
 
   @Override
   public void action() {
 
-    if (this.myMap == null) this.myMap = new MapRepresentation();
+    if (this.knowledge == null) this.knowledge = new Knowledge();
 
     // 0) Retrieve the current position
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
@@ -62,23 +62,23 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
       }
 
       // 1) remove the current node from openlist and add it to closedNodes.
-      this.myMap.addNode(myPosition.getLocationId(), MapAttribute.closed);
+      this.knowledge.addNode(myPosition.getLocationId(), MapAttribute.closed);
 
       // 2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
       String nextNodeId = null;
       Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = lobs.iterator();
       while (iter.hasNext()) {
         Location accessibleNode = iter.next().getLeft();
-        boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
+        boolean isNewNode = this.knowledge.addNewNode(accessibleNode.getLocationId());
         // the node may exist, but not necessarily the edge
         if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
-          this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
+          this.knowledge.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
           if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
         }
       }
 
       // 3) while openNodes is not empty, continues.
-      if (!this.myMap.hasOpenNode()) {
+      if (!this.knowledge.hasOpenNode()) {
         // Explo finished
         finished = true;
         System.out.println(
@@ -91,14 +91,14 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
           // no directly accessible openNode
           // chose one, compute the path and take the first step.
           nextNodeId =
-              this.myMap
+              this.knowledge
                   .getShortestPathToClosestOpenNode(myPosition.getLocationId())
                   .get(0); // getShortestPath(myPosition,this.openNodes.get(0)).get(0);
-          // System.out.println(this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"|
+          // System.out.println(this.myAgent.getLocalName()+"-- list= "+this.knowledge.getOpenNodes()+"|
           // nextNode: "+nextNode);
         } else {
           // System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list=
-          // "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
+          // "+this.knowledge.getOpenNodes()+"\n -- nextNode: "+nextNode);
         }
 
         /***************************************************
