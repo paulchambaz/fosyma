@@ -85,10 +85,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
             if (observed.startsWith("Silo")) {
               this.knowledge.setSiloPosition(accessibleNode.getLocationId());
-              System.out.println("Found silo agent at : " + accessibleNode.getLocationId());
             } else if (observed.startsWith("Golem")) {
               this.knowledge.setGolemPosition(accessibleNode.getLocationId());
-              System.out.println("Found golem agent at : " + accessibleNode.getLocationId());
             } else {
               this.knowledge.updateAgentPosition(observed, accessibleNode.getLocationId());
             }
