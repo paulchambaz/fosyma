@@ -14,6 +14,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.HashSet;
 import jade.core.AID;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,16 +26,14 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   private boolean finished = false;
   private MapRepresentation myMap;
-  private List<String> list_agentNames;
+  private List<String> agentNames;
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
-  public ExploCoopBehaviour(
-    final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames
-  ) {
+  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
     super(myagent);
     this.myMap = myMap;
-    this.list_agentNames = agentNames;
+    this.agentNames = agentNames;
   }
 
   // action performs one step of the exploration algorithm:
@@ -59,7 +58,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent).observe();
 
     try {
-      this.myAgent.doWait(1000);
+      this.myAgent.doWait(500);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -69,39 +68,34 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     String nextNodeId = null;
     Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = observations.iterator();
 
-    // Liste agents observés
-    List<String> receivers = new ArrayList<String>();
-
+    List<String> receiversAgents = new ArrayList<>();
     while (iter.hasNext()) {
-      Couple<Location, List<Couple<Observation,String>>> observationsOnNode = iter.next();
-      Location accessibleNode = observationsOnNode.getLeft();
+      var entry = iter.next();
+      Location accessibleNode = entry.getLeft();
+
+      // add new nodes directly to map representation
       boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
-
-      // Récupèration de la liste des observations à cette position
-      List<Couple<Observation, String>> nodeObservations = observationsOnNode.getRight();
-      Iterator<Couple<Observation, String>> iterObservations = nodeObservations.iterator();
-
-      // Test si un agent est observé à la position
-      while (iterObservations.hasNext()){
-        Couple<Observation,String> observe = iterObservations.next();
-        if(observe.getLeft() == Observation.AGENTNAME){
-          receivers.add(observe.getRight());
-        }
-      }
-      
       if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
         this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
         if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
       }
+
+      // recuperate the lits of agents
+      entry.getRight().stream()
+        .filter(obs -> obs.getLeft() == Observation.AGENTNAME)
+        .map(Couple::getRight)
+        .forEach(receiversAgents::add);
+      // remove duplicates
+      receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
     }
 
     // Envoie de la carte
-    if (!(receivers.isEmpty())){
+    if (!(receiversAgents.isEmpty())){
       // Ajout du comportement ici ?
       ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
       msg.setProtocol("SHARE-TOPO");
       msg.setSender(this.myAgent.getAID());
-      for (String agentName : receivers) {
+      for (String agentName : receiversAgents) {
         msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
       }
 

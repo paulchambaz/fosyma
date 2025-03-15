@@ -12,57 +12,39 @@ import jade.lang.acl.ACLMessage;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * The agent periodically share its map. It blindly tries to send all its graph to its friend(s) If
- * it was written properly, this sharing action would NOT be in a ticker behaviour and only a
- * subgraph would be shared.
- *
- * @author hc
- */
 public class ShareMapBehaviour extends SimpleBehaviour {
-
-  private MapRepresentation myMap;
-  private List<String> receivers;
+  private static final long serialVersionUID = -568863390879327961L;
   private boolean finished = false;
 
-  /**
-   * The agent periodically share its map. It blindly tries to send all its graph to its friend(s)
-   * If it was written properly, this sharing action would NOT be in a ticker behaviour and only a
-   * subgraph would be shared.
-   *
-   * @param a the agent
-   * @param mymap (the map to share)
-   * @param receivers the list of agents to send the map to
-   */
-  public ShareMapBehaviour(Agent a, MapRepresentation mymap, List<String> receivers) {
-    super(a);
-    this.myMap = mymap;
-    this.receivers = receivers;
+  private MapRepresentation myMap;
+  private List<String> receiverAgents;
+
+  public ShareMapBehaviour(Agent agent, MapRepresentation myMap, List<String> receiverAgents) {
+    super(agent);
+    this.myMap = myMap;
+    this.receiverAgents = receiverAgents;
   }
 
-  /** */
-  private static final long serialVersionUID = -568863390879327961L;
-
+  // this behaviour sends the full map
   @Override
   public void action() {
-    // 4) At each time step, the agent blindly send all its graph to its surrounding to illustrate
-    // how to share its knowledge (the topology currently) with the the others agents.
-    // If it was written properly, this sharing action should be in a dedicated behaviour set, the
-    // receivers be automatically computed, and only a subgraph would be shared.
-
     ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+
     msg.setProtocol("SHARE-TOPO");
     msg.setSender(this.myAgent.getAID());
-    for (String agentName : receivers) {
+
+    for (String agentName : receiverAgents) {
       msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
     }
 
-    SerializableSimpleGraph<String, MapAttribute> sg = this.myMap.getSerializableGraph();
+    SerializableSimpleGraph<String, MapAttribute> serializableGraph = this.myMap.getSerializableGraph();
+
     try {
-      msg.setContentObject(sg);
+      msg.setContentObject(serializableGraph);
     } catch (IOException e) {
       e.printStackTrace();
     }
+
     ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
   }
 
