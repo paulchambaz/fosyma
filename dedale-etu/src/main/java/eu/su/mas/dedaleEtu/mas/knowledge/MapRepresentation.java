@@ -67,8 +67,8 @@ public class MapRepresentation implements Serializable {
 
   private Map<String, TreasureData> treasures;
   private Map<String, AgentData> agents;
-  private Couple<String, Integer> siloPosition;
-  private Couple<String, Integer> golemPosition;
+  private SiloData silo;
+  private GolemData golem;
 
   public MapRepresentation() {
     System.setProperty("org.graphstream.ui", "javafx");
@@ -83,8 +83,8 @@ public class MapRepresentation implements Serializable {
 
     this.treasures = new HashMap<>();
     this.agents = new HashMap<>();
-    this.siloPosition = null;
-    this.golemPosition = null;
+    this.silo = null;
+    this.golem = null;
   }
 
   // addNode adds or updates a node in the graph with the specified attribute.
@@ -280,7 +280,12 @@ public class MapRepresentation implements Serializable {
   // Silos are special locations where treasures can be deposited.
   // The node is visually highlighted in orange and labeled as "SILO".
   public synchronized void setSiloPosition(String nodeId) {
-    this.siloPosition = new Couple<>(nodeId, 0);
+    if (silo == null) {
+      this.silo = new SiloData(nodeId);
+    } else {
+      this.silo.setPosition(nodeId);
+      this.silo.resetCounter();
+    }
 
     if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
         Node currentNode = this.worldGraph.getNode(nodeId);
@@ -290,30 +295,34 @@ public class MapRepresentation implements Serializable {
   }
 
   public synchronized void ageSiloData() {
-    if (this.siloPosition != null) {
-      int currentCounter = this.siloPosition.getRight();
-      this.siloPosition = new Couple<>(this.siloPosition.getLeft(), currentCounter + 1);
+    if (this.silo != null) {
+      this.silo.incrementCounter();
     }
   }
 
   // getSiloPosition retrieves the location of the silo.
   public synchronized String getSiloPosition() {
-    return (siloPosition != null) ? siloPosition.getLeft() : null;
+    return (this.silo != null) ? this.silo.getPosition() : null;
   }
 
   public synchronized int getSiloUpdateCounter() {
-    return (siloPosition != null) ? siloPosition.getRight() : -1;
+    return (this.silo != null) ? this.silo.getUpdateCounter() : -1;
   }
 
   // getShortestPathToSilo calculates the most efficient path from a given position to the silo.
   // Important for optimizing treasure delivery.
   public synchronized List<String> getShortestPathToSilo(String currentPosition) {
-    if (siloPosition == null) return null;
-    return getShortestPath(currentPosition, siloPosition.getLeft());
+    if (this.silo == null) return null;
+    return getShortestPath(currentPosition, this.silo.getPosition());
   }
 
   public synchronized void setGolemPosition(String nodeId) {
-    this.golemPosition = new Couple<>(nodeId, 0);
+    if (this.golem == null) {
+      this.golem = new GolemData(nodeId);
+    } else {
+      this.golem.setPosition(nodeId);
+      this.golem.resetCounter();
+    }
 
     if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
       Node currentNode = this.worldGraph.getNode(nodeId);
@@ -323,27 +332,26 @@ public class MapRepresentation implements Serializable {
   }
 
   public synchronized void ageGolemData() {
-    if (this.golemPosition != null) {
-      int currentCounter = this.golemPosition.getRight();
-      this.golemPosition = new Couple<>(this.golemPosition.getLeft(), currentCounter + 1);
+    if (this.golem != null) {
+      this.golem.incrementCounter();
     }
   }
 
   public synchronized String getGolemPosition() {
-    return (golemPosition != null) ? golemPosition.getLeft() : null;
+    return (this.golem != null) ? this.golem.getPosition() : null;
   }
 
   public synchronized int getGolemUpdateCounter() {
-    return (golemPosition != null) ? golemPosition.getRight() : -1;
+    return (this.golem != null) ? this.golem.getUpdateCounter() : -1;
   }
 
   public synchronized boolean isGolemNearby(String nodeId, int maxDistance) {
     int MAX_AGE = 10;
-    if (golemPosition == null || golemPosition.getRight() > MAX_AGE) {
+    if (this.golem == null || this.golem.getUpdateCounter() > MAX_AGE) {
       return false;
     }
 
-    List<String> path = getShortestPath(nodeId, golemPosition.getLeft());
+    List<String> path = getShortestPath(nodeId, this.golem.getPosition());
     if (path == null) return false;
 
     return path.size() <= maxDistance;
@@ -442,6 +450,7 @@ public class MapRepresentation implements Serializable {
   // loadSavedData reconstructs the map from a serialized representation.
   // Used when receiving map information from other agents.
   public synchronized void loadSavedData() {
+    // TODO: a réécrire from scratch pour inclure la sauvegarde complete de la representation du savoir de l'agent
     this.worldGraph = new SingleGraph("My world vision");
     this.worldGraph.setAttribute("ui.stylesheet", nodeStyle);
 
@@ -523,6 +532,7 @@ public class MapRepresentation implements Serializable {
       String nodeId = entry.getKey();
       TreasureData receivedTreasure = entry.getValue();
 
+      // TODO: a revoir, on veux probablement juste remplacer l'agent deja present dans la liste
       if (!treasures.containsKey(nodeId) || treasures.get(nodeId).getUpdateCounter() > receivedTreasure.getUpdateCounter()) {
         this.treasures.put(nodeId, receivedTreasure);
       }
@@ -534,21 +544,22 @@ public class MapRepresentation implements Serializable {
       String agentName = entry.getKey();
       AgentData receivedAgent = entry.getValue();
 
+      // TODO: a revoir, on veux probablement juste remplacer l'agent deja present dans la liste
       if (!agents.containsKey(agentName) || agents.get(agentName).getUpdateCounter() > receivedAgent.getUpdateCounter()) {
         this.agents.put(agentName, receivedAgent);
       }
     }
   }
 
-  public void mergeSilo(Couple<String, Integer> siloPosition) {
-    if (siloPosition != null && (this.siloPosition != null || this.siloPosition.getRight() > siloPosition.getRight())) {
-      this.siloPosition = siloPosition;
+  public void mergeSilo(SiloData silo) {
+    if (silo != null && (this.silo != null || this.silo.getUpdateCounter() > silo.getUpdateCounter())) {
+      this.silo.copy(silo);
     }
   }
 
-  public void mergeGolem(Couple<String, Integer> golemPosition) {
-    if (golemPosition != null && (this.golemPosition != null || this.golemPosition.getRight() > golemPosition.getRight())) {
-      this.golemPosition = golemPosition;
+  public void mergeGolem(GolemData golem) {
+    if (golem != null && (this.golem != null || this.golem.getUpdateCounter() > golem.getUpdateCounter())) {
+      this.golem.copy(golem);
     }
   }
 
@@ -556,14 +567,14 @@ public class MapRepresentation implements Serializable {
     SerializableSimpleGraph<String, MapAttribute> serializableGraph, 
     Map<String, TreasureData> treasures,
     Map<String, AgentData> agents,
-    Couple<String, Integer> siloPosition,
-    Couple<String, Integer> golemPosition
+    SiloData silo,
+    GolemData golem
   ) {
     mergeMap(serializableGraph);
     mergeTreasures(treasures);
     mergeAgents(agents);
-    mergeSilo(siloPosition);
-    mergeGolem(golemPosition);
+    mergeSilo(silo);
+    mergeGolem(golem);
   }
 
 
