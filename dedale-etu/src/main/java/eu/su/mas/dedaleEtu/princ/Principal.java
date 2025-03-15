@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.princ;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agents.GateKeeperAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreCoopAgent;
+import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyTankerAgent;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -11,6 +12,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.Assert;
@@ -160,45 +162,58 @@ public class Principal {
     List<AgentController> agentList = new ArrayList<>();
 
     if (ConfigurationFile.COMPUTERisMAIN) {
-      ContainerController mainContainer = containerList.get(ConfigurationFile.LOCAL_CONTAINER_NAME);
-      Assert.assertNotNull("This container does not exist", mainContainer);
-
-      try {
-        Object[] gateKeeperParams = new Object[] {
-          ConfigurationFile.ENVIRONMENT_TYPE,
-          ConfigurationFile.GENERATOR_TYPE,
-          ConfigurationFile.INSTANCE_TOPOLOGY,
-          ConfigurationFile.INSTANCE_CONFIGURATION_ELEMENTS,
-          ConfigurationFile.ACTIVE_DIAMOND,
-          ConfigurationFile.ACTIVE_GOLD,
-          ConfigurationFile.ACTIVE_WELL,
-          ConfigurationFile.GENERATOR_PARAMETERS
-        };
-
-        AgentController gateKeeperAgent = mainContainer.createNewAgent(
-          ConfigurationFile.DEFAULT_GATEKEEPER_NAME,
-          GateKeeperAgent.class.getName(),
-          gateKeeperParams
-        );
-
-        agentList.add(gateKeeperAgent);
-        System.out.println(ConfigurationFile.DEFAULT_GATEKEEPER_NAME + " launched");
-      } catch (StaleProxyException e) {
-        e.printStackTrace();
-      }
+      createGateKeeperAgent(containerList, agentList);
     }
 
     ContainerController agentContainer = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
     Assert.assertNotNull("This container does not exist", agentContainer);
 
-    // create explorer agent elsa
-    createExploreAgent(agentContainer, "Elsa", new Object[]{"Tim"}, agentList);
+    List<String> agents = Arrays.asList("dante", "virgilio", "beatrice", "lucia", "bernardo");
 
-    // create explorer agent tim
-    createExploreAgent(agentContainer, "Tim", new Object[]{"Elsa"}, agentList);
+    for (String agent : agents) {
+      List<String> otherAgents = new ArrayList<>(agents);
+      otherAgents.remove(agent);
+      Object[] otherAgentsArray = otherAgents.toArray();
+      createExploreAgent(agentContainer, agent, otherAgentsArray, agentList);
+    }
+
+    createSiloAgent(agentContainer, agentList);
+    // createGolemAgent(agentContainer, agentList);
 
     System.out.println("Agents created...");
     return agentList;
+  }
+
+  private static void createGateKeeperAgent(
+    HashMap<String, ContainerController> containerList,
+    List<AgentController> agentList
+  ) {
+    ContainerController mainContainer = containerList.get(ConfigurationFile.LOCAL_CONTAINER_NAME);
+    Assert.assertNotNull("This container does not exist", mainContainer);
+
+    try {
+      Object[] gateKeeperParams = new Object[] {
+        ConfigurationFile.ENVIRONMENT_TYPE,
+        ConfigurationFile.GENERATOR_TYPE,
+        ConfigurationFile.INSTANCE_TOPOLOGY,
+        ConfigurationFile.INSTANCE_CONFIGURATION_ELEMENTS,
+        ConfigurationFile.ACTIVE_DIAMOND,
+        ConfigurationFile.ACTIVE_GOLD,
+        ConfigurationFile.ACTIVE_WELL,
+        ConfigurationFile.GENERATOR_PARAMETERS
+      };
+
+      AgentController gateKeeperAgent = mainContainer.createNewAgent(
+        ConfigurationFile.DEFAULT_GATEKEEPER_NAME,
+        GateKeeperAgent.class.getName(),
+        gateKeeperParams
+      );
+
+      agentList.add(gateKeeperAgent);
+      System.out.println(ConfigurationFile.DEFAULT_GATEKEEPER_NAME + " launched");
+    } catch (StaleProxyException e) {
+      e.printStackTrace();
+    }
   }
 
   // createExploreAgent creates an explorer agent with the specified name and
@@ -215,9 +230,50 @@ public class Principal {
         parameters
       );
       agentList.add(agent);
+      System.out.println("Agent " + agentName + " was created");
     } catch (Exception e) {
       e.printStackTrace();
       System.out.println("Failed to create agent: " + agentName);
+    }
+  }
+
+  private static void createSiloAgent(
+    ContainerController container,
+    List<AgentController> agentList
+  ) {
+    try {
+      AgentController siloAgent = createNewDedaleAgent(
+        container,
+        "Silo",
+        DummyTankerAgent.class.getName(),
+        new Object[]{}
+      );
+      agentList.add(siloAgent);
+      System.out.println("Silo agent was created");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to create agent: Tank");
+    }
+
+  }
+
+  private static void createGolemAgent(
+    ContainerController container,
+    List<AgentController> agentList
+  ) {
+    try {
+      AgentController golemAgent = createNewDedaleAgent(
+        container,
+        "Golem",
+        // TODO: replace with proper class: DummyWumpus.class.getName(),
+        "eu.su.mas.dedaleEtu.mas.agents.dummies.wumpus.DummyWumpus",
+        new Object[]{}
+      );
+      agentList.add(golemAgent);
+      System.out.println("Golem agent was created");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to create agent: Golem");
     }
   }
 

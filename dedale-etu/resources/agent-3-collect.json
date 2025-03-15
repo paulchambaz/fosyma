@@ -1,0 +1,68 @@
+[
+  {
+    "agentType": "agentCollect",
+    "agentName": "Dante",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 20,
+    "backPackCapacityDiamond": -1,
+    "detectionRadius": 0,
+    "strengthExpertise": 3,
+    "lockPickingExpertise": 2
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Virgilio",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 50,
+    "backPackCapacityDiamond": -1,
+    "detectionRadius": 0,
+    "strengthExpertise": 1,
+    "lockPickingExpertise": 4
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Beatrice",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 35,
+    "backPackCapacityDiamond": -1,
+    "detectionRadius": 0,
+    "strengthExpertise": 2,
+    "lockPickingExpertise": 3
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Lucia",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 80,
+    "backPackCapacityDiamond": -1,
+    "detectionRadius": 0,
+    "strengthExpertise": 4,
+    "lockPickingExpertise": 1
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Bernardo",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 65,
+    "backPackCapacityDiamond": -1,
+    "detectionRadius": 0,
+    "strengthExpertise": 3,
+    "lockPickingExpertise": 2
+  },
+  {
+    "agentType": "agentTanker",
+    "agentName": "Silo",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 10000,
+    "backPackCapacityDiamond": 10000,
+    "detectionRadius": 0,
+    "strengthExpertise": 1,
+    "lockPickingExpertise": 1
+  }
+]

@@ -63,7 +63,7 @@ public final class ConfigurationFile {
   // public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2023-elements";
 
   // Size of the generated environment, mandatory
-  public static Integer ENVIRONMENT_SIZE = 10;
+  public static Integer ENVIRONMENT_SIZE = 16;
 
   // Parameters required for some generators (see dedale.gitlab.io)
   public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1 = 1;
@@ -87,7 +87,7 @@ public final class ConfigurationFile {
 
   // Must'nt be null as it describes the native agents' capabilities
 
-  public static String INSTANCE_CONFIGURATION_ENTITIES = "resources/agent-2collect.json";
+  public static String INSTANCE_CONFIGURATION_ENTITIES = "resources/agent-3-collect.json";
   // public static String INSTANCE_CONFIGURATION_ENTITIES=null;
   // public static String INSTANCE_CONFIGURATION_ENTITIES="resources/agentExplo.json";
   // public static String INSTANCE_CONFIGURATION_ENTITIES="resources/agentExplo-2.json";
