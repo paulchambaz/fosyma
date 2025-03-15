@@ -43,11 +43,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   @Override
   public void action() {
-    if (this.knowledge == null) {
-      this.knowledge = new Knowledge();
-      this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, this.knowledge, agentNames, this.myHashList));
-    }
-
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
     if (myPosition == null) {
       return;

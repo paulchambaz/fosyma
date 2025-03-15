@@ -29,23 +29,23 @@ public class SerializableKnowledge implements Serializable {
 
   public SerializableSimpleGraph<String, MapAttribute> getGraph() {
     return this.graph;
-  };
+  }
 
   public Map<String, TreasureData> getTreasures() {
     return this.treasures;
-  };
+  }
 
   public Map<String, AgentData> getAgents() {
     return this.agents;
-  };
+  }
 
   public SiloData getSilo() {
     return this.silo;
-  };
+  }
 
   public GolemData getGolem() {
     return this.golem;
-  };
+  }
 
 }
 

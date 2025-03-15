@@ -26,87 +26,85 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
   private Knowledge knowledge;
   private List<String> receiverAgents;
-  private List<Integer> myHashList;
+  private Memory memory;
 
-  public ShareMapBehaviour(Agent agent, Knowledge knowledge, List<String> receiverAgents, List<Integer> myHashList) {
+  public ShareMapBehaviour(Agent agent, Knowledge knowledge, List<String> receiverAgents, Memory memory) {
     super(agent);
     this.knowledge = knowledge;
     this.receiverAgents = receiverAgents;
-    this.myHashList = myHashList;
+    this.memory = memory;
   }
 
   @Override
   public void action() {
     List<String> receivers = getReceivers();
 
-    if (!(receivers.isEmpty())){
-      SerializableSimpleGraph<String, MapAttribute> sg = this.knowledge.getSerializableGraph();
-      int myHashCode = this.knowledge.getSerializableKnowledge().hashCode();
+    // we have no one to talk to so we can skip the rest of this behaviour
+    if (receivers.isEmpty()) {
+      return;
+    }
 
-      // Message de ping
-      ACLMessage msgPing = new ACLMessage(ACLMessage.INFORM);
-      msgPing.setSender(this.myAgent.getAID());
-      msgPing.setProtocol("PING");
-      msgPing.setContent(String.valueOf(myHashCode));
-      for (String agentName : receivers) {
-        msgPing.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-      }
-      
-      // System.out.println("Agent " + this.myAgent.getLocalName() + " is trying to reach its friends");
-      ((AbstractDedaleAgent) this.myAgent).sendMessage(msgPing);
+    // TODO: we may want to change that since the communication radius is
+    // larger than the observation radius
 
-      MessageTemplate msgTemplatePing = MessageTemplate.and(
-        MessageTemplate.MatchProtocol("PING"),
-        MessageTemplate.MatchPerformative(ACLMessage.INFORM)
-      );
-      // Attends une reponse de requete (en Milllisecondes)
-      ACLMessage msgReceivedPing = this.myAgent.blockingReceive(msgTemplatePing, 100);
-      
-      if (msgReceivedPing != null) {
-        int hashPing = 0;
-        try {
-          hashPing = Integer.parseInt(msgReceivedPing.getContent());
-        } catch (NumberFormatException e) {
-          e.printStackTrace();
-        }
-
-        if (myHashList.contains(hashPing)){
-          // Message de requete pour envoi de la carte
-          ACLMessage msgRequest = new ACLMessage(ACLMessage.INFORM);
-          msgRequest.setSender(this.myAgent.getAID());
-          msgRequest.setProtocol("REQUEST-SEND-MAP");
-          msgRequest.setContent("liste des noeuds ouverts");
-          for (String agentName : receivers) {
-            msgRequest.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-          }
-
-          // System.out.println("Agent " + this.myAgent.getLocalName() + " is sending a request");
-          ((AbstractDedaleAgent) this.myAgent).sendMessage(msgRequest);
-        } else {
-          MessageTemplate msgTemplateRequest = MessageTemplate.and(
-            MessageTemplate.MatchProtocol("REQUEST-SEND-MAP"),
-            MessageTemplate.MatchPerformative(ACLMessage.INFORM)
-          );
-          ACLMessage msgReceivedRequest = this.myAgent.blockingReceive(msgTemplateRequest, 100);
-
-          // Message d'envoie de carte
-          ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-          msg.setProtocol("SHARE-TOPO");
-          msg.setSender(this.myAgent.getAID());
-          for (String agentName : receivers) {
-            msg.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-          }
-
-          try {
-            msg.setContentObject(sg);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-          // System.out.println("Agent " + this.myAgent.getLocalName() + " is sending its map");
-          ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
-        }
+    while (ACLMessage message = getMessage("ping")) {
+      // TODO: we should skip the ping phase since we have already an
+      // interlocutor to talk to
+      // TODO: even better  we should filter messages by the id of the agents
+      // from the receivers
+      //
+      int hashPing;
+      try {
+        hashPing = Integer.parseInt(messageReceivedPing.getContent());
+      } catch (NumberFormatException e) {
+        e.printStackTrace();
       }
     }
+
+    int hash = this.memory.addHash(this.knowledge.getSerializableKnowledge());
+
+    ACLMessage message = Utils.createACLMessage(
+      this.myAgent,
+      "ping",
+      receivers,
+      String.valueOf(hash)
+    );
+    ((AbstractDedaleAgent) this.myAgent).sendMessage(msgPing);
+
+    // TODO: maybe wrong protocol
+    ACLMessage messageReceivedPing = waitForMessage("request-send-map", 100);
+
+    // since no message was received before the timeout, we can assume the
+    // other agent is gone and go do something else with our life
+    if (messageReceivedPing == null) {
+      return;
+    }
+
+    if (this.memory.hasHash(hashPing)) {
+      // our knowledge is fresher than the agent we are talking to
+      // we should help them get more informed by sending the map
+      ACLMessage message = Utils.createACLMessage(
+        this.myAgent,
+        "knowledge-exchange",
+        receivers,
+        this.knowledge.getSerializedKnowledge()
+      );
+      ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+    } else {
+      // we have not been able to find the knowledge representation in our memory
+      // we should first ask them if their knowledge is fresher that ours before continuing
+      ACLMessage message = Utils.createACLMessage(
+        this.myAgent,
+        // TODO: this is not exactly the same ping be careful
+        "ping",
+        receivers,
+        String.valueOf(hash)
+      );
+      ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+    }
+
+    // TODO: here we should do an action instead of listening
+    ACLMessage messageReceivedPing = waitForMessage("request-send-map", 100);
   }
 
   private List<String> getReceivers() {
@@ -126,6 +124,22 @@ public class ShareMapBehaviour extends SimpleBehaviour {
     }
     receivers = new ArrayList<>(new HashSet<>(receivers));
     return receivers;
+  }
+
+  private ACLMessage getMessage(String protocol) {
+    return this.myAgent.receive(
+      MessageTemplate.and(
+        MessageTemplate.MatchProtocol(protocol),
+        MessageTemplate.MatchPerformative(ACLMessage.INFORM)
+    ));
+  }
+
+  private ACLMessage waitForMessage(String protocol, int timeout) {
+    return this.myAgent.blockingReceive(
+      MessageTemplate.and(
+        MessageTemplate.MatchProtocol(protocol),
+        MessageTemplate.MatchPerformative(ACLMessage.INFORM)
+    ), timeout); // blocking for at most 100ms
   }
 
   @Override
