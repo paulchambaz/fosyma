@@ -15,7 +15,6 @@ class Memory {
     public Integer addHash(SerializableKnowledge knowledge) {
         Integer hash = knowledge.hashCode();
         
-        // If we've reached capacity, remove the oldest element
         if (hashDeque.size() >= maxSize) {
             hashDeque.removeFirst();
         }

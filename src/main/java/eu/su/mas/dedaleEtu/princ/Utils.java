@@ -17,8 +17,10 @@ public class Utils {
     ACLMessage message = new ACLMessage(ACLMessage.INFORM);
     message.setProtocol(protocol);
     message.setSender(author.getAID());
-    for (String agentName : receivers) {
-      message.addReceiver(new AID(agentName, AID.ISLOCALNAME));
+    if (receivers != null) {
+      for (String agentName : receivers) {
+        message.addReceiver(new AID(agentName, AID.ISLOCALNAME));
+      }
     }
 
     try {
