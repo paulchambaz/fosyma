@@ -1,17 +1,19 @@
 package eu.su.mas.dedaleEtu.princ;
 
-class Communication {
-  private String friend;
+import jade.core.AID;
+
+public class Communication {
+  private AID friend;
   private String protocol;
   private boolean shouldSpeak;
 
-  public Communication(String friend, String protocol, boolean shouldSpeak) {
+  public Communication(AID friend, String protocol, boolean shouldSpeak) {
     this.friend = friend;
     this.protocol = protocol;
     this.shouldSpeak = shouldSpeak;
   }
 
-  public String getFriend() { return this.friend; }
+  public AID getFriend() { return this.friend; }
   public String getProtocol() { return this.protocol; }
 
   public boolean shouldSpeak() {

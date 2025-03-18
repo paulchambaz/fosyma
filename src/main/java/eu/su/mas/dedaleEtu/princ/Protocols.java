@@ -1,7 +1,11 @@
 package eu.su.mas.dedaleEtu.princ;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.ACLMessage;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import java.util.Iterator;
 
 public class Protocols {
   public static Communication handshake(Agent agent, int timeout, String protocol) {
@@ -36,21 +40,27 @@ public class Protocols {
     // but in the case we have gotten a response, either from the initial call
     // or from the bottle to the sea, then we should get information about that
     // content
-    String friend = response.getSender();
+    AID friend = response.getSender();
     String friendProtocol = (String) response.getContent();
 
-    boolean chooses = agent.getLocalName().compareTo(friend) <= 0;
+    boolean chooses = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
 
     // if the response is send to me, then it means it was a response from the friend
     // if the response is not then it means it was the initial broadcast
-    String sendto = response.getReceiver();
-    if (sendto != null) {
+    Iterator sendto = response.getAllReceiver();
+    int count = 0;
+    while (sendto.hasNext()) {
+      count += 1;
+      sendto.next();
+    }
+    if (count == 1) {
       return new Communication(friend, friendProtocol, chooses);
     }
 
     // we then decide which protocol to use - by convention, we will always use
     // the protocol of the agent with the lowest name in the topological order
-    // TODO: in the future it is coherent to send both a protocol and a priority
+    // TODO: in the future it is coherent to send both a protocol and a
+    // priority - but not for now
     String usedProtocol = (chooses) ? protocol : friendProtocol;
 
     // finally, we sent to the friend that we have gotten what protocol we will
@@ -66,7 +76,7 @@ public class Protocols {
     // perturb future communications
     MessageTemplate cleanupFilter = MessageTemplate.and(
       filter,
-      MessageTemplate.MatchSender(friend),
+      MessageTemplate.MatchSender(friend)
     );
     do {
       response = agent.receive(cleanupFilter);

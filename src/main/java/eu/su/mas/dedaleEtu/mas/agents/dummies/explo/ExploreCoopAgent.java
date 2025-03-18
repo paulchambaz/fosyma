@@ -3,7 +3,9 @@ package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.Memory;
 import jade.core.behaviours.Behaviour;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,6 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 
   private Knowledge knowledge;
   private Memory memory;
-  // private List<Integer> myHashList;
 
   // setup initializes the agent with required behaviors and collaborator list.
   // Arguments must include at least the agent names to cooperate with.
@@ -24,7 +25,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
     super.setup();
 
     this.knowledge = new Knowledge();
-    this.memory = new Memory();
+    this.memory = new Memory(512);
 
     final Object[] args = getArguments();
     if (args.length == 0) {

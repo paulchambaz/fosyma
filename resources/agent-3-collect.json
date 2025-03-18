@@ -34,17 +34,6 @@
   },
   {
     "agentType": "agentCollect",
-    "agentName": "Lucia",
-    "communicationRange": 3,
-    "initialLocation": "free",
-    "backPackCapacityGold": 80,
-    "backPackCapacityDiamond": -1,
-    "detectionRadius": 0,
-    "strengthExpertise": 4,
-    "lockPickingExpertise": 1
-  },
-  {
-    "agentType": "agentCollect",
     "agentName": "Bernardo",
     "communicationRange": 3,
     "initialLocation": "free",

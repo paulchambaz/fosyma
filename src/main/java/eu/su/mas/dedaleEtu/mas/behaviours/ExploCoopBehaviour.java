@@ -1,26 +1,21 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.Memory;
 import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.HashSet;
-import jade.core.AID;
-import java.io.IOException;
 import java.util.ArrayList;
-
-import eu.su.mas.dedaleEtu.princ.Utils;
 
 // ExploCoopBehaviour implements cooperative exploration logic for agents
 // to discover and map an environment while sharing topological information.
@@ -29,16 +24,13 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   private boolean finished = false;
   private Knowledge knowledge;
-  private List<String> agentNames;
-  private List<Integer> myHashList;
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
-  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge, List<String> agentNames, List<Integer> myHashList) {
+  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge, List<String> agentNames,
+      Memory memory) {
     super(myagent);
     this.knowledge = knowledge;
-    this.agentNames = agentNames;
-    this.myHashList = myHashList;
   }
 
   @Override
@@ -48,11 +40,12 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       return;
     }
 
-    List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent).observe();
+    List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent)
+        .observe();
 
     try {
       this.myAgent.doWait(500);
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
@@ -68,7 +61,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       boolean isNewNode = this.knowledge.addNewNode(accessibleNode.getLocationId());
       if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
         this.knowledge.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
-        if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
+        if (nextNodeId == null && isNewNode)
+          nextNodeId = accessibleNode.getLocationId();
       }
 
       // collect agent names
@@ -93,18 +87,19 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
             // handle treasure observations
             int treasureValue = Integer.parseInt(observed);
             this.knowledge.addTreasure(
-              accessibleNode.getLocationId(),
-              observeKind,
-              treasureValue,
-              -1, // default lock strength until we observe it
-              -1 // default pick strength until we observe it
+                accessibleNode.getLocationId(),
+                observeKind,
+                treasureValue,
+                -1, // default lock strength until we observe it
+                -1 // default pick strength until we observe it
             );
             break;
 
           case STENCH:
           case WIND:
             // TODO: handle environmental cues
-            // TODO: it would be good to use the proper logs on the gui that operates in proper sync time
+            // TODO: it would be good to use the proper logs on the gui that operates in
+            // proper sync time
             System.out.println("Environmental cue detected: " + observeKind);
             break;
 
@@ -127,40 +122,26 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
     // if there are neighbours - it initiates the knowledge exchange protocol
     receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
-    if (!(receiversAgents.isEmpty())){
-      ACLMessage message = Utils.createACLMessage(
-        this.myAgent,
-        "knowledge-exchange",
-        receiversAgents,
-        this.knowledge.getSerializableKnowledge()
-      );
-
-      // ACLMessage message = Utils.createACLMessage(
-      //   this.myAgent,
-      //   "SHARE-TOPO",
-      //   receiversAgents,
-      //   this.knowledge.getSerializableGraph()
-      // );
-      // ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+    if (!(receiversAgents.isEmpty())) {
+      // TODO: share map
     }
 
-
-    // if there are no more nodes to be learnt about the graph, then we should switch to a simpler protocol
+    // if there are no more nodes to be learnt about the graph, then we should
+    // switch to a simpler protocol
     if (!this.knowledge.hasOpenNode()) {
       finished = true;
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
       return;
     }
 
-    // if there are still nodes to be learned 
+    // if there are still nodes to be learned
     if (nextNodeId == null) {
       nextNodeId = this.knowledge.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
     }
 
     MessageTemplate messageTemplate = MessageTemplate.and(
-      MessageTemplate.MatchProtocol("knowledge-exchange"),
-      MessageTemplate.MatchPerformative(ACLMessage.INFORM)
-    );
+        MessageTemplate.MatchProtocol("knowledge-exchange"),
+        MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 
     ACLMessage messageReceived = this.myAgent.receive(messageTemplate);
     if (messageReceived != null) {
@@ -174,8 +155,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     }
 
     // mise a jour hashList
-    int myHashCode = this.knowledge.getSerializableKnowledge().hashCode();
-    myHashList.add(myHashCode);
+    // int myHashCode = this.knowledge.getSerializableKnowledge().hashCode();
+    // myHashList.add(myHashCode);
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
   }
 

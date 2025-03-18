@@ -3,7 +3,7 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-class Memory {
+public class Memory {
     private final Deque<Integer> hashDeque;
     private final int maxSize;
 

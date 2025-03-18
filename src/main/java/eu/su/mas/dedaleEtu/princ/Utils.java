@@ -11,16 +11,14 @@ public class Utils {
   public static ACLMessage createACLMessage(
     Agent author,
     String protocol,
-    List<String> receivers,
+    AID receiver,
     Serializable content
   ) {
     ACLMessage message = new ACLMessage(ACLMessage.INFORM);
     message.setProtocol(protocol);
     message.setSender(author.getAID());
-    if (receivers != null) {
-      for (String agentName : receivers) {
-        message.addReceiver(new AID(agentName, AID.ISLOCALNAME));
-      }
+    if (receiver != null) {
+      message.addReceiver(receiver);
     }
 
     try {
