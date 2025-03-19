@@ -8,12 +8,15 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import java.util.Iterator;
 
 public class Protocols {
+
+  private static String PROTOCOL_HANDSHAKE = "handshake";
+
   public static Communication handshake(Agent agent, int timeout, String protocol) {
     // first, we test if there is already a handshake sent our way
 
     MessageTemplate filter = MessageTemplate.and(
         MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-        MessageTemplate.MatchProtocol("handshake"));
+        MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE));
 
     ACLMessage response = agent.receive(filter);
 
@@ -22,7 +25,7 @@ public class Protocols {
       // agent, then await for a response
 
       ACLMessage bottleToSea = Utils.createACLMessage(
-          agent, "handshake", null, protocol);
+          agent, PROTOCOL_HANDSHAKE, null, protocol);
       ((AbstractDedaleAgent) agent).sendMessage(bottleToSea);
 
       response = agent.blockingReceive(filter, timeout);
@@ -39,7 +42,13 @@ public class Protocols {
     // or from the bottle to the sea, then we should get information about that
     // content
     AID friend = response.getSender();
-    String friendProtocol = (String) response.getContent();
+    String friendProtocol;
+    try {
+      friendProtocol = (String) response.getContentObject();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
 
     boolean chooses = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
 
@@ -65,7 +74,7 @@ public class Protocols {
     // finally, we sent to the friend that we have gotten what protocol we will
     // actually use for the communication
     ACLMessage message = Utils.createACLMessage(
-        agent, "handshake", friend, usedProtocol);
+        agent, PROTOCOL_HANDSHAKE, friend, usedProtocol);
     ((AbstractDedaleAgent) agent).sendMessage(message);
 
     // cleanup in case of asynchronicity - because we can be already certain

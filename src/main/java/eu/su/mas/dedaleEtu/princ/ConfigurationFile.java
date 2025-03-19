@@ -28,61 +28,22 @@ public final class ConfigurationFile {
 
   // The environment is either manually designed, or generated with a specific
   // generator.
-  public static GeneratorType GENERATOR_TYPE = GeneratorType.MANUAL;
+  public static GeneratorType GENERATOR_TYPE = GeneratorType.GS_GRID;
 
   // The GateKeeper is in charge of the Platform and of the agents within, do not
   // change its name.
   public static String DEFAULT_GATEKEEPER_NAME = "GK";
 
   // Give the topology
-
-  // public static String INSTANCE_TOPOLOGY=null;
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/topology/map2020-topologyExam1-graph.dgs";
-  // public static String INSTANCE_TOPOLOGY="resources/topology/HouatTopology";
   public static String INSTANCE_TOPOLOGY = "resources/topology/map2018-topology";
-
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/topology/map2021-topologyExam1-tree.dgs";
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/interlocking/mapInterlocking2-topology";
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/topology/map2023-topologyExam.dgs";
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/topology/map2020-topologyExam1-graph.dgs";
-  // public static String INSTANCE_TOPOLOGY="resources/map2018-topology";
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam1-draft.dgs";
-  // public static String
-  // INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam-V2b.dgs";
-  // public static String INSTANCE_TOPOLOGY="resources/map2019-topologyExam1";
 
   // Give the elements available on the map, if any
   // If the environment is loaded but you do not want to define elements on the
   // map
-
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/distributedExploration/emptyMap";
-
-  // otherwise
-
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2019-elementsExam1";
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/Houat-elements";
   public static String INSTANCE_CONFIGURATION_ELEMENTS = "resources/treasureHunt/map2018-elements.json";
 
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/interlocking/mapInterlocking2-elements";
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/map2018-elements";
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/mapInterlocking2-elements";
-  // public static String
-  // INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2023-elements";
-
   // Size of the generated environment, mandatory
-  public static Integer ENVIRONMENT_SIZE = 10;
+  public static Integer ENVIRONMENT_SIZE = 4;
 
   // Parameters required for some generators (see dedale.gitlab.io)
   public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1 = 1;
@@ -105,55 +66,5 @@ public final class ConfigurationFile {
   public static boolean ACTIVE_DIAMOND = true;
 
   // Must'nt be null as it describes the native agents' capabilities
-
   public static String INSTANCE_CONFIGURATION_ENTITIES = "resources/agent-3-collect.json";
-  // public static String INSTANCE_CONFIGURATION_ENTITIES=null;
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/agentExplo.json";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/agentExplo-2.json";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/agentExploCoop-2.json";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/treasureHunt/map2023-entities.json";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/treasureHunt/agentTankerCollect.json";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/agentKeyboardControlled";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/hunt/map2020-entitiesTree";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/hunt/map2021-entitiesTree";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/hunt/map2020-entitiesGraph";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/hunt/map2021-entitiesGraph";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/map2018-entities2";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/map2019-entitiesExam1";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/monoAgent-entities";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="resources/mapInterlocking2-entities";
-
-  // public static String INSTANCE_CONFIGURATION_ENTITIES=null;
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentExplo";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/agentExploSolo";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/agentExploCoop-2";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentTanker";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentCollect";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-entities";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentGolem";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2018-agentTankerCollect";
-  // public static String
-  // INSTANCE_CONFIGURATION_ENTITIES="src/test/java/resources/map2019-entitiesExam1";
 }

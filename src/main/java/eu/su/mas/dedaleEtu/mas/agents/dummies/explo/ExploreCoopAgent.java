@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.KnowledgeVisualizationBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
 import jade.core.behaviours.Behaviour;
@@ -37,6 +38,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(new ExploCoopBehaviour(this, this.knowledge));
+    behaviours.add(new ShareMapBehaviour(this, this.knowledge));
     behaviours.add(new KnowledgeVisualizationBehaviour(this.knowledge));
 
     addBehaviour(new StartMyBehaviours(this, behaviours));

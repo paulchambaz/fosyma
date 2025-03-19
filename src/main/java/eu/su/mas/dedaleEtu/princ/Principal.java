@@ -163,7 +163,9 @@ public class Principal {
     ContainerController agentContainer = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
     Assert.assertNotNull("This container does not exist", agentContainer);
 
-    List<String> agents = Arrays.asList("dante", "virgilio", "beatrice", "bernardo");
+    // List<String> agents = Arrays.asList("dante", "virgilio", "beatrice",
+    // "bernardo");
+    List<String> agents = Arrays.asList("dante", "virgilio");
 
     for (String agent : agents) {
       List<String> otherAgents = new ArrayList<>(agents);
