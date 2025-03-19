@@ -9,16 +9,15 @@ import jade.core.Agent;
 
 public class Utils {
   public static ACLMessage createACLMessage(
-    Agent author,
-    String protocol,
-    List<String> receivers,
-    Serializable content
-  ) {
+      Agent author,
+      String protocol,
+      AID receiver,
+      Serializable content) {
     ACLMessage message = new ACLMessage(ACLMessage.INFORM);
     message.setProtocol(protocol);
     message.setSender(author.getAID());
-    for (String agentName : receivers) {
-      message.addReceiver(new AID(agentName, AID.ISLOCALNAME));
+    if (receiver != null) {
+      message.addReceiver(receiver);
     }
 
     try {
@@ -30,4 +29,3 @@ public class Utils {
     return message;
   }
 }
-

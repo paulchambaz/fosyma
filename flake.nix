@@ -15,6 +15,17 @@
       buildPkgs = with pkgs; [
         pkg-config
         scdoc
+        fyne
+        libGL
+        xorg.libXxf86vm
+        xorg.libX11.dev
+        xorg.libXcursor
+        xorg.libXi
+        xorg.libXinerama
+        xorg.libXrandr
+        xorg.libXxf86vm
+        libxkbcommon
+        wayland
       ];
 
       libPkgs = with pkgs; [
@@ -30,6 +41,10 @@
       devShell = pkgs.mkShell {
         nativeBuildInputs = buildPkgs;
         buildInputs = libPkgs ++ devPkgs;
+
+        shellHook = ''
+          export LD_LIBRARY_PATH=${pkgs.libGL}/lib:${pkgs.xorg.libXxf86vm}/lib:$LD_LIBRARY_PATH
+        '';
       };
     });
 }

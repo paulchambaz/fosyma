@@ -34,11 +34,10 @@ public class Principal {
       runtime = createEmptyPlatform(containerList);
     } else {
       containerList.putAll(createAndConnectContainer(
-        ConfigurationFile.LOCAL_CONTAINER_NAME,
-        ConfigurationFile.PLATFORM_HOSTNAME,
-        ConfigurationFile.PLATFORM_ID,
-        ConfigurationFile.PLATFORM_PORT
-      ));
+          ConfigurationFile.LOCAL_CONTAINER_NAME,
+          ConfigurationFile.PLATFORM_HOSTNAME,
+          ConfigurationFile.PLATFORM_ID,
+          ConfigurationFile.PLATFORM_PORT));
     }
 
     agentList = createAgents(containerList);
@@ -53,10 +52,9 @@ public class Principal {
 
     // create a platform (main container + DF + AMS)
     Profile mainProfile = new ProfileImpl(
-      ConfigurationFile.PLATFORM_HOSTNAME,
-      ConfigurationFile.PLATFORM_PORT,
-      ConfigurationFile.PLATFORM_ID
-    );
+        ConfigurationFile.PLATFORM_HOSTNAME,
+        ConfigurationFile.PLATFORM_PORT,
+        ConfigurationFile.PLATFORM_ID);
     System.out.println("Launching a main-container..." + mainProfile);
     AgentContainer mainContainerRef = runtime.createMainContainer(mainProfile);
 
@@ -78,19 +76,18 @@ public class Principal {
 
     // Create the standard set of containers
     String[] containerNames = {
-      ConfigurationFile.LOCAL_CONTAINER_NAME,
-      ConfigurationFile.LOCAL_CONTAINER2_NAME,
-      ConfigurationFile.LOCAL_CONTAINER3_NAME,
-      ConfigurationFile.LOCAL_CONTAINER4_NAME,
+        ConfigurationFile.LOCAL_CONTAINER_NAME,
+        ConfigurationFile.LOCAL_CONTAINER2_NAME,
+        ConfigurationFile.LOCAL_CONTAINER3_NAME,
+        ConfigurationFile.LOCAL_CONTAINER4_NAME,
     };
 
     for (String containerName : containerNames) {
       ProfileImpl containerProfile = new ProfileImpl(
-        ConfigurationFile.PLATFORM_HOSTNAME,
-        ConfigurationFile.PLATFORM_PORT,
-        ConfigurationFile.PLATFORM_ID
-      );
-      
+          ConfigurationFile.PLATFORM_HOSTNAME,
+          ConfigurationFile.PLATFORM_PORT,
+          ConfigurationFile.PLATFORM_ID);
+
       containerProfile.setParameter(Profile.CONTAINER_NAME, containerName);
       System.out.println("Launching container " + containerProfile);
       ContainerController containerRef = runtime.createAgentContainer(containerProfile);
@@ -105,8 +102,7 @@ public class Principal {
   // existing platform. Used for distributed deployment across multiple
   // machines.
   private static HashMap<String, ContainerController> createAndConnectContainer(
-    String containerName, String host, String platformID, Integer port
-  ) {
+      String containerName, String host, String platformID, Integer port) {
     HashMap<String, ContainerController> containerList = new HashMap<>();
     Runtime runtime = Runtime.instance();
 
@@ -115,11 +111,10 @@ public class Principal {
     }
 
     System.out.println(
-      "Create and Connect container: " + containerName
-      + ", host : " + host
-      + ", platformID: " + platformID
-      + ", port: " + port
-    );
+        "Create and Connect container: " + containerName
+            + ", host : " + host
+            + ", platformID: " + platformID
+            + ", port: " + port);
 
     ProfileImpl containerProfile = new ProfileImpl(host, port, platformID);
     containerProfile.setParameter(Profile.CONTAINER_NAME, containerName);
@@ -143,7 +138,8 @@ public class Principal {
 
       // create sniffer agent
       System.out.println("Launching sniffer agent on the main container...");
-      AgentController snifferAgent = mainContainer.createNewAgent("sniffeur", "jade.tools.sniffer.Sniffer", new Object[0]);
+      AgentController snifferAgent = mainContainer.createNewAgent("sniffeur", "jade.tools.sniffer.Sniffer",
+          new Object[0]);
       snifferAgent.start();
 
     } catch (StaleProxyException e) {
@@ -156,8 +152,7 @@ public class Principal {
   // explorer agents. Initializes agents with appropriate parameters based on
   // configuration.
   private static List<AgentController> createAgents(
-      HashMap<String, ContainerController> containerList
-  ) {
+      HashMap<String, ContainerController> containerList) {
     System.out.println("Launching agents...");
     List<AgentController> agentList = new ArrayList<>();
 
@@ -185,29 +180,27 @@ public class Principal {
   }
 
   private static void createGateKeeperAgent(
-    HashMap<String, ContainerController> containerList,
-    List<AgentController> agentList
-  ) {
+      HashMap<String, ContainerController> containerList,
+      List<AgentController> agentList) {
     ContainerController mainContainer = containerList.get(ConfigurationFile.LOCAL_CONTAINER_NAME);
     Assert.assertNotNull("This container does not exist", mainContainer);
 
     try {
       Object[] gateKeeperParams = new Object[] {
-        ConfigurationFile.ENVIRONMENT_TYPE,
-        ConfigurationFile.GENERATOR_TYPE,
-        ConfigurationFile.INSTANCE_TOPOLOGY,
-        ConfigurationFile.INSTANCE_CONFIGURATION_ELEMENTS,
-        ConfigurationFile.ACTIVE_DIAMOND,
-        ConfigurationFile.ACTIVE_GOLD,
-        ConfigurationFile.ACTIVE_WELL,
-        ConfigurationFile.GENERATOR_PARAMETERS
+          ConfigurationFile.ENVIRONMENT_TYPE,
+          ConfigurationFile.GENERATOR_TYPE,
+          ConfigurationFile.INSTANCE_TOPOLOGY,
+          ConfigurationFile.INSTANCE_CONFIGURATION_ELEMENTS,
+          ConfigurationFile.ACTIVE_DIAMOND,
+          ConfigurationFile.ACTIVE_GOLD,
+          ConfigurationFile.ACTIVE_WELL,
+          ConfigurationFile.GENERATOR_PARAMETERS
       };
 
       AgentController gateKeeperAgent = mainContainer.createNewAgent(
-        ConfigurationFile.DEFAULT_GATEKEEPER_NAME,
-        GateKeeperAgent.class.getName(),
-        gateKeeperParams
-      );
+          ConfigurationFile.DEFAULT_GATEKEEPER_NAME,
+          GateKeeperAgent.class.getName(),
+          gateKeeperParams);
 
       agentList.add(gateKeeperAgent);
       System.out.println(ConfigurationFile.DEFAULT_GATEKEEPER_NAME + " launched");
@@ -219,16 +212,14 @@ public class Principal {
   // createExploreAgent creates an explorer agent with the specified name and
   // parameters. Adds the created agents to the provided agent list.
   private static void createExploreAgent(
-    ContainerController container, String agentName, Object[] parameters,
-    List<AgentController> agentList
-  ) {
+      ContainerController container, String agentName, Object[] parameters,
+      List<AgentController> agentList) {
     try {
       AgentController agent = createNewDedaleAgent(
-        container,
-        agentName,
-        ExploreCoopAgent.class.getName(),
-        parameters
-      );
+          container,
+          agentName,
+          ExploreCoopAgent.class.getName(),
+          parameters);
       agentList.add(agent);
       System.out.println("Agent " + agentName + " was created");
     } catch (Exception e) {
@@ -238,16 +229,14 @@ public class Principal {
   }
 
   private static void createSiloAgent(
-    ContainerController container,
-    List<AgentController> agentList
-  ) {
+      ContainerController container,
+      List<AgentController> agentList) {
     try {
       AgentController siloAgent = createNewDedaleAgent(
-        container,
-        "Silo",
-        DummyTankerAgent.class.getName(),
-        new Object[]{}
-      );
+          container,
+          "Silo",
+          DummyTankerAgent.class.getName(),
+          new Object[] {});
       agentList.add(siloAgent);
       System.out.println("Silo agent was created");
     } catch (Exception e) {
@@ -258,17 +247,15 @@ public class Principal {
   }
 
   private static void createGolemAgent(
-    ContainerController container,
-    List<AgentController> agentList
-  ) {
+      ContainerController container,
+      List<AgentController> agentList) {
     try {
       AgentController golemAgent = createNewDedaleAgent(
-        container,
-        "Golem",
-        // TODO: replace with proper class: DummyWumpus.class.getName(),
-        "eu.su.mas.dedaleEtu.mas.agents.dummies.wumpus.DummyWumpus",
-        new Object[]{}
-      );
+          container,
+          "Golem",
+          // TODO: replace with proper class: DummyWumpus.class.getName(),
+          "eu.su.mas.dedaleEtu.mas.agents.dummies.wumpus.DummyWumpus",
+          new Object[] {});
       agentList.add(golemAgent);
       System.out.println("Golem agent was created");
     } catch (Exception e) {
@@ -302,10 +289,9 @@ public class Principal {
       String className,
       Object[] additionalParameters) {
     Object[] entityParameters = AbstractDedaleAgent.loadEntityCaracteristics(
-        agentName, 
-        ConfigurationFile.INSTANCE_CONFIGURATION_ENTITIES
-    );
-        
+        agentName,
+        ConfigurationFile.INSTANCE_CONFIGURATION_ENTITIES);
+
     Object[] allParameters = mergeArrays(entityParameters, additionalParameters);
 
     AgentController agent = null;
@@ -314,7 +300,7 @@ public class Principal {
     } catch (StaleProxyException e) {
       e.printStackTrace();
     }
-    
+
     Assert.assertNotNull(agent);
     System.out.println(agentName + " launched");
     return agent;
@@ -324,16 +310,16 @@ public class Principal {
   // entity parameters with additional parameters for agent creation.
   private static Object[] mergeArrays(Object[] array1, Object[] array2) {
     Assert.assertNotNull(array1);
-    
+
     if (array2 == null) {
       return array1;
     }
-    
+
     Object[] result = new Object[array1.length + array2.length];
-    
+
     System.arraycopy(array1, 0, result, 0, array1.length);
     System.arraycopy(array2, 0, result, array1.length, array2.length);
-    
+
     return result;
   }
 }
