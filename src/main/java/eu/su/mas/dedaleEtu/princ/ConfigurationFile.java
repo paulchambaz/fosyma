@@ -43,7 +43,7 @@ public final class ConfigurationFile {
   public static String INSTANCE_CONFIGURATION_ELEMENTS = "resources/treasureHunt/map2018-elements.json";
 
   // Size of the generated environment, mandatory
-  public static Integer ENVIRONMENT_SIZE = 4;
+  public static Integer ENVIRONMENT_SIZE = 12;
 
   // Parameters required for some generators (see dedale.gitlab.io)
   public static Integer OPTIONAL_ADDITIONAL_ENVGENERATOR_PARAM1 = 1;

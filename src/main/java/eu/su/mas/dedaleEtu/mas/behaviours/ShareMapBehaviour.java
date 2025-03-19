@@ -38,7 +38,7 @@ public class ShareMapBehaviour extends SimpleBehaviour {
     System.out.println(
         this.myAgent.getLocalName() + " - result of the handshake protocol : " + comms.getFriend().getLocalName());
 
-    if (comms.getProtocol() != PROTOCOL_NAME) {
+    if (!comms.getProtocol().equals(PROTOCOL_NAME)) {
       // TODO: we should reroute behaviour when changing protocols
       return;
     }
@@ -48,31 +48,47 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
     for (int i = 0; i < 2; i++) {
       if (speaker) {
-        ACLMessage message = Utils.createACLMessage(
-            this.myAgent,
-            PROTOCOL_NAME,
-            friend,
-            this.knowledge.getSerializableKnowledge());
-        ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+        sendKnowledge(friend);
       } else {
-        MessageTemplate filter = MessageTemplate.and(
-            MessageTemplate.and(
-                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchProtocol(PROTOCOL_NAME)),
-            MessageTemplate.MatchSender(friend));
-
-        ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
-
-        SerializableKnowledge knowledgeReceived = null;
-        try {
-          knowledgeReceived = (SerializableKnowledge) message.getContentObject();
-        } catch (UnreadableException e) {
-          e.printStackTrace();
-        }
-        this.knowledge.mergeKnowledge(knowledgeReceived);
+        receiveKnowledge(friend);
       }
       speaker = !speaker;
     }
+  }
+
+  private void sendKnowledge(AID friend) {
+    ACLMessage message = Utils.createACLMessage(
+        this.myAgent,
+        PROTOCOL_NAME,
+        friend,
+        this.knowledge.getSerializableKnowledge());
+    ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+  }
+
+  private void receiveKnowledge(AID friend) {
+    MessageTemplate filter = MessageTemplate.and(
+        MessageTemplate.and(
+            MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.MatchProtocol(PROTOCOL_NAME)),
+        MessageTemplate.MatchSender(friend));
+
+    ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
+
+    if (message == null) {
+      return;
+    }
+
+    SerializableKnowledge knowledgeReceived = null;
+    try {
+      knowledgeReceived = (SerializableKnowledge) message.getContentObject();
+    } catch (UnreadableException e) {
+      e.printStackTrace();
+      return;
+    }
+
+    System.out.println(this.myAgent.getLocalName() + " just received knowledge");
+
+    this.knowledge.mergeKnowledge(knowledgeReceived);
   }
 
   @Override

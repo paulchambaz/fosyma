@@ -19,12 +19,15 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.IdAlreadyInUseException;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
+import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.view.Viewer;
 import eu.su.mas.dedale.env.Observation;
 
 public class Knowledge implements Serializable {
   private static final long serialVersionUID = -1333959882640838272L;
+
+  private String agent;
 
   private Graph worldGraph;
   private Integer nbEdges;
@@ -37,7 +40,8 @@ public class Knowledge implements Serializable {
 
   private KnowledgeVisualization visualization;
 
-  public Knowledge() {
+  public Knowledge(String agent) {
+    this.agent = agent;
     this.worldGraph = new SingleGraph("My world vision");
     this.nbEdges = 0;
     this.treasures = new HashMap<>();
@@ -577,22 +581,26 @@ public class Knowledge implements Serializable {
   }
 
   public void mergeSilo(SiloData silo) {
-    if (silo != null && (this.silo != null || this.silo.getUpdateCounter() > silo.getUpdateCounter())) {
-      if (this.silo == null) {
-        this.silo = silo;
-      } else {
-        this.silo.copy(silo);
-      }
+    if (silo == null) {
+      return;
+    }
+
+    if (this.silo == null) {
+      this.silo = silo;
+    } else if (this.silo.getUpdateCounter() > silo.getUpdateCounter()) {
+      this.silo.copy(silo);
     }
   }
 
   public void mergeGolem(GolemData golem) {
-    if (golem != null && (this.golem != null || this.golem.getUpdateCounter() > golem.getUpdateCounter())) {
-      if (this.golem == null) {
-        this.golem = golem;
-      } else {
-        this.golem.copy(golem);
-      }
+    if (golem == null) {
+      return;
+    }
+
+    if (this.golem == null) {
+      this.golem = golem;
+    } else if (this.golem.getUpdateCounter() > golem.getUpdateCounter()) {
+      this.golem.copy(golem);
     }
   }
 
@@ -623,7 +631,7 @@ public class Knowledge implements Serializable {
 
   public void createVisualization() {
     try {
-      this.visualization = new KnowledgeVisualization();
+      this.visualization = new KnowledgeVisualization(this.agent);
       if (this.visualization.initialize()) {
         attachVisualization(this.visualization);
       } else {
@@ -645,8 +653,10 @@ class KnowledgeVisualization {
   private Viewer viewer;
   private final AtomicBoolean isInitialized = new AtomicBoolean(false);
   private boolean isViewerActive = false;
+  private final String agentName;
 
-  public KnowledgeVisualization() {
+  public KnowledgeVisualization(String agentName) {
+    this.agentName = agentName;
   }
 
   public boolean initialize() {
@@ -673,6 +683,7 @@ class KnowledgeVisualization {
     if (!isViewerActive && viewer == null) {
       Graph graph = knowledge.getGraph();
       if (graph != null) {
+        graph.setAttribute("ui.title", "Knowledge Map - Agent: " + agentName);
         applyGraphStyling(graph);
 
         Platform.runLater(() -> {
@@ -698,12 +709,14 @@ class KnowledgeVisualization {
 
   private void openGui(Graph graph) {
     try {
-      this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
-      viewer.enableAutoLayout();
-      viewer.setCloseFramePolicy(FxViewer.CloseFramePolicy.CLOSE_VIEWER);
-      viewer.addDefaultView(true);
-      graph.display();
-      isViewerActive = true;
+      if (this.viewer == null) {
+        this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+        this.viewer.enableAutoLayout();
+        this.viewer.setCloseFramePolicy(FxViewer.CloseFramePolicy.CLOSE_VIEWER);
+        this.viewer.addDefaultView(true);
+        graph.display();
+        this.isViewerActive = true;
+      }
     } catch (Exception e) {
       System.err.println("Error opening GUI: " + e.getMessage());
       e.printStackTrace();

@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.KnowledgeVisualizationBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
@@ -23,18 +24,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
   protected void setup() {
     super.setup();
 
-    this.knowledge = new Knowledge();
-
-    final Object[] args = getArguments();
-    if (args.length == 0) {
-      System.err.println("Error while creating agent");
-      System.exit(-1);
-    }
-
-    List<String> agentNames = new ArrayList<String>();
-    for (int i = 2; i < args.length; i++) {
-      agentNames.add((String) args[i]);
-    }
+    this.knowledge = new Knowledge(this.getLocalName());
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(new ExploCoopBehaviour(this, this.knowledge));
