@@ -13,8 +13,13 @@ public class Communication {
     this.shouldSpeak = shouldSpeak;
   }
 
-  public AID getFriend() { return this.friend; }
-  public String getProtocol() { return this.protocol; }
+  public AID getFriend() {
+    return this.friend;
+  }
+
+  public String getProtocol() {
+    return this.protocol;
+  }
 
   public boolean shouldSpeak() {
     return this.shouldSpeak;
@@ -24,4 +29,3 @@ public class Communication {
     return !this.shouldSpeak;
   }
 }
-

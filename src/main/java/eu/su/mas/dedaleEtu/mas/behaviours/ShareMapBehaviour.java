@@ -20,63 +20,16 @@ public class ShareMapBehaviour extends SimpleBehaviour {
   private boolean finished = false;
 
   private Knowledge knowledge;
-  // private Memory memory;
+  private List<String> receiverAgents;
 
-  private static int TIMEOUT = 100;
-  private static String PROTOCOL_NAME = "share-map";
-
-  public ShareMapBehaviour(Agent agent, Knowledge knowledge, List<String> receiverAgents, Memory memory) {
+  public ShareMapBehaviour(Agent agent, Knowledge knowledge, List<String> receiverAgents) {
     super(agent);
     this.knowledge = knowledge;
-    // this.memory = memory;
+    this.receiverAgents = receiverAgents;
   }
 
   @Override
   public void action() {
-    Communication comms = Protocols.handshake(this.myAgent, TIMEOUT, PROTOCOL_NAME);
-
-    if (comms == null) {
-      return;
-    }
-
-    if (comms.getProtocol() != PROTOCOL_NAME) {
-      // TODO: it would be smart if we rerouted that behaviour to the
-      // appropriate protocol
-      return;
-    }
-
-    AID friend = comms.getFriend();
-    boolean speaker = comms.shouldSpeak();
-
-    for (int i = 0; i < 2; i++) {
-      if (speaker) {
-        // we send the map
-        ACLMessage message = Utils.createACLMessage(
-            this.myAgent,
-            PROTOCOL_NAME,
-            friend,
-            this.knowledge.getSerializableKnowledge());
-        ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
-      } else {
-        // we receive the map
-        MessageTemplate filter = MessageTemplate.and(
-            MessageTemplate.and(
-                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchProtocol("share-map")),
-            MessageTemplate.MatchSender(friend));
-
-        ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
-
-        SerializableKnowledge knowledgeReceived = null;
-        try {
-          knowledgeReceived = (SerializableKnowledge) message.getContentObject();
-        } catch (UnreadableException e) {
-          e.printStackTrace();
-        }
-        this.knowledge.mergeKnowledge(knowledgeReceived);
-      }
-      speaker = !speaker;
-    }
   }
 
   @Override

@@ -27,14 +27,17 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
-  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge, List<String> agentNames,
-      Memory memory) {
+  public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge) {
     super(myagent);
     this.knowledge = knowledge;
   }
 
   @Override
   public void action() {
+    // if (this.knowledge == null) {
+    // this.knowledge = new Knowledge();
+    // }
+
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
     if (myPosition == null) {
       return;
@@ -97,33 +100,17 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
           case STENCH:
           case WIND:
-            // TODO: handle environmental cues
-            // TODO: it would be good to use the proper logs on the gui that operates in
-            // proper sync time
             System.out.println("Environmental cue detected: " + observeKind);
             break;
 
           case LOCKSTATUS:
-            // TODO: handle lock status - figure out why this does not return
-            // any values
-            // TODO: it would be good to use the proper logs on the gui that
-            // operates in proper sync time
             System.out.println("Lock status observed: " + observed);
             break;
 
           default:
-            // TODO: remove assert in production - agents should ignore by
-            // default in case of crashing - but this is useful to detect new
-            // observations
             assert false : "Unhandled observation type: " + observeKind;
         }
       }
-    }
-
-    // if there are neighbours - it initiates the knowledge exchange protocol
-    receiversAgents = new ArrayList<>(new HashSet<>(receiversAgents));
-    if (!(receiversAgents.isEmpty())) {
-      // TODO: share map
     }
 
     // if there are no more nodes to be learnt about the graph, then we should
@@ -136,7 +123,12 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
     // if there are still nodes to be learned
     if (nextNodeId == null) {
-      nextNodeId = this.knowledge.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
+      var path = this.knowledge.getShortestPathToClosestOpenNode(myPosition.getLocationId());
+      if (path != null && path.size() > 0) {
+        nextNodeId = path.get(0);
+      } else {
+        return;
+      }
     }
 
     MessageTemplate messageTemplate = MessageTemplate.and(
@@ -155,8 +147,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     }
 
     // mise a jour hashList
-    // int myHashCode = this.knowledge.getSerializableKnowledge().hashCode();
-    // myHashList.add(myHashCode);
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
   }
 

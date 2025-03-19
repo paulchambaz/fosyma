@@ -12,9 +12,8 @@ public class Protocols {
     // first, we test if there is already a handshake sent our way
 
     MessageTemplate filter = MessageTemplate.and(
-      MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-      MessageTemplate.MatchProtocol("handshake")
-    );
+        MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+        MessageTemplate.MatchProtocol("handshake"));
 
     ACLMessage response = agent.receive(filter);
 
@@ -23,8 +22,7 @@ public class Protocols {
       // agent, then await for a response
 
       ACLMessage bottleToSea = Utils.createACLMessage(
-        agent, "handshake", null, protocol
-      );
+          agent, "handshake", null, protocol);
       ((AbstractDedaleAgent) agent).sendMessage(bottleToSea);
 
       response = agent.blockingReceive(filter, timeout);
@@ -45,7 +43,8 @@ public class Protocols {
 
     boolean chooses = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
 
-    // if the response is send to me, then it means it was a response from the friend
+    // if the response is send to me, then it means it was a response from the
+    // friend
     // if the response is not then it means it was the initial broadcast
     Iterator sendto = response.getAllReceiver();
     int count = 0;
@@ -66,18 +65,15 @@ public class Protocols {
     // finally, we sent to the friend that we have gotten what protocol we will
     // actually use for the communication
     ACLMessage message = Utils.createACLMessage(
-      agent, "handshake", friend, usedProtocol
-    );
+        agent, "handshake", friend, usedProtocol);
     ((AbstractDedaleAgent) agent).sendMessage(message);
-
 
     // cleanup in case of asynchronicity - because we can be already certain
     // and both receive extra messages, which are useless and should not
     // perturb future communications
     MessageTemplate cleanupFilter = MessageTemplate.and(
-      filter,
-      MessageTemplate.MatchSender(friend)
-    );
+        filter,
+        MessageTemplate.MatchSender(friend));
     do {
       response = agent.receive(cleanupFilter);
     } while (response != null);
