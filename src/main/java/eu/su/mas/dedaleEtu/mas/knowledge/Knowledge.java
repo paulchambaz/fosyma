@@ -19,7 +19,6 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.IdAlreadyInUseException;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
-import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.view.Viewer;
 import eu.su.mas.dedale.env.Observation;

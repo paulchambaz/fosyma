@@ -13,7 +13,6 @@ public class Protocols {
 
   public static Communication handshake(Agent agent, int timeout, String protocol) {
     // first, we test if there is already a handshake sent our way
-
     MessageTemplate filter = MessageTemplate.and(
         MessageTemplate.MatchPerformative(ACLMessage.INFORM),
         MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE));
@@ -69,7 +68,7 @@ public class Protocols {
     // the protocol of the agent with the lowest name in the topological order
     // TODO: in the future it is coherent to send both a protocol and a
     // priority - but not for now
-    String usedProtocol = (chooses) ? protocol : friendProtocol;
+    String usedProtocol = chooses ? protocol : friendProtocol;
 
     // finally, we sent to the friend that we have gotten what protocol we will
     // actually use for the communication

@@ -38,7 +38,7 @@ public class ShareMapBehaviour extends SimpleBehaviour {
     System.out.println(
         this.myAgent.getLocalName() + " - result of the handshake protocol : " + comms.getFriend().getLocalName());
 
-    if (!comms.getProtocol().equals(PROTOCOL_NAME)) {
+    if (!(comms.getProtocol().equals(PROTOCOL_NAME))) {
       // TODO: we should reroute behaviour when changing protocols
       return;
     }
@@ -57,12 +57,16 @@ public class ShareMapBehaviour extends SimpleBehaviour {
   }
 
   private void sendKnowledge(AID friend) {
+    System.out.println(this.myAgent.getLocalName() + " is speaking");
     ACLMessage message = Utils.createACLMessage(
         this.myAgent,
         PROTOCOL_NAME,
         friend,
         this.knowledge.getSerializableKnowledge());
+    // TODO: we need to understand why sometimes this does not arrive to its proper
+    // destination
     ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+    System.out.println(this.myAgent.getLocalName() + " just sent knowledge");
   }
 
   private void receiveKnowledge(AID friend) {
@@ -72,9 +76,10 @@ public class ShareMapBehaviour extends SimpleBehaviour {
             MessageTemplate.MatchProtocol(PROTOCOL_NAME)),
         MessageTemplate.MatchSender(friend));
 
-    ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
+    ACLMessage message = this.myAgent.blockingReceive(filter, 100 * TIMEOUT);
 
     if (message == null) {
+      System.out.println(this.myAgent.getLocalName() + " did not receive any message - fail");
       return;
     }
 
@@ -87,7 +92,6 @@ public class ShareMapBehaviour extends SimpleBehaviour {
     }
 
     System.out.println(this.myAgent.getLocalName() + " just received knowledge");
-
     this.knowledge.mergeKnowledge(knowledgeReceived);
   }
 
