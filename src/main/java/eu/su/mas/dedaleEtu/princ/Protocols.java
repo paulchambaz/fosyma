@@ -9,84 +9,278 @@ import java.util.Iterator;
 
 public class Protocols {
 
-  private static String PROTOCOL_HANDSHAKE = "handshake";
+  private static String PROTOCOL_HANDSHAKE = "hs";
+
+  // public static Communication handshake(Agent agent, int timeout, String
+  // protocol) {
+  // // first, we test if there is already a handshake sent our way
+  // MessageTemplate filter = MessageTemplate.and(
+  // MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+  // MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE));
+  //
+  // ACLMessage response = agent.receive(filter);
+  //
+  // if (response == null) {
+  // // if we have not received any answer then we will try to reach some
+  // // agent, then await for a response
+  //
+  // ACLMessage bottleToSea = Utils.createACLMessage(
+  // agent, PROTOCOL_HANDSHAKE, null, protocol);
+  // ((AbstractDedaleAgent) agent).sendMessage(bottleToSea);
+  //
+  // response = agent.blockingReceive(filter, timeout);
+  //
+  // if (response == null) {
+  // // if we have not received a message either from the initial lookup or
+  // // from the bottle to the sea, then it means there is not one reachable
+  // // and the handshake has failed
+  // return null;
+  // }
+  // }
+  //
+  // // but in the case we have gotten a response, either from the initial call
+  // // or from the bottle to the sea, then we should get information about that
+  // // content
+  // AID friend = response.getSender();
+  // String friendProtocol;
+  // try {
+  // friendProtocol = (String) response.getContentObject();
+  // } catch (Exception e) {
+  // e.printStackTrace();
+  // return null;
+  // }
+  //
+  // boolean chooses = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+  //
+  // // if the response is send to me, then it means it was a response from the
+  // // friend
+  // // if the response is not then it means it was the initial broadcast
+  // Iterator sendto = response.getAllReceiver();
+  // int count = 0;
+  // while (sendto.hasNext()) {
+  // count += 1;
+  // sendto.next();
+  // }
+  // if (count == 1) {
+  // return new Communication(friend, friendProtocol, chooses);
+  // }
+  //
+  // // we then decide which protocol to use - by convention, we will always use
+  // // the protocol of the agent with the lowest name in the topological order
+  // // TODO: in the future it is coherent to send both a protocol and a
+  // // priority - but not for now
+  // String usedProtocol = chooses ? protocol : friendProtocol;
+  //
+  // // finally, we sent to the friend that we have gotten what protocol we will
+  // // actually use for the communication
+  // ACLMessage message = Utils.createACLMessage(
+  // agent, PROTOCOL_HANDSHAKE, friend, usedProtocol);
+  // ((AbstractDedaleAgent) agent).sendMessage(message);
+  //
+  // // cleanup in case of asynchronicity - because we can be already certain
+  // // and both receive extra messages, which are useless and should not
+  // // perturb future communications
+  // MessageTemplate cleanupFilter = MessageTemplate.and(
+  // filter,
+  // MessageTemplate.MatchSender(friend));
+  // do {
+  // response = agent.receive(cleanupFilter);
+  // } while (response != null);
+  //
+  // // therefore we start the protocol with awaiting a response from sender
+  // return new Communication(friend, usedProtocol, chooses);
+  // }
 
   public static Communication handshake(Agent agent, int timeout, String protocol) {
-    // first, we test if there is already a handshake sent our way
-    MessageTemplate filter = MessageTemplate.and(
+    emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "2");
+    emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "1");
+
+    MessageTemplate filter;
+    ACLMessage response;
+    AID friendA, friendB, friend;
+    String protocolA, protocolB, usedProtocol;
+    boolean speaker;
+
+    filter = MessageTemplate.and(
         MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-        MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE));
+        MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "0"));
 
-    ACLMessage response = agent.receive(filter);
+    response = agent.receive(filter);
 
-    if (response == null) {
-      // if we have not received any answer then we will try to reach some
-      // agent, then await for a response
+    if (response != null) {
+      friendA = response.getSender();
+      try {
+        protocolA = (String) response.getContentObject();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+      }
 
-      ACLMessage bottleToSea = Utils.createACLMessage(
-          agent, PROTOCOL_HANDSHAKE, null, protocol);
-      ((AbstractDedaleAgent) agent).sendMessage(bottleToSea);
+      ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
+          agent, PROTOCOL_HANDSHAKE + "1", friendA, protocol));
+
+      filter = MessageTemplate.and(
+          MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+          MessageTemplate.or(
+              MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "1"),
+              MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "2")));
 
       response = agent.blockingReceive(filter, timeout);
 
       if (response == null) {
-        // if we have not received a message either from the initial lookup or
-        // from the bottle to the sea, then it means there is not one reachable
-        // and the handshake has failed
         return null;
+      }
+
+      if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "1")) {
+        friendB = response.getSender();
+        try {
+          protocolB = (String) response.getContentObject();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+
+        boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+        friend = withA ? friendA : friendB;
+
+        speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+        usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+
+        ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
+            agent, PROTOCOL_HANDSHAKE + "2", friend, protocol));
+
+        return new Communication(friend, usedProtocol, speaker);
+      }
+
+      if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "2")) {
+        friendB = response.getSender();
+        try {
+          protocolB = (String) response.getContentObject();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+
+        boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+        friend = withA ? friendA : friendB;
+
+        speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+        usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+
+        return new Communication(friend, usedProtocol, speaker);
       }
     }
 
-    // but in the case we have gotten a response, either from the initial call
-    // or from the bottle to the sea, then we should get information about that
-    // content
-    AID friend = response.getSender();
-    String friendProtocol;
-    try {
-      friendProtocol = (String) response.getContentObject();
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
+    if (response == null) {
+      ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
+          agent, PROTOCOL_HANDSHAKE + "0", null, protocol));
+
+      filter = MessageTemplate.and(
+          MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+          MessageTemplate.or(
+              MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "0"),
+              MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "1")));
+
+      response = agent.blockingReceive(filter, timeout);
+
+      if (response == null) {
+        return null;
+      }
+
+      if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "0")) {
+        friendA = response.getSender();
+        try {
+          protocolA = (String) response.getContentObject();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+
+        ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
+            agent, PROTOCOL_HANDSHAKE + "2", friendA, protocol));
+
+        filter = MessageTemplate.and(
+            MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+            MessageTemplate.or(
+                MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "1"),
+                MessageTemplate.MatchProtocol(PROTOCOL_HANDSHAKE + "2")));
+
+        response = agent.blockingReceive(filter, timeout);
+
+        if (response == null) {
+          return null;
+        }
+
+        if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "1")) {
+          friendB = response.getSender();
+          try {
+            protocolB = (String) response.getContentObject();
+          } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+          }
+
+          boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+          friend = withA ? friendA : friendB;
+
+          speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+          usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+
+          ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
+              agent, PROTOCOL_HANDSHAKE + "2", friend, protocol));
+
+          return new Communication(friend, usedProtocol, speaker);
+        }
+
+        if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "2")) {
+          friendB = response.getSender();
+          try {
+            protocolB = (String) response.getContentObject();
+          } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+          }
+
+          boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+          friend = withA ? friendA : friendB;
+
+          speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+          usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+
+          return new Communication(friend, usedProtocol, speaker);
+        }
+      }
+
+      if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "1")) {
+        friendA = response.getSender();
+        try {
+          protocolA = (String) response.getContentObject();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+
+        speaker = agent.getLocalName().compareTo(friendA.getLocalName()) <= 0;
+        usedProtocol = speaker ? protocol : protocolA;
+
+        ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
+            agent, PROTOCOL_HANDSHAKE + "2", friendA, usedProtocol));
+
+        return new Communication(friendA, usedProtocol, speaker);
+      }
     }
 
-    boolean chooses = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+    return null;
+  }
 
-    // if the response is send to me, then it means it was a response from the
-    // friend
-    // if the response is not then it means it was the initial broadcast
-    Iterator sendto = response.getAllReceiver();
-    int count = 0;
-    while (sendto.hasNext()) {
-      count += 1;
-      sendto.next();
-    }
-    if (count == 1) {
-      return new Communication(friend, friendProtocol, chooses);
-    }
+  private static void emptyMessageCue(Agent agent, String protocol) {
+    MessageTemplate filter = MessageTemplate.and(
+        MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+        MessageTemplate.MatchProtocol(protocol));
 
-    // we then decide which protocol to use - by convention, we will always use
-    // the protocol of the agent with the lowest name in the topological order
-    // TODO: in the future it is coherent to send both a protocol and a
-    // priority - but not for now
-    String usedProtocol = chooses ? protocol : friendProtocol;
-
-    // finally, we sent to the friend that we have gotten what protocol we will
-    // actually use for the communication
-    ACLMessage message = Utils.createACLMessage(
-        agent, PROTOCOL_HANDSHAKE, friend, usedProtocol);
-    ((AbstractDedaleAgent) agent).sendMessage(message);
-
-    // cleanup in case of asynchronicity - because we can be already certain
-    // and both receive extra messages, which are useless and should not
-    // perturb future communications
-    MessageTemplate cleanupFilter = MessageTemplate.and(
-        filter,
-        MessageTemplate.MatchSender(friend));
+    ACLMessage response;
     do {
-      response = agent.receive(cleanupFilter);
+      response = agent.receive(filter);
     } while (response != null);
-
-    // therefore we start the protocol with awaiting a response from sender
-    return new Communication(friend, usedProtocol, chooses);
   }
 }

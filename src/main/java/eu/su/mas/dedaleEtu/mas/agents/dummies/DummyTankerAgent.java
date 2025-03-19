@@ -25,7 +25,7 @@ public class DummyTankerAgent extends AbstractDedaleAgent {
     this.knowledge = new Knowledge(this.getLocalName());
 
     List<Behaviour> behaviours = new ArrayList<>();
-    // behaviours.add(new ExploCoopBehaviour(this, this.knowledge));
+    behaviours.add(new ExploCoopBehaviour(this, this.knowledge));
     behaviours.add(new ShareMapBehaviour(this, this.knowledge));
     behaviours.add(new KnowledgeVisualizationBehaviour(this.knowledge));
 
