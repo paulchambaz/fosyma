@@ -44,7 +44,7 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
   @Override
   public void action() {
 
-    if (this.knowledge == null) this.knowledge = new Knowledge();
+    // if (this.knowledge == null) this.knowledge = new Knowledge();
 
     // 0) Retrieve the current position
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();

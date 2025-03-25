@@ -36,6 +36,7 @@ public class Knowledge implements Serializable {
   private Map<String, AgentData> agents;
   private SiloData silo;
   private GolemData golem;
+  private int blockCounter;
 
   private KnowledgeVisualization visualization;
 
@@ -47,6 +48,7 @@ public class Knowledge implements Serializable {
     this.agents = new HashMap<>();
     this.silo = null;
     this.golem = null;
+    this.blockCounter = 0;
   }
 
   public void attachVisualization(KnowledgeVisualization visualization) {
@@ -490,6 +492,14 @@ public class Knowledge implements Serializable {
 
   public synchronized GolemData getGolem() {
     return this.golem;
+  }
+
+  public synchronized int getBlockCounter() {
+    return this.blockCounter;
+  }
+
+  public synchronized void bumpBlockCounter(){
+    this.blockCounter += 1;
   }
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {

@@ -117,6 +117,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     // switch to a simpler protocol
     if (!this.knowledge.hasOpenNode()) {
       finished = true;
+      // We add the collecting treasure behaviour here (temporary solution)
+      ((AbstractDedaleAgent) this.myAgent).addBehaviour(new GoToGoalBehaviour(this.myAgent, this.knowledge));
+
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
       return;
     }
