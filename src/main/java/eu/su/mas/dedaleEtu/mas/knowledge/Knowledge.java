@@ -23,8 +23,13 @@ import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.view.Viewer;
 import eu.su.mas.dedale.env.Observation;
 
+import eu.su.mas.dedaleEtu.princ.Utils;
+
 public class Knowledge implements Serializable {
   private static final long serialVersionUID = -1333959882640838272L;
+
+  private float desireExplore;
+  private float desireCollect;
 
   private String agent;
 
@@ -56,6 +61,37 @@ public class Knowledge implements Serializable {
     this.introvertCounter = 0;
     this.blockCounter = 0;
     this.closestTreasurePath = new ArrayList<>();
+
+    this.desireExplore = 1;
+    this.desireCollect = 0;
+  }
+
+  public void updateDesireExplore() {
+    float convergence = (float) 0.99;
+    float effect = (float) 0.5;
+    if (wantsToCollect()) {
+      this.desireCollect = Utils.lerp(this.desireCollect, 0, convergence);
+      this.desireExplore = Utils.lerp(this.desireCollect, 1, convergence);
+
+      // we have changed our state, we will exagerate this effect
+      if (!wantsToCollect()) {
+        this.desireCollect = Utils.lerp(this.desireCollect, 0, effect);
+        this.desireExplore = Utils.lerp(this.desireCollect, 1, effect);
+      }
+    } else {
+      this.desireExplore = Utils.lerp(this.desireCollect, 0, convergence);
+      this.desireCollect = Utils.lerp(this.desireCollect, 1, convergence);
+
+      // we have changed our state, we will exagerate this effect
+      if (wantsToCollect()) {
+        this.desireExplore = Utils.lerp(this.desireCollect, 0, effect);
+        this.desireCollect = Utils.lerp(this.desireCollect, 1, effect);
+      }
+    }
+  }
+
+  public boolean wantsToCollect() {
+    return this.desireExplore < this.desireCollect;
   }
 
   public void attachVisualization(KnowledgeVisualization visualization) {
@@ -515,15 +551,15 @@ public class Knowledge implements Serializable {
     return this.blockCounter;
   }
 
-  public synchronized void bumpBlockCounter(){
+  public synchronized void bumpBlockCounter() {
     this.blockCounter += 1;
   }
 
-  public synchronized List<String> getClosestTreasurePath(){
+  public synchronized List<String> getClosestTreasurePath() {
     return this.closestTreasurePath;
   }
 
-  public synchronized void updateClosestTreasurePath(String idFrom){
+  public synchronized void updateClosestTreasurePath(String idFrom) {
     int closestPathLength = 0;
     List<String> closestPath = new ArrayList<String>();
 
@@ -532,17 +568,16 @@ public class Knowledge implements Serializable {
       String idTo = treasure.getNodeId();
 
       List<String> path = this.getShortestPath(idFrom, idTo);
-  
+
       int pathLength = path.size();
-      if ((closestPathLength == 0) || (pathLength < closestPathLength)){ // We know this treasure is closer
-          closestPath.clear();
-          closestPath.addAll(path);
-          closestPathLength = pathLength;
+      if ((closestPathLength == 0) || (pathLength < closestPathLength)) { // We know this treasure is closer
+        closestPath.clear();
+        closestPath.addAll(path);
+        closestPathLength = pathLength;
       }
     }
     this.closestTreasurePath = new ArrayList<String>(closestPath);
   }
-
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {
     return new SerializableKnowledge(
