@@ -36,6 +36,8 @@ public class Knowledge implements Serializable {
   private Map<String, AgentData> agents;
   private SiloData silo;
   private GolemData golem;
+
+  private Integer introvertCounter;
   private int blockCounter;
 
   private KnowledgeVisualization visualization;
@@ -48,6 +50,7 @@ public class Knowledge implements Serializable {
     this.agents = new HashMap<>();
     this.silo = null;
     this.golem = null;
+    this.introvertCounter = 0;
     this.blockCounter = 0;
   }
 
@@ -60,6 +63,23 @@ public class Knowledge implements Serializable {
 
   public Graph getGraph() {
     return this.worldGraph;
+  }
+
+  public synchronized void introvertReset() {
+    this.introvertCounter = 0;
+  }
+
+  public synchronized void introvertRecovery() {
+    this.introvertCounter += 1;
+  }
+
+  public synchronized boolean introvertCanTalk() {
+    Integer INTROVERT_LOCKDOWN_TIME = 16;
+    return this.introvertCounter > INTROVERT_LOCKDOWN_TIME;
+  }
+
+  public synchronized Integer getIntrovertCounter() {
+    return introvertCounter;
   }
 
   public synchronized void addNode(String id, MapAttribute mapAttribute) {

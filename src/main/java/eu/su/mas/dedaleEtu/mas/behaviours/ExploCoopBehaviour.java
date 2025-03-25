@@ -134,23 +134,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
       }
     }
 
-    MessageTemplate messageTemplate = MessageTemplate.and(
-        MessageTemplate.MatchProtocol("knowledge-exchange"),
-        MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-
-    ACLMessage messageReceived = this.myAgent.receive(messageTemplate);
-    if (messageReceived != null) {
-      SerializableKnowledge knowledgeReceived = null;
-      try {
-        knowledgeReceived = (SerializableKnowledge) messageReceived.getContentObject();
-      } catch (UnreadableException e) {
-        e.printStackTrace();
-      }
-      this.knowledge.mergeKnowledge(knowledgeReceived);
-    }
-
     // mise a jour hashList
     ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
+    this.knowledge.introvertRecovery();
   }
 
   // done signals when the exploration is complete by checking
