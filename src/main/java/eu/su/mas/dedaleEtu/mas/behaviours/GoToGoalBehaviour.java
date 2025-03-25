@@ -18,6 +18,8 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.Map;
 
 import java.util.HashSet;
@@ -36,65 +38,52 @@ public class GoToGoalBehaviour extends SimpleBehaviour {
     private static final long serialVersionUID = 1233959882640838272L;
 
     private boolean finished = false;
-
     private Knowledge knowledge;
+    private Deque<String> pathToGoal;
 
     public GoToGoalBehaviour (Agent myagent, Knowledge knowledge){
         super(myagent);
         this.knowledge = knowledge;
-    }
 
+        Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+        this.knowledge.updateClosestTreasurePath(myPosition.getLocationId());
+
+        this.pathToGoal = new ArrayDeque<String>();
+    }
     @Override
     public void action() {
-        // We calculate the closest treasure to go to and remember the route to go to it
-        Map<String, TreasureData> treasures = knowledge.getTreasures();
-        Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-        String idFrom = myPosition.getLocationId();
-        int closestPathLength = 0;
-
-        TreasureData closestTresor;
-        List<String> closestPath = new ArrayList<String>();
-
-        for (Map.Entry<String, TreasureData> entry : treasures.entrySet()) {
-            TreasureData tresor = entry.getValue();
-            String idTo = tresor.getNodeId();
-
-            List<String> path = knowledge.getShortestPath(idFrom, idTo);
-        
-            int pathLength = path.size();
-            if ((closestPathLength == 0) || (pathLength < closestPathLength)){ // We know this treasure is closer
-                closestPath.addAll(path);
-                closestPathLength = pathLength;
-                closestTresor = tresor;
-            }
+        try {
+            this.myAgent.doWait(500);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        // Here we go to the closest treasure found
-        for (String nodeId : closestPath){
-            try{
-                ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nodeId));
+        if (pathToGoal.isEmpty()){
+            // here we normally found the goal, we can check if it's still here in case the golem moved it and open it
+            List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent).observe();
+            
+            for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
+                for (Couple<Observation, String> observation : entry.getRight()) {
+                    Observation observeKind = observation.getLeft();
+                    Observation myTreasureType = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType();
+                    String observed = observation.getRight();
+
+                    if (observeKind == myTreasureType) {
+                        ((AbstractDedaleAgent) this.myAgent).openLock(observeKind);
+                        int picked = ((AbstractDedaleAgent) this.myAgent).pick();
+                        System.out.println("TREASURE PICKED = " + picked);
+                    }
+                }
             }
-            catch (Exception e) {
-                this.knowledge.bumpBlockCounter();
-            }
+            return;
         }
 
-        // Then we walk back to the silo
-        String siloPosition = knowledge.getSilo().getPosition();
-        myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-        idFrom = myPosition.getLocationId();
-        List<String> pathToSilo = knowledge.getShortestPath(idFrom, siloPosition);
-
-        // Here we go to the silo
-        for (String nodeId : pathToSilo){
-            try{
-                ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nodeId));
-            }
-            catch (Exception e){
-                this.knowledge.bumpBlockCounter();
-            }
+        try{
+            ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(pathToGoal.removeFirst()));
         }
-
+        catch (Exception e) {
+            this.knowledge.bumpBlockCounter();
+        }
     }
 
     @Override

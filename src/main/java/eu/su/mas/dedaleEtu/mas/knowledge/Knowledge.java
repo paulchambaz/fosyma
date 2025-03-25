@@ -38,7 +38,9 @@ public class Knowledge implements Serializable {
   private GolemData golem;
 
   private Integer introvertCounter;
-  private int blockCounter;
+  private Integer blockCounter;
+
+  private List<String> closestTreasurePath;
 
   private KnowledgeVisualization visualization;
 
@@ -52,6 +54,7 @@ public class Knowledge implements Serializable {
     this.golem = null;
     this.introvertCounter = 0;
     this.blockCounter = 0;
+    this.closestTreasurePath = new ArrayList<>();
   }
 
   public void attachVisualization(KnowledgeVisualization visualization) {
@@ -514,13 +517,38 @@ public class Knowledge implements Serializable {
     return this.golem;
   }
 
-  public synchronized int getBlockCounter() {
+  public synchronized Integer getBlockCounter() {
     return this.blockCounter;
   }
 
   public synchronized void bumpBlockCounter(){
     this.blockCounter += 1;
   }
+
+  public synchronized List<String> getClosestTreasurePath(){
+    return this.closestTreasurePath;
+  }
+
+  public synchronized void updateClosestTreasurePath(String idFrom){
+    int closestPathLength = 0;
+    List<String> closestPath = new ArrayList<String>();
+
+    for (Map.Entry<String, TreasureData> entry : this.treasures.entrySet()) {
+      TreasureData treasure = entry.getValue();
+      String idTo = treasure.getNodeId();
+
+      List<String> path = this.getShortestPath(idFrom, idTo);
+  
+      int pathLength = path.size();
+      if ((closestPathLength == 0) || (pathLength < closestPathLength)){ // We know this treasure is closer
+          closestPath.clear();
+          closestPath.addAll(path);
+          closestPathLength = pathLength;
+      }
+    }
+    this.closestTreasurePath = new ArrayList<String>(closestPath);
+  }
+
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {
     return new SerializableKnowledge(
