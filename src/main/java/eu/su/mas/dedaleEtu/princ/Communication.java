@@ -1,8 +1,9 @@
 package eu.su.mas.dedaleEtu.princ;
 
 import jade.core.AID;
+import java.io.Serializable;
 
-public class Communication {
+public class Communication implements Serializable {
   private AID friend;
   private String protocol;
   private boolean shouldSpeak;

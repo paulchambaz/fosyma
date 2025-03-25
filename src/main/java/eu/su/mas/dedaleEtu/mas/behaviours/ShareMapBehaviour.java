@@ -29,11 +29,12 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
   @Override
   public void action() {
-    Communication comms = Protocols.handshake(this.myAgent, TIMEOUT, PROTOCOL_NAME);
+    Communication comms = Protocols.handshake(this.myAgent, this.knowledge, TIMEOUT, PROTOCOL_NAME);
 
     if (comms == null) {
       return;
     }
+    this.knowledge.introvertReset();
 
     System.out.println(
         this.myAgent.getLocalName() + " - result of the handshake protocol : " + comms.getFriend().getLocalName());

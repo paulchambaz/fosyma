@@ -12,17 +12,26 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This behaviour allows an agent to explore the environment and learn the associated topological
- * map. The algorithm is a pseudo - DFS computationally consuming because its not optimised at all.
+ * This behaviour allows an agent to explore the environment and learn the
+ * associated topological
+ * map. The algorithm is a pseudo - DFS computationally consuming because its
+ * not optimised at all.
  *
- * <p>When all the nodes around him are visited, the agent randomly select an open node and go there
+ * <p>
+ * When all the nodes around him are visited, the agent randomly select an open
+ * node and go there
  * to restart its dfs.
  *
- * <p>This (non optimal) behaviour is done until all nodes are explored.
+ * <p>
+ * This (non optimal) behaviour is done until all nodes are explored.
  *
- * <p>Warning, this behaviour does not save the content of visited nodes, only the topology.
+ * <p>
+ * Warning, this behaviour does not save the content of visited nodes, only the
+ * topology.
  *
- * <p>Warning, this behaviour is a solo exploration and does not take into account the presence of
+ * <p>
+ * Warning, this behaviour is a solo exploration and does not take into account
+ * the presence of
  * other agents (or well) and indefinitely tries to reach its target node
  *
  * @author hc
@@ -44,17 +53,17 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
   @Override
   public void action() {
 
-    if (this.knowledge == null) this.knowledge = new Knowledge();
-
     // 0) Retrieve the current position
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 
     if (myPosition != null) {
       // List of observable from the agent's current position
-      List<Couple<Location, List<Couple<Observation, String>>>> lobs =
-          ((AbstractDedaleAgent) this.myAgent).observe(); // myPosition
+      List<Couple<Location, List<Couple<Observation, String>>>> lobs = ((AbstractDedaleAgent) this.myAgent).observe(); // myPosition
 
-      /** Just added here to let you see what the agent is doing, otherwise he will be too quick */
+      /**
+       * Just added here to let you see what the agent is doing, otherwise he will be
+       * too quick
+       */
       try {
         this.myAgent.doWait(500);
       } catch (Exception e) {
@@ -64,7 +73,8 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
       // 1) remove the current node from openlist and add it to closedNodes.
       this.knowledge.addNode(myPosition.getLocationId(), MapAttribute.closed);
 
-      // 2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
+      // 2) get the surrounding nodes and, if not in closedNodes, add them to open
+      // nodes.
       String nextNodeId = null;
       Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = lobs.iterator();
       while (iter.hasNext()) {
@@ -73,7 +83,8 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
         // the node may exist, but not necessarily the edge
         if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
           this.knowledge.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
-          if (nextNodeId == null && isNewNode) nextNodeId = accessibleNode.getLocationId();
+          if (nextNodeId == null && isNewNode)
+            nextNodeId = accessibleNode.getLocationId();
         }
       }
 
@@ -86,23 +97,25 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
       } else {
         // 4) select next move.
         // 4.1 If there exist one open node directly reachable, go for it,
-        //	 otherwise choose one from the openNode list, compute the shortestPath and go for it
+        // otherwise choose one from the openNode list, compute the shortestPath and go
+        // for it
         if (nextNodeId == null) {
           // no directly accessible openNode
           // chose one, compute the path and take the first step.
-          nextNodeId =
-              this.knowledge
-                  .getShortestPathToClosestOpenNode(myPosition.getLocationId())
-                  .get(0); // getShortestPath(myPosition,this.openNodes.get(0)).get(0);
-          // System.out.println(this.myAgent.getLocalName()+"-- list= "+this.knowledge.getOpenNodes()+"|
+          nextNodeId = this.knowledge
+              .getShortestPathToClosestOpenNode(myPosition.getLocationId())
+              .get(0); // getShortestPath(myPosition,this.openNodes.get(0)).get(0);
+          // System.out.println(this.myAgent.getLocalName()+"-- list=
+          // "+this.knowledge.getOpenNodes()+"|
           // nextNode: "+nextNode);
         } else {
-          // System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list=
+          // System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"--
+          // list=
           // "+this.knowledge.getOpenNodes()+"\n -- nextNode: "+nextNode);
         }
 
         /***************************************************
-         ** 		ADDING the API CALL to illustrate their use **
+         ** ADDING the API CALL to illustrate their use **
          *****************************************************/
 
         // list of observations associated to the currentPosition
@@ -154,8 +167,8 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 
         // If the agent picked (part of) the treasure
         if (b) {
-          List<Couple<Location, List<Couple<Observation, String>>>> lobs2 =
-              ((AbstractDedaleAgent) this.myAgent).observe(); // myPosition
+          List<Couple<Location, List<Couple<Observation, String>>>> lobs2 = ((AbstractDedaleAgent) this.myAgent)
+              .observe(); // myPosition
           System.out.println(
               this.myAgent.getLocalName() + " - State of the observations after picking " + lobs2);
 
@@ -176,16 +189,19 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
         }
 
         // Trying to store everything in the tanker
-        // System.out.println(this.myAgent.getLocalName()+" - My current backpack capacity is:"+
+        // System.out.println(this.myAgent.getLocalName()+" - My current backpack
+        // capacity is:"+
         // ((AbstractDedaleAgent)this.myAgent).getBackPackFreeSpace());
-        // System.out.println(this.myAgent.getLocalName()+" - The agent tries to transfer is load
+        // System.out.println(this.myAgent.getLocalName()+" - The agent tries to
+        // transfer is load
         // into the Silo (if reachable); succes ? :
         // "+((AbstractDedaleAgent)this.myAgent).emptyMyBackPack("Silo"));
-        // System.out.println(this.myAgent.getLocalName()+" - My current backpack capacity is:"+
+        // System.out.println(this.myAgent.getLocalName()+" - My current backpack
+        // capacity is:"+
         // ((AbstractDedaleAgent)this.myAgent).getBackPackFreeSpace());
 
         /************************************************
-         * 				END API CALL ILUSTRATION
+         * END API CALL ILUSTRATION
          *************************************************/
         ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
       }
