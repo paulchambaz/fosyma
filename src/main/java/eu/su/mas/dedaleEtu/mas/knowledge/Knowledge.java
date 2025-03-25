@@ -38,6 +38,7 @@ public class Knowledge implements Serializable {
   private GolemData golem;
 
   private Integer introvertCounter;
+  private static Integer INTROVERT_LOCKDOWN_TIME = 16;
 
   private KnowledgeVisualization visualization;
 
@@ -67,12 +68,15 @@ public class Knowledge implements Serializable {
     this.introvertCounter = 0;
   }
 
+  public synchronized void introvertSoftReset() {
+    this.introvertCounter = INTROVERT_LOCKDOWN_TIME;
+  }
+
   public synchronized void introvertRecovery() {
     this.introvertCounter += 1;
   }
 
   public synchronized boolean introvertCanTalk() {
-    Integer INTROVERT_LOCKDOWN_TIME = 16;
     return this.introvertCounter > INTROVERT_LOCKDOWN_TIME;
   }
 
@@ -458,16 +462,6 @@ public class Knowledge implements Serializable {
         .collect(Collectors.toList());
   }
 
-  // prepareMigration prepares the map for serialization before agent movement.
-  // Serializes the graph topology and closes the visualization.
-  public void prepareMigration() {
-    serializeGraphTopology();
-    if (this.visualization != null) {
-      this.visualization.close();
-    }
-    this.worldGraph = null;
-  }
-
   private void serializeGraphTopology() {
     this.serializableGraph = new SerializableSimpleGraph<String, MapAttribute>();
 
@@ -519,28 +513,6 @@ public class Knowledge implements Serializable {
         this.getAgents(),
         this.getSilo(),
         this.getGolem());
-  }
-
-  // loadSavedData reconstructs the map from a serialized representation.
-  // Used when receiving map information from other agents.
-  public synchronized void loadSavedData() {
-    this.worldGraph = new SingleGraph("My world vision");
-
-    Integer edgeCounter = 0;
-    for (SerializableNode<String, MapAttribute> currentNode : this.serializableGraph.getAllNodes()) {
-      this.worldGraph
-          .addNode(currentNode.getNodeId())
-          .setAttribute("ui.class", currentNode.getNodeContent().toString());
-
-      for (String s : this.serializableGraph.getEdges(currentNode.getNodeId())) {
-        this.worldGraph.addEdge(edgeCounter.toString(), currentNode.getNodeId(), s);
-        edgeCounter++;
-      }
-    }
-
-    notifyVisualization();
-
-    System.out.println("Loading done");
   }
 
   // mergeMap integrates map information received from another agent.
@@ -659,6 +631,34 @@ public class Knowledge implements Serializable {
       System.err.println("Failed to create visualization: " + e.getMessage());
       e.printStackTrace();
     }
+  }
+
+  public synchronized void beforeMove() {
+    serializeGraphTopology();
+    if (this.visualization != null) {
+      this.visualization.close();
+    }
+    this.worldGraph = null;
+  }
+
+  public synchronized void afterMove() {
+    this.worldGraph = new SingleGraph("My world vision");
+
+    Integer edgeCounter = 0;
+    for (SerializableNode<String, MapAttribute> currentNode : this.serializableGraph.getAllNodes()) {
+      this.worldGraph
+          .addNode(currentNode.getNodeId())
+          .setAttribute("ui.class", currentNode.getNodeContent().toString());
+
+      for (String s : this.serializableGraph.getEdges(currentNode.getNodeId())) {
+        this.worldGraph.addEdge(edgeCounter.toString(), currentNode.getNodeId(), s);
+        edgeCounter++;
+      }
+    }
+
+    notifyVisualization();
+
+    System.out.println("Loading done");
   }
 }
 

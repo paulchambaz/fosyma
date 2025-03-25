@@ -98,6 +98,9 @@ public class Protocols {
 
       ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
           agent, PROTOCOL_HANDSHAKE + "0", null, protocol));
+      // after we send a bottle to the sea, we always wait at least one step
+      // before we talk again
+      knowledge.introvertSoftReset();
 
       filter = MessageTemplate.and(
           MessageTemplate.MatchPerformative(ACLMessage.INFORM),

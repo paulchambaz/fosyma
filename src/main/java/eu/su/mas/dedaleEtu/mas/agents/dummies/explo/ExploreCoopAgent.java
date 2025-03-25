@@ -40,17 +40,13 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 
   // beforeMove executes actions before agent migration between containers
   protected void beforeMove() {
-    if (this.knowledge != null) {
-      this.knowledge.prepareMigration();
-    }
+    this.knowledge.beforeMove();
     super.beforeMove();
   }
 
   // afterMove executes actions after agent migration between containers
   protected void afterMove() {
     super.afterMove();
-    if (this.knowledge != null) {
-      this.knowledge.loadSavedData();
-    }
+    this.knowledge.afterMove();
   }
 }
