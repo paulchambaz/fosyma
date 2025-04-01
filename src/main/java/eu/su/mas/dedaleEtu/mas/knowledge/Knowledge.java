@@ -55,7 +55,9 @@ public class Knowledge implements Serializable {
   // agent state
   private Integer introvertCounter;
   private Integer blockCounter;
-  private ArrayDeque<String> closestTreasurePath;
+
+  private String goal;
+  private ArrayDeque<String> goalPath;
 
   // visualizatoin reference
   private KnowledgeVisualization visualization;
@@ -70,7 +72,8 @@ public class Knowledge implements Serializable {
     this.golem = null;
     this.introvertCounter = 0;
     this.blockCounter = 0;
-    this.closestTreasurePath = new ArrayDeque<>();
+    this.goal = "";
+    this.goalPath = new ArrayDeque<>();
     this.desireExplore = 1;
     this.desireCollect = 0;
   }
@@ -589,37 +592,31 @@ public class Knowledge implements Serializable {
     notifyVisualization();
   }
 
-  public synchronized Deque<String> getClosestTreasurePath() {
-    return this.closestTreasurePath;
+  public synchronized Deque<String> getGoalPath() {
+    return this.goalPath;
   }
 
-  public synchronized void updateClosestTreasurePath(String idFrom) {
-    int closestPathLength = 0;
-    List<String> closestPath = new ArrayList<>();
+  public synchronized void setGoal(String goal) {
+    this.goal = goal;
+  }
 
-    for (Map.Entry<String, TreasureData> entry : this.treasures.entrySet()) {
-      TreasureData treasure = entry.getValue();
-      if (treasure.getQuantity() <= 0) {
-        continue;
-      }
+  public synchronized void updateGoal(String myPosition) {
+    switch (this.goal) {
+      case "SILO":
+        this.goalPath = new ArrayDeque<>(getShortestPathToSilo(myPosition));
+        break;
 
-      String idTo = treasure.getNodeId();
-      List<String> path = this.getShortestPath(idFrom, idTo);
-
-      if (path == null || path.isEmpty()) {
-        continue;
-      }
-
-      int pathLength = path.size();
-      if ((closestPathLength == 0) || (pathLength < closestPathLength)) {
-        closestPath.clear();
-        closestPath.addAll(path);
-        closestPathLength = pathLength;
-      }
+      case "TREASURE":
+        this.goalPath = new ArrayDeque<>(treasures.entrySet().stream()
+            .map(currentTreasure -> getShortestPath(myPosition, currentTreasure.getKey()))
+            .filter(path -> path != null)
+            .min(Comparator.comparing(List::size))
+            .orElse(null));
+        break;
+      default:
+        assert false : "Unhandled goal type";
     }
 
-    this.closestTreasurePath = new ArrayDeque<>(closestPath);
-    notifyVisualization();
   }
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {
@@ -965,8 +962,8 @@ class KnowledgeVisualization {
 
   private void styleEdgesForPath(Graph graph, Knowledge knowledge) {
     graph.edges().forEach(edge -> edge.removeAttribute("ui.class"));
-    if (!knowledge.getClosestTreasurePath().isEmpty()) {
-      Deque<String> path = knowledge.getClosestTreasurePath();
+    if (!knowledge.getGoalPath().isEmpty()) {
+      Deque<String> path = knowledge.getGoalPath();
       String[] pathArray = path.toArray(new String[0]);
       for (int i = 0; i < pathArray.length - 1; i++) {
         String currentNode = pathArray[i];
@@ -1030,9 +1027,9 @@ class KnowledgeVisualization {
           .append(" (Age: ").append(knowledge.getGolemUpdateCounter()).append(")\n\n");
     }
 
-    if (!knowledge.getClosestTreasurePath().isEmpty()) {
+    if (!knowledge.getGoalPath().isEmpty()) {
       info.append("Path to closest treasure: ");
-      for (String nodeId : knowledge.getClosestTreasurePath()) {
+      for (String nodeId : knowledge.getGoalPath()) {
         info.append(nodeId).append(" → ");
       }
       if (info.length() > 2) {
