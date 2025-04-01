@@ -47,7 +47,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     // register transitions
     fsmBehaviour.registerDefaultTransition(INIT, EXPLORE);
     fsmBehaviour.registerTransition(EXPLORE, COLLECT, 1);
-    fsmBehaviour.registerTransition(COLLECT, END, 1);
+    fsmBehaviour.registerTransition(COLLECT, COLLECT, 1);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);
