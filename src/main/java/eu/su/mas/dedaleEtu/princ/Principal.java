@@ -2,7 +2,7 @@ package eu.su.mas.dedaleEtu.princ;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agents.GateKeeperAgent;
-import eu.su.mas.dedaleEtu.mas.agents.FsmAgent;
+import eu.su.mas.dedaleEtu.mas.agents.FsmCollectAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyTankerAgent;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
@@ -220,7 +220,7 @@ public class Principal {
       AgentController agent = createNewDedaleAgent(
           container,
           agentName,
-          FsmAgent.class.getName(),
+          FsmCollectAgent.class.getName(),
           parameters);
       agentList.add(agent);
       System.out.println("Agent " + agentName + " was created");
