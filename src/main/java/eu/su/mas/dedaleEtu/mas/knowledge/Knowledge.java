@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Deque;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import org.graphstream.algorithm.Dijkstra;
@@ -31,26 +30,34 @@ import eu.su.mas.dedaleEtu.princ.Utils;
 public class Knowledge implements Serializable {
   private static final long serialVersionUID = -1333959882640838272L;
 
+  // agent static parameters
+  private static Integer INTROVERT_LOCKDOWN_TIME = 16;
+
+  // agent identity
+  private String agent;
+  private AgentData agentData;
+
+  // agent desire
   private float desireExplore;
   private float desireCollect;
 
-  private String agent;
-
+  // environment representation
   private Graph worldGraph;
   private Integer nbEdges;
   private SerializableSimpleGraph<String, MapAttribute> serializableGraph;
 
+  // environment entities
   private Map<String, TreasureData> treasures;
   private Map<String, AgentData> agents;
   private SiloData silo;
   private GolemData golem;
 
+  // agent state
   private Integer introvertCounter;
-  private static Integer INTROVERT_LOCKDOWN_TIME = 16;
   private Integer blockCounter;
-
   private ArrayDeque<String> closestTreasurePath;
 
+  // visualizatoin reference
   private KnowledgeVisualization visualization;
 
   public Knowledge(String agent) {
@@ -64,9 +71,17 @@ public class Knowledge implements Serializable {
     this.introvertCounter = 0;
     this.blockCounter = 0;
     this.closestTreasurePath = new ArrayDeque<>();
-
     this.desireExplore = 1;
     this.desireCollect = 0;
+  }
+
+  public void attachVisualization(KnowledgeVisualization visualization) {
+    this.visualization = visualization;
+    notifyVisualization();
+  }
+
+  public AgentData getAgentData() {
+    return this.agentData;
   }
 
   public void updateDesireExplore() {
@@ -97,27 +112,23 @@ public class Knowledge implements Serializable {
     return this.desireExplore < this.desireCollect;
   }
 
-  public void attachVisualization(KnowledgeVisualization visualization) {
-    this.visualization = visualization;
-    if (this.visualization != null) {
-      this.visualization.updateFromModel(this);
-    }
-  }
-
   public Graph getGraph() {
     return this.worldGraph;
   }
 
   public synchronized void introvertReset() {
     this.introvertCounter = 0;
+    notifyVisualization();
   }
 
   public synchronized void introvertSoftReset() {
     this.introvertCounter = INTROVERT_LOCKDOWN_TIME;
+    notifyVisualization();
   }
 
   public synchronized void introvertRecovery() {
     this.introvertCounter += 1;
+    notifyVisualization();
   }
 
   public synchronized boolean introvertCanTalk() {
@@ -129,16 +140,14 @@ public class Knowledge implements Serializable {
   }
 
   public synchronized void addNode(String id, MapAttribute mapAttribute) {
-    Node currentNode;
     if (this.worldGraph.getNode(id) == null) {
-      currentNode = this.worldGraph.addNode(id);
+      Node currentNode = this.worldGraph.addNode(id);
+      currentNode.setAttribute("ui.class", mapAttribute.toString());
+      currentNode.setAttribute("ui.label", id);
     } else {
-      currentNode = this.worldGraph.getNode(id);
+      Node currentNode = this.worldGraph.getNode(id);
+      currentNode.setAttribute("ui.class", mapAttribute.toString());
     }
-    currentNode.clearAttributes();
-    currentNode.setAttribute("ui.class", mapAttribute.toString());
-    currentNode.setAttribute("ui.label", id);
-
     notifyVisualization();
   }
 
@@ -178,7 +187,6 @@ public class Knowledge implements Serializable {
       existing.setNodeId(nodeId);
       if (existing.getUpdateCounter() > 0) {
         existing.resetCounter();
-
         if (quantity > 0) {
           existing.setQuantity(quantity);
         }
@@ -187,13 +195,7 @@ public class Knowledge implements Serializable {
       TreasureData treasure = new TreasureData(nodeId, type, quantity, quantity > 0, lockStrength, pickStrength);
       this.treasures.put(nodeId, treasure);
     }
-
-    if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
-      Node currentNode = this.worldGraph.getNode(nodeId);
-      currentNode.setAttribute("ui.style", "fill-color: yellow;");
-      currentNode.setAttribute("ui.label", nodeId + "-" + type);
-      notifyVisualization();
-    }
+    notifyVisualization();
   }
 
   // updateTreasureState updates whether a treasure at the specified node is open
@@ -203,6 +205,7 @@ public class Knowledge implements Serializable {
       TreasureData treasure = this.treasures.get(nodeId);
       treasure.setLocked(isLocked);
       treasure.resetCounter();
+      notifyVisualization();
     }
   }
 
@@ -214,6 +217,7 @@ public class Knowledge implements Serializable {
       TreasureData treasure = this.treasures.get(nodeId);
       treasure.decreaseQuantity(quantityPicked);
       treasure.resetCounter();
+      notifyVisualization();
     }
   }
 
@@ -223,6 +227,7 @@ public class Knowledge implements Serializable {
     for (TreasureData treasure : this.treasures.values()) {
       treasure.incrementCounter();
     }
+    notifyVisualization();
   }
 
   // hasTreasure checks if a node contains any remaining treasure.
@@ -253,10 +258,26 @@ public class Knowledge implements Serializable {
         .collect(Collectors.toList());
   }
 
+  public synchronized void updateAgentPosition(String nodeId) {
+    if (this.agentData == null) {
+      this.agentData = new AgentData(nodeId);
+    } else {
+      agentData.setPosition(nodeId);
+    }
+  }
+
+  public synchronized void loseAgentPosition(String agentName) {
+    if (this.agents.containsKey(agentName)) {
+      AgentData agentData = this.agents.get(agentName);
+      agentData.setPosition(null);
+      notifyVisualization();
+    }
+  }
+
   // updateAgentPosition tracks the current position of an agent in the
   // environment.
   // Creates a new agent record if it doesn't exist or updates an existing one.
-  public synchronized void updateAgentPosition(String agentName, String nodeId) {
+  public synchronized void updateAgentsPosition(String agentName, String nodeId) {
     if (!this.agents.containsKey(agentName)) {
       this.agents.put(agentName, new AgentData(nodeId));
     } else {
@@ -264,6 +285,7 @@ public class Knowledge implements Serializable {
       agentData.setPosition(nodeId);
       agentData.resetCounter();
     }
+    notifyVisualization();
   }
 
   // updateAgentExpertise records the expertise levels of an agent for different
@@ -272,6 +294,7 @@ public class Knowledge implements Serializable {
   public synchronized void updateAgentExpertise(String agentName, Map<Observation, Integer> expertise) {
     if (this.agents.containsKey(agentName)) {
       this.agents.get(agentName).setExpertise(expertise);
+      notifyVisualization();
     }
   }
 
@@ -283,12 +306,14 @@ public class Knowledge implements Serializable {
       AgentData data = this.agents.get(agentName);
       data.setBackpackCapacity(capacity);
       data.setBackpackFreeSpace(freeSpace);
+      notifyVisualization();
     }
   }
 
   public synchronized void updateAgentStatus(String agentName, String status) {
     if (this.agents.containsKey(agentName)) {
       this.agents.get(agentName).setStatus(status);
+      notifyVisualization();
     }
   }
 
@@ -296,6 +321,7 @@ public class Knowledge implements Serializable {
     for (AgentData agent : this.agents.values()) {
       agent.incrementCounter();
     }
+    notifyVisualization();
   }
 
   // getAgentData retrieves all information about a specific agent.
@@ -305,11 +331,12 @@ public class Knowledge implements Serializable {
 
   // getAgentAtPosition finds all agents currently located at a specific node.
   // Useful for coordinating actions between agents in proximity.
-  public synchronized List<String> getAgentAtPosition(String nodeId) {
+  public synchronized String getAgentAtPosition(String nodeId) {
     return this.agents.entrySet().stream()
         .filter(entry -> nodeId.equals(entry.getValue().getPosition()))
         .map(Map.Entry::getKey)
-        .collect(Collectors.toList());
+        .findFirst()
+        .orElse(null);
   }
 
   public synchronized List<String> getAgentsWithLockpickingStrength(int requiredStrength) {
@@ -336,18 +363,13 @@ public class Knowledge implements Serializable {
       this.silo.setPosition(nodeId);
       this.silo.resetCounter();
     }
-
-    if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
-      Node currentNode = this.worldGraph.getNode(nodeId);
-      currentNode.setAttribute("ui.style", "fill-color: orange; size: 20px;");
-      currentNode.setAttribute("ui.label", "SILO");
-      notifyVisualization();
-    }
+    notifyVisualization();
   }
 
   public synchronized void ageSiloData() {
     if (this.silo != null) {
       this.silo.incrementCounter();
+      notifyVisualization();
     }
   }
 
@@ -375,18 +397,13 @@ public class Knowledge implements Serializable {
       this.golem.setPosition(nodeId);
       this.golem.resetCounter();
     }
-
-    if (this.worldGraph != null && this.worldGraph.getNode(nodeId) != null) {
-      Node currentNode = this.worldGraph.getNode(nodeId);
-      currentNode.setAttribute("ui.style", "fill-color: red; size: 20px;");
-      currentNode.setAttribute("ui.label", "GOLEM");
-      notifyVisualization();
-    }
+    notifyVisualization();
   }
 
   public synchronized void ageGolemData() {
     if (this.golem != null) {
       this.golem.incrementCounter();
+      notifyVisualization();
     }
   }
 
@@ -412,37 +429,43 @@ public class Knowledge implements Serializable {
   }
 
   public synchronized Graph createTempGraph() {
-    // TODO: im not sure this function works properly - must test
+    // TODO: we always DO WANT to include our current position in in the graph,
+    // regardless of if we think it is occupied or not
     Graph tempGraph = new SingleGraph("Temporary path graph");
-
     this.worldGraph.nodes().forEach(node -> {
       String id = node.getId();
+      boolean isOccupied = false;
 
       for (AgentData agent : this.agents.values()) {
         String position = agent.getPosition();
-        if (position == id) {
-          return;
+        if (position != null && position.equals(id)) {
+          isOccupied = true;
+          break;
         }
       }
 
-      if (this.silo != null && this.silo.getPosition() == id) {
-        return;
+      if (this.silo != null && id.equals(this.silo.getPosition())) {
+        isOccupied = true;
+      }
+      if (this.golem != null && id.equals(this.golem.getPosition())) {
+        isOccupied = true;
       }
 
-      if (this.golem != null && this.golem.getPosition() == id) {
-        return;
+      if (!isOccupied) {
+        tempGraph.addNode(id);
       }
-
-      tempGraph.addNode(id);
     });
 
     this.worldGraph.edges().forEach(edge -> {
-      try {
-        tempGraph.addEdge(
-            edge.getId(),
-            edge.getSourceNode().getId(),
-            edge.getTargetNode().getId());
-      } catch (Exception e) {
+      String sourceId = edge.getSourceNode().getId();
+      String targetId = edge.getTargetNode().getId();
+
+      if (tempGraph.getNode(sourceId) != null && tempGraph.getNode(targetId) != null) {
+        try {
+          tempGraph.addEdge(edge.getId(), sourceId, targetId);
+        } catch (Exception e) {
+          // edge already exists or nodes not found
+        }
       }
     });
 
@@ -452,11 +475,19 @@ public class Knowledge implements Serializable {
   // getShortestPath calculates the most efficient path between any two nodes.
   // Uses Dijkstra's algorithm to find the optimal route.
   public synchronized List<String> getShortestPath(String idFrom, String idTo) {
+    if (idFrom == null || idTo == null) {
+      return null;
+    }
+
     Graph tempGraph = createTempGraph();
+    Node from = tempGraph.getNode(idFrom);
+    if (from == null) {
+      return null;
+    }
 
     Dijkstra dijkstra = new Dijkstra();
     dijkstra.init(tempGraph);
-    dijkstra.setSource(tempGraph.getNode(idFrom));
+    dijkstra.setSource(from);
     dijkstra.compute();
 
     List<Node> path;
@@ -497,24 +528,23 @@ public class Knowledge implements Serializable {
   // explored).
   // Helps prioritize exploration efforts.
   public List<String> getOpenNodes() {
-    // TODO: we currenly filter through UI attributes, this is horrible and we can
-    // and should do better
     return this.worldGraph
         .nodes()
-        .filter(currentNode -> currentNode.getAttribute("ui.class") == MapAttribute.open.toString())
+        .filter(currentNode -> "open".equals(currentNode.getAttribute("ui.class")))
         .map(Node::getId)
         .collect(Collectors.toList());
   }
 
   private void serializeGraphTopology() {
-    this.serializableGraph = new SerializableSimpleGraph<String, MapAttribute>();
+    this.serializableGraph = new SerializableSimpleGraph<>();
 
     Iterator<Node> nodeIterator = this.worldGraph.iterator();
     while (nodeIterator.hasNext()) {
       Node currentNode = nodeIterator.next();
+      String nodeClass = (String) currentNode.getAttribute("ui.class");
       this.serializableGraph.addNode(
           currentNode.getId(),
-          MapAttribute.valueOf((String) currentNode.getAttribute("ui.class")));
+          MapAttribute.valueOf(nodeClass));
     }
 
     Iterator<Edge> edgeIterator = this.worldGraph.edges().iterator();
@@ -556,6 +586,7 @@ public class Knowledge implements Serializable {
 
   public synchronized void bumpBlockCounter() {
     this.blockCounter += 1;
+    notifyVisualization();
   }
 
   public synchronized Deque<String> getClosestTreasurePath() {
@@ -568,18 +599,27 @@ public class Knowledge implements Serializable {
 
     for (Map.Entry<String, TreasureData> entry : this.treasures.entrySet()) {
       TreasureData treasure = entry.getValue();
-      String idTo = treasure.getNodeId();
+      if (treasure.getQuantity() <= 0) {
+        continue;
+      }
 
+      String idTo = treasure.getNodeId();
       List<String> path = this.getShortestPath(idFrom, idTo);
 
+      if (path == null || path.isEmpty()) {
+        continue;
+      }
+
       int pathLength = path.size();
-      if ((closestPathLength == 0) || (pathLength < closestPathLength)) { // We know this treasure is closer
+      if ((closestPathLength == 0) || (pathLength < closestPathLength)) {
         closestPath.clear();
         closestPath.addAll(path);
         closestPathLength = pathLength;
       }
     }
+
     this.closestTreasurePath = new ArrayDeque<>(closestPath);
+    notifyVisualization();
   }
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {
@@ -621,6 +661,8 @@ public class Knowledge implements Serializable {
         addEdge(currentNode.getNodeId(), s);
       }
     }
+
+    notifyVisualization();
   }
 
   public void mergeTreasures(Map<String, TreasureData> treasures) {
@@ -633,6 +675,8 @@ public class Knowledge implements Serializable {
         this.treasures.put(nodeId, receivedTreasure);
       }
     }
+
+    notifyVisualization();
   }
 
   public void mergeAgents(Map<String, AgentData> agents) {
@@ -645,6 +689,8 @@ public class Knowledge implements Serializable {
         this.agents.put(agentName, receivedAgent);
       }
     }
+
+    notifyVisualization();
   }
 
   public void mergeSilo(SiloData silo) {
@@ -657,6 +703,8 @@ public class Knowledge implements Serializable {
     } else if (this.silo.getUpdateCounter() > silo.getUpdateCounter()) {
       this.silo.copy(silo);
     }
+
+    notifyVisualization();
   }
 
   public void mergeGolem(GolemData golem) {
@@ -669,6 +717,8 @@ public class Knowledge implements Serializable {
     } else if (this.golem.getUpdateCounter() > golem.getUpdateCounter()) {
       this.golem.copy(golem);
     }
+
+    notifyVisualization();
   }
 
   public void mergeKnowledge(SerializableKnowledge knowledge) {
@@ -682,12 +732,11 @@ public class Knowledge implements Serializable {
   // hasOpenNode checks if any unexplored nodes remain in the graph.
   // Used to determine if exploration should continue.
   public boolean hasOpenNode() {
-    // TODO: we are using UI attributes in order to perform a filter : this is
-    // horrible
-    return (this.worldGraph
+    return this.worldGraph
         .nodes()
-        .filter(currentNode -> currentNode.getAttribute("ui.class") == MapAttribute.open.toString())
-        .findAny()).isPresent();
+        .filter(currentNode -> "open".equals(currentNode.getAttribute("ui.class")))
+        .findAny()
+        .isPresent();
   }
 
   private void notifyVisualization() {
@@ -701,7 +750,6 @@ public class Knowledge implements Serializable {
       this.visualization = new KnowledgeVisualization(this.agent);
       if (this.visualization.initialize()) {
         attachVisualization(this.visualization);
-      } else {
       }
     } catch (Exception e) {
       System.err.println("Failed to create visualization: " + e.getMessage());
@@ -713,6 +761,7 @@ public class Knowledge implements Serializable {
     serializeGraphTopology();
     if (this.visualization != null) {
       this.visualization.close();
+      this.visualization = null;
     }
     this.worldGraph = null;
   }
@@ -720,6 +769,7 @@ public class Knowledge implements Serializable {
   public synchronized void afterMove() {
     this.worldGraph = new SingleGraph("My world vision");
 
+    // we want to reconstruct the grap from the serialized graph
     Integer edgeCounter = 0;
     for (SerializableNode<String, MapAttribute> currentNode : this.serializableGraph.getAllNodes()) {
       this.worldGraph
@@ -727,8 +777,12 @@ public class Knowledge implements Serializable {
           .setAttribute("ui.class", currentNode.getNodeContent().toString());
 
       for (String s : this.serializableGraph.getEdges(currentNode.getNodeId())) {
-        this.worldGraph.addEdge(edgeCounter.toString(), currentNode.getNodeId(), s);
-        edgeCounter++;
+        try {
+          this.worldGraph.addEdge(edgeCounter.toString(), currentNode.getNodeId(), s);
+          edgeCounter++;
+        } catch (Exception e) {
+          // edge already exists or nodes not found
+        }
       }
     }
 
@@ -739,14 +793,27 @@ public class Knowledge implements Serializable {
 }
 
 class KnowledgeVisualization {
-  private static final String DEFAULT_NODE_STYLE = "node {fill-color: black; size-mode:fit; text-alignment:under;"
-      + " text-size:14; text-color:white; text-background-mode:rounded-box; text-background-color:black;}";
-  private static final String NODE_STYLE_OPEN = "node.open {fill-color: blue;}";
-  private static final String NODE_STYLE_AGENT = "node.agent {fill-color: forestgreen;}";
-  private static final String NODE_STYLE_CLOSED = "node.closed {fill-color: grey;}";
+  private static final String DEFAULT_STYLESHEET = "node {" +
+      "  fill-color: black;" +
+      "  size-mode: fit;" +
+      "  text-alignment: under;" +
+      "  text-size: 14;" +
+      "  text-color: black;" +
+      "  text-background-mode: rounded-box;" +
+      "  text-background-color: white;" +
+      "}" +
+      "node.open { fill-color: blue; }" +
+      "node.closed { fill-color: grey; }" +
+      "node.me { fill-color: black; size: 20px; }" +
+      "node.treasure { fill-color: yellow; }" +
+      "node.agent { fill-color: forestgreen; }" +
+      "node.silo { fill-color: orange; }" +
+      "node.golem { fill-color: red; }" +
+      "edge { fill-color: #999; }" +
+      "edge.path { fill-color: green; stroke-width: 10px; }";
 
-  private Viewer viewer;
   private final AtomicBoolean isInitialized = new AtomicBoolean(false);
+  private Viewer viewer;
   private boolean isViewerActive = false;
   private final String agentName;
 
@@ -775,31 +842,205 @@ class KnowledgeVisualization {
       return;
     }
 
-    if (!isViewerActive && viewer == null) {
+    if (!isViewerActive || viewer == null) {
       Graph graph = knowledge.getGraph();
       if (graph != null) {
-        graph.setAttribute("ui.title", "Knowledge Map - Agent: " + agentName);
-        applyGraphStyling(graph);
+        createOrUpdateViewer(graph, knowledge);
+      }
+    } else {
+      updateExistingVisualization(knowledge);
+    }
+  }
 
-        Platform.runLater(() -> {
-          try {
-            openGui(graph);
-          } catch (Exception e) {
-            System.err.println("Failed to open visualization: " + e.getMessage());
-            e.printStackTrace();
-          }
-        });
+  private void createOrUpdateViewer(Graph graph, Knowledge knowledge) {
+    graph.setAttribute("ui.title", "Knowledge Map - Agent: " + agentName);
+    graph.setAttribute("ui.stylesheet", DEFAULT_STYLESHEET);
+
+    styleNodes(graph, knowledge);
+    styleEdgesForPath(graph, knowledge);
+    createInfoPanel(graph, knowledge);
+
+    Platform.runLater(() -> {
+      try {
+        openGui(graph);
+      } catch (Exception e) {
+      }
+    });
+  }
+
+  private void updateExistingVisualization(Knowledge knowledge) {
+    Graph graph = knowledge.getGraph();
+    if (graph == null) {
+      return;
+    }
+
+    Platform.runLater(() -> {
+      try {
+        styleNodes(graph, knowledge);
+        styleEdgesForPath(graph, knowledge);
+        createInfoPanel(graph, knowledge);
+      } catch (Exception e) {
+      }
+    });
+  }
+
+  private void styleNodes(Graph graph, Knowledge knowledge) {
+    graph.nodes().forEach(node -> {
+      String nodeId = node.getId();
+
+      // Set default label
+      node.setAttribute("ui.label", nodeId);
+
+      // Get node class (default to closed if not open)
+      String nodeClass = (String) node.getAttribute("ui.class");
+      if (nodeClass == null || (!nodeClass.equals("open") && !nodeClass.equals("closed"))) {
+        nodeClass = "closed";
+      }
+
+      // Determine what's at this node
+      boolean hasTreasure = knowledge.hasTreasure(nodeId);
+      String agentHere = knowledge.getAgentAtPosition(nodeId);
+      boolean isSilo = nodeId.equals(knowledge.getSiloPosition());
+      boolean isGolem = nodeId.equals(knowledge.getGolemPosition());
+      boolean isCurrentPosition = nodeId.equals(knowledge.getAgentData().getPosition());
+
+      // Set node class and label based on content
+      if (isCurrentPosition) {
+        // Current agent position takes precedence
+        node.setAttribute("ui.class", "me");
+
+        // Include treasure info in label if present
+        if (hasTreasure) {
+          TreasureData treasure = knowledge.getTreasureData(nodeId);
+          node.setAttribute("ui.label",
+              nodeId + "-" + this.agentName + "-" + treasure.getType() + "(" + treasure.getQuantity() + ")");
+        } else {
+          node.setAttribute("ui.label", nodeId + "-" + this.agentName);
+        }
+      } else if (agentHere != null) {
+        // Other agent is here
+        node.setAttribute("ui.class", "agent");
+
+        // Include treasure info in label if present
+        if (hasTreasure) {
+          TreasureData treasure = knowledge.getTreasureData(nodeId);
+          node.setAttribute("ui.label",
+              nodeId + "-" + agentHere + "-" + treasure.getType() + "(" + treasure.getQuantity() + ")");
+        } else {
+          node.setAttribute("ui.label", nodeId + "-" + agentHere);
+        }
+      } else if (isGolem) {
+        // Golem is here
+        node.setAttribute("ui.class", "golem");
+
+        // Include treasure info in label if present
+        if (hasTreasure) {
+          TreasureData treasure = knowledge.getTreasureData(nodeId);
+          node.setAttribute("ui.label", nodeId + "-Golem-" + treasure.getType() + "(" + treasure.getQuantity() + ")");
+        } else {
+          node.setAttribute("ui.label", nodeId + "-Golem");
+        }
+      } else if (isSilo) {
+        // Silo is here
+        node.setAttribute("ui.class", "silo");
+
+        // Include treasure info in label if present
+        if (hasTreasure) {
+          TreasureData treasure = knowledge.getTreasureData(nodeId);
+          node.setAttribute("ui.label", nodeId + "-Silo-" + treasure.getType() + "(" + treasure.getQuantity() + ")");
+        } else {
+          node.setAttribute("ui.label", nodeId + "-Silo");
+        }
+      } else if (hasTreasure) {
+        // Only treasure is here
+        TreasureData treasure = knowledge.getTreasureData(nodeId);
+        node.setAttribute("ui.class", "treasure");
+        node.setAttribute("ui.label", nodeId + "-" + treasure.getType() + "(" + treasure.getQuantity() + ")");
+      } else {
+        // Just a regular node (open or closed)
+        node.setAttribute("ui.class", nodeClass);
+      }
+    });
+  }
+
+  private void styleEdgesForPath(Graph graph, Knowledge knowledge) {
+    graph.edges().forEach(edge -> edge.removeAttribute("ui.class"));
+    if (!knowledge.getClosestTreasurePath().isEmpty()) {
+      Deque<String> path = knowledge.getClosestTreasurePath();
+      String[] pathArray = path.toArray(new String[0]);
+      for (int i = 0; i < pathArray.length - 1; i++) {
+        String currentNode = pathArray[i];
+        String nextNode = pathArray[i + 1];
+        graph.edges()
+            .filter(edge -> (edge.getSourceNode().getId().equals(currentNode) &&
+                edge.getTargetNode().getId().equals(nextNode)) ||
+                (edge.getSourceNode().getId().equals(nextNode) &&
+                    edge.getTargetNode().getId().equals(currentNode)))
+            .forEach(edge -> edge.setAttribute("ui.class", "path"));
       }
     }
   }
 
-  private void applyGraphStyling(Graph graph) {
-    StringBuilder styleSheet = new StringBuilder();
-    styleSheet.append(DEFAULT_NODE_STYLE);
-    styleSheet.append(NODE_STYLE_OPEN);
-    styleSheet.append(NODE_STYLE_AGENT);
-    styleSheet.append(NODE_STYLE_CLOSED);
-    graph.setAttribute("ui.stylesheet", styleSheet.toString());
+  private void createInfoPanel(Graph graph, Knowledge knowledge) {
+    StringBuilder info = new StringBuilder();
+
+    info.append("Agent: ").append(agentName).append("\n");
+
+    info.append("Desires: Explore=")
+        .append(String.format("%d", knowledge.wantsToCollect() ? 0 : 1))
+        .append(" Collect=")
+        .append(String.format("%d", knowledge.wantsToCollect() ? 1 : 0))
+        .append("\n");
+
+    info.append("Introvert Counter: ")
+        .append(knowledge.getIntrovertCounter())
+        .append("\n");
+
+    info.append("Block Counter: ")
+        .append(knowledge.getBlockCounter())
+        .append("\n");
+
+    info.append("Treasures:\n");
+    for (Map.Entry<String, TreasureData> entry : knowledge.getTreasures().entrySet()) {
+      TreasureData treasure = entry.getValue();
+      if (treasure.getQuantity() > 0) {
+        info.append("  ").append(entry.getKey()).append(": ")
+            .append(treasure.getType()).append(" (")
+            .append(treasure.getQuantity()).append(")\n");
+      }
+    }
+    info.append("\n");
+
+    info.append("Agents:\n");
+    for (Map.Entry<String, AgentData> entry : knowledge.getAgents().entrySet()) {
+      AgentData agent = entry.getValue();
+      info.append("  ").append(entry.getKey()).append(": ")
+          .append("Pos=").append(agent.getPosition())
+          .append(" Status=").append(agent.getStatus()).append("\n");
+    }
+    info.append("\n");
+
+    if (knowledge.getSilo() != null) {
+      info.append("Silo: ").append(knowledge.getSiloPosition())
+          .append(" (Age: ").append(knowledge.getSiloUpdateCounter()).append(")\n\n");
+    }
+
+    if (knowledge.getGolem() != null) {
+      info.append("Golem: ").append(knowledge.getGolemPosition())
+          .append(" (Age: ").append(knowledge.getGolemUpdateCounter()).append(")\n\n");
+    }
+
+    if (!knowledge.getClosestTreasurePath().isEmpty()) {
+      info.append("Path to closest treasure: ");
+      for (String nodeId : knowledge.getClosestTreasurePath()) {
+        info.append(nodeId).append(" → ");
+      }
+      if (info.length() > 2) {
+        info.delete(info.length() - 3, info.length());
+      }
+    }
+
+    graph.setAttribute("ui.info", info.toString());
   }
 
   private void openGui(Graph graph) {

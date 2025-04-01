@@ -5,7 +5,6 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 // - open: Node is discovered but not fully explored
 // - closed: Node is fully explored with no further actions needed
 public enum MapAttribute {
-  agent,
   open,
   closed;
 }

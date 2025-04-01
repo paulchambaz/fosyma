@@ -3,7 +3,6 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 import eu.su.mas.dedale.env.Observation;
 
 public class AgentData implements Serializable {

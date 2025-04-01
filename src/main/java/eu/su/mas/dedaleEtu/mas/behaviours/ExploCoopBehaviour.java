@@ -6,15 +6,9 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
-import eu.su.mas.dedaleEtu.mas.knowledge.Memory;
-import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import jade.core.behaviours.SimpleBehaviour;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 import java.util.List;
-import java.util.HashSet;
 import java.util.ArrayList;
 
 // ExploCoopBehaviour implements cooperative exploration logic for agents
@@ -40,6 +34,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     if (myPosition == null) {
       return;
     }
+
+    this.knowledge.updateAgentPosition(myPosition.getLocationId());
 
     List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent)
         .observe();
@@ -79,7 +75,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
             } else if (observed.startsWith("Golem")) {
               this.knowledge.setGolemPosition(accessibleNode.getLocationId());
             } else {
-              this.knowledge.updateAgentPosition(observed, accessibleNode.getLocationId());
+              this.knowledge.updateAgentsPosition(observed, accessibleNode.getLocationId());
             }
             break;
 
