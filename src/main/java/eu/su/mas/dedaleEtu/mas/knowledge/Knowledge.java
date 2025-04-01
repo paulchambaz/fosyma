@@ -964,7 +964,11 @@ class KnowledgeVisualization {
     graph.edges().forEach(edge -> edge.removeAttribute("ui.class"));
     if (!knowledge.getGoalPath().isEmpty()) {
       Deque<String> path = knowledge.getGoalPath();
+
+      path.addFirst(knowledge.getAgentData().getPosition());
+
       String[] pathArray = path.toArray(new String[0]);
+
       for (int i = 0; i < pathArray.length - 1; i++) {
         String currentNode = pathArray[i];
         String nextNode = pathArray[i + 1];
