@@ -9,7 +9,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
 import eu.su.mas.dedaleEtu.mas.knowledge.Memory;
 import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
-import jade.core.behaviours.SimpleBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 // ExploCoopBehaviour implements cooperative exploration logic for agents
 // to discover and map an environment while sharing topological information.
-public class ExploCoopBehaviour extends SimpleBehaviour {
+public class ExploCoopBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 8567689731496787661L;
 
   private boolean finished = false;
@@ -114,9 +114,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     // if there are no more nodes to be learnt about the graph, then we should
     // switch to a simpler protocol
     if (!this.knowledge.hasOpenNode()) {
-      finished = true;
-      this.exitValue = 1;
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
+      this.exitValue = 1;
       return;
     }
 
@@ -137,10 +136,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   // done signals when the exploration is complete by checking
   // if all nodes in the environment have been visited.
-  @Override
-  public boolean done() {
-    return finished;
-  }
 
   @Override
   public int onEnd() {

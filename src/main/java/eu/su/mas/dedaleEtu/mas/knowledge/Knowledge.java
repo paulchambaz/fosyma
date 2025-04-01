@@ -49,7 +49,8 @@ public class Knowledge implements Serializable {
   private static Integer INTROVERT_LOCKDOWN_TIME = 16;
   private Integer blockCounter;
 
-  private ArrayDeque<String> closestTreasurePath;
+  private String goal;
+  private ArrayDeque<String> goalPath;
 
   private KnowledgeVisualization visualization;
 
@@ -63,7 +64,9 @@ public class Knowledge implements Serializable {
     this.golem = null;
     this.introvertCounter = 0;
     this.blockCounter = 0;
-    this.closestTreasurePath = new ArrayDeque<>();
+
+    this.goal = "";
+    this.goalPath = new ArrayDeque<>();
 
     this.desireExplore = 1;
     this.desireCollect = 0;
@@ -558,28 +561,31 @@ public class Knowledge implements Serializable {
     this.blockCounter += 1;
   }
 
-  public synchronized Deque<String> getClosestTreasurePath() {
-    return this.closestTreasurePath;
+  public synchronized Deque<String> getGoalPath() {
+    return this.goalPath;
   }
 
-  public synchronized void updateClosestTreasurePath(String idFrom) {
-    int closestPathLength = 0;
-    List<String> closestPath = new ArrayList<>();
+  public synchronized void setGoal(String goal) {
+    this.goal = goal;
+  }
 
-    for (Map.Entry<String, TreasureData> entry : this.treasures.entrySet()) {
-      TreasureData treasure = entry.getValue();
-      String idTo = treasure.getNodeId();
+  public synchronized void updateGoal(String myPosition) {
+    switch (this.goal) {
+      case "SILO":
+        this.goalPath = new ArrayDeque<>(getShortestPathToSilo(myPosition));
+        break;
 
-      List<String> path = this.getShortestPath(idFrom, idTo);
-
-      int pathLength = path.size();
-      if ((closestPathLength == 0) || (pathLength < closestPathLength)) { // We know this treasure is closer
-        closestPath.clear();
-        closestPath.addAll(path);
-        closestPathLength = pathLength;
-      }
+      case "TREASURE":
+        this.goalPath = new ArrayDeque<>(treasures.entrySet().stream()
+          .map(currentTreasure -> getShortestPath(myPosition, currentTreasure.getKey()))
+          .filter(path -> path != null)
+          .min(Comparator.comparing(List::size))
+          .orElse(null));
+        break;
+      default:
+        assert false : "Unhandled goal type";
     }
-    this.closestTreasurePath = new ArrayDeque<>(closestPath);
+    
   }
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {

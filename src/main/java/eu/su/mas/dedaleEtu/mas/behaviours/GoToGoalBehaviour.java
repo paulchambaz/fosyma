@@ -40,6 +40,7 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
 
     private Knowledge knowledge;
     private Deque<String> pathToGoal;
+
     private int exitValue;
 
     public GoToGoalBehaviour (Agent myagent, Knowledge knowledge){
@@ -49,19 +50,18 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
 
     private void initialize(){
         Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-        this.knowledge.updateClosestTreasurePath(myPosition.getLocationId());
+        this.knowledge.updateGoal(myPosition.getLocationId());
 
-        this.pathToGoal = this.knowledge.getClosestTreasurePath();
-        System.out.println("PATH TO GOAL = " + this.pathToGoal);
+        this.pathToGoal = this.knowledge.getGoalPath();
+        this.initialized = true;
     }
 
     @Override
     public void action() {
+        System.out.println("GOING TO GOAL" + myAgent.getLocalName());
         if (!initialized){
             initialize();
         }
-
-        System.out.println("GOTOGOAL BEHAVIOUR STARTING !!!!");
         try {
             this.myAgent.doWait(500);
         } catch (Exception e) {
@@ -71,21 +71,26 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
         if (pathToGoal.isEmpty()){
             // here we normally found the goal, we can check if it's still here in case the golem moved it and open it
             List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent).observe();
-            
+            Observation myTreasureType = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType();
+
             for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
                 for (Couple<Observation, String> observation : entry.getRight()) {
                     Observation observeKind = observation.getLeft();
-                    Observation myTreasureType = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType();
                     String observed = observation.getRight();
 
-                    if (observeKind == myTreasureType) {
-                        ((AbstractDedaleAgent) this.myAgent).openLock(observeKind);
-                        int picked = ((AbstractDedaleAgent) this.myAgent).pick();
-                        System.out.println("TREASURE PICKED = " + picked);
+                    switch (observeKind) {
+                        case GOLD:
+                            this.exitValue = 1;
+                            break;
+                        case AGENTNAME:
+                            if (observed.startsWith("Silo"))
+                                this.exitValue = 2;
+                            break;
+                        default:
+                            assert false : "Unhandled observation type: " + observeKind;
                     }
                 }
             }
-            return;
         }
 
         try{
@@ -95,10 +100,8 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
             this.knowledge.bumpBlockCounter();
             // we are stuck at a point, we can try and recalculate a dijkstra here to the treasure
             Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-            this.knowledge.updateClosestTreasurePath(myPosition.getLocationId());
+            this.knowledge.updateGoal(myPosition.getLocationId());
         }
-
-        this.exitValue = 1;
     }
 
     @Override
