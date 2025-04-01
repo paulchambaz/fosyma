@@ -401,6 +401,7 @@ public class Knowledge implements Serializable {
   public synchronized List<String> getShortestPathToSilo(String currentPosition) {
     if (this.silo == null)
       return null;
+    System.out.println(this.silo.getPosition());
     return getShortestPath(currentPosition, this.silo.getPosition());
   }
 
@@ -614,7 +615,9 @@ public class Knowledge implements Serializable {
   public synchronized void updateGoal(String myPosition) {
     switch (this.goal) {
       case "SILO":
+        
         this.goalPath = new ArrayDeque<>(getShortestPathToSilo(myPosition));
+        System.out.println("AFTER");
         break;
 
       case "TREASURE":

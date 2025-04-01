@@ -41,7 +41,7 @@ public class ExploCoopBehaviour extends OneShotBehaviour {
         .observe();
 
     try {
-      this.myAgent.doWait(500);
+      this.myAgent.doWait(200);
     } catch (Exception e) {
       e.printStackTrace();
     }

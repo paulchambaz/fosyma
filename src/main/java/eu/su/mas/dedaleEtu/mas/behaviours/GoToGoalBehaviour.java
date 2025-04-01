@@ -49,19 +49,30 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
     }
 
     private void initialize(){
-        Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+        System.out.println("GOING TO GOAL " + myAgent.getLocalName());
+        Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();      
+        if (myPosition == null) {
+            return;
+        }
+        this.knowledge.updateAgentPosition(myPosition.getLocationId());                            
         this.knowledge.updateGoal(myPosition.getLocationId());
 
         this.pathToGoal = this.knowledge.getGoalPath();
+        System.out.println(this.pathToGoal);
         this.initialized = true;
     }
 
     @Override
     public void action() {
-        System.out.println("GOING TO GOAL" + myAgent.getLocalName());
         if (!initialized){
             initialize();
         }
+        Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+        if (myPosition == null) {
+            return;
+        }
+        this.knowledge.updateAgentPosition(myPosition.getLocationId());
+
         try {
             this.myAgent.doWait(500);
         } catch (Exception e) {
@@ -99,7 +110,11 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
         catch (Exception e) {
             this.knowledge.bumpBlockCounter();
             // we are stuck at a point, we can try and recalculate a dijkstra here to the treasure
-            Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+            myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+            if (myPosition == null) {
+                return;
+            }
+            this.knowledge.updateAgentPosition(myPosition.getLocationId());   
             this.knowledge.updateGoal(myPosition.getLocationId());
         }
     }
