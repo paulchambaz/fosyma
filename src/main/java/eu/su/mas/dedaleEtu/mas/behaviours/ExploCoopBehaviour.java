@@ -24,12 +24,14 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
   private boolean finished = false;
   private Knowledge knowledge;
+  private int exitValue;
 
   // ExploCoopBehaviour constructor initializes the exploration behavior with
   // a reference to the agent, its map representation, and cooperating agents.
   public ExploCoopBehaviour(final AbstractDedaleAgent myagent, Knowledge knowledge) {
     super(myagent);
     this.knowledge = knowledge;
+    this.exitValue = 0;
   }
 
   @Override
@@ -113,9 +115,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
     // switch to a simpler protocol
     if (!this.knowledge.hasOpenNode()) {
       finished = true;
-      // We add the collecting treasure behaviour here (temporary solution)
-      ((AbstractDedaleAgent) this.myAgent).addBehaviour(new GoToGoalBehaviour(this.myAgent, this.knowledge));
-
+      this.exitValue = 1;
       System.out.println(this.myAgent.getLocalName() + " - Exploration successufully done, behaviour removed.");
       return;
     }
@@ -140,5 +140,10 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
   @Override
   public boolean done() {
     return finished;
+  }
+
+  @Override
+  public int onEnd() {
+    return this.exitValue;
   }
 }

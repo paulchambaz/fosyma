@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Deque;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import org.graphstream.algorithm.Dijkstra;
@@ -46,7 +49,7 @@ public class Knowledge implements Serializable {
   private static Integer INTROVERT_LOCKDOWN_TIME = 16;
   private Integer blockCounter;
 
-  private List<String> closestTreasurePath;
+  private ArrayDeque<String> closestTreasurePath;
 
   private KnowledgeVisualization visualization;
 
@@ -60,7 +63,7 @@ public class Knowledge implements Serializable {
     this.golem = null;
     this.introvertCounter = 0;
     this.blockCounter = 0;
-    this.closestTreasurePath = new ArrayList<>();
+    this.closestTreasurePath = new ArrayDeque<>();
 
     this.desireExplore = 1;
     this.desireCollect = 0;
@@ -555,13 +558,13 @@ public class Knowledge implements Serializable {
     this.blockCounter += 1;
   }
 
-  public synchronized List<String> getClosestTreasurePath() {
+  public synchronized Deque<String> getClosestTreasurePath() {
     return this.closestTreasurePath;
   }
 
   public synchronized void updateClosestTreasurePath(String idFrom) {
     int closestPathLength = 0;
-    List<String> closestPath = new ArrayList<String>();
+    List<String> closestPath = new ArrayList<>();
 
     for (Map.Entry<String, TreasureData> entry : this.treasures.entrySet()) {
       TreasureData treasure = entry.getValue();
@@ -576,7 +579,7 @@ public class Knowledge implements Serializable {
         closestPathLength = pathLength;
       }
     }
-    this.closestTreasurePath = new ArrayList<String>(closestPath);
+    this.closestTreasurePath = new ArrayDeque<>(closestPath);
   }
 
   public synchronized SerializableKnowledge getSerializableKnowledge() {
