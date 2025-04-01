@@ -13,6 +13,17 @@ import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
+import javafx.stage.Stage;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.Scene;
+import org.graphstream.ui.view.View;
+import org.graphstream.ui.view.ViewerPipe;
+import org.graphstream.ui.view.ViewerListener;
 import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.EdgeRejectedException;
@@ -810,9 +821,14 @@ class KnowledgeVisualization {
       "edge.path { fill-color: green; stroke-width: 10px; }";
 
   private final AtomicBoolean isInitialized = new AtomicBoolean(false);
-  private Viewer viewer;
+  private FxViewer viewer;
   private boolean isViewerActive = false;
   private final String agentName;
+
+  // Add fields for the info panel
+  private Label infoLabel;
+  private Stage stage;
+  private SplitPane splitPane;
 
   public KnowledgeVisualization(String agentName) {
     this.agentName = agentName;
@@ -825,13 +841,98 @@ class KnowledgeVisualization {
 
     try {
       System.setProperty("org.graphstream.ui", "javafx");
+      // Initialize JavaFX components
+      Platform.runLater(() -> {
+        // Create the main layout components but don't show yet
+        initializeLayout();
+      });
       isInitialized.set(true);
       return true;
     } catch (Exception e) {
-      System.err.println("Failed to initialize visualization :" + e.getMessage());
+      System.err.println("Failed to initialize visualization: " + e.getMessage());
       e.printStackTrace();
       return false;
     }
+  }
+
+  // Content VBox to hold all info sections
+  private VBox infoContent;
+
+  // Section labels for each category
+  private Label agentHeaderLabel;
+  private VBox statusSection;
+  private VBox treasuresSection;
+  private VBox agentsSection;
+  private VBox environmentSection;
+  private VBox pathSection;
+
+  private void initializeLayout() {
+    // Create the main window
+    stage = new Stage();
+    stage.setTitle("Knowledge Map - Agent: " + agentName);
+
+    // Create a split pane to hold both the graph and info panel
+    splitPane = new SplitPane();
+    splitPane.setOrientation(Orientation.HORIZONTAL);
+
+    // Create a VBox to hold styled information content
+    infoContent = new VBox(10);
+    infoContent.setPadding(new Insets(15));
+    infoContent.setStyle("-fx-background-color: #f4f4f4;");
+
+    // Create section for Agent header (centered and bold)
+    agentHeaderLabel = new Label("Agent: " + agentName);
+    agentHeaderLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+    agentHeaderLabel.setMaxWidth(Double.MAX_VALUE);
+    agentHeaderLabel.setAlignment(javafx.geometry.Pos.CENTER);
+    infoContent.getChildren().add(agentHeaderLabel);
+
+    // Create STATUS section
+    Label statusHeader = createSectionHeader("STATUS");
+    statusSection = new VBox(5);
+    infoContent.getChildren().addAll(statusHeader, statusSection);
+
+    // Create TREASURES section
+    Label treasuresHeader = createSectionHeader("TREASURES");
+    treasuresSection = new VBox(5);
+    infoContent.getChildren().addAll(treasuresHeader, treasuresSection);
+
+    // Create AGENTS section
+    Label agentsHeader = createSectionHeader("AGENTS");
+    agentsSection = new VBox(5);
+    infoContent.getChildren().addAll(agentsHeader, agentsSection);
+
+    // Create ENVIRONMENT section
+    Label environmentHeader = createSectionHeader("ENVIRONMENT");
+    environmentSection = new VBox(5);
+    infoContent.getChildren().addAll(environmentHeader, environmentSection);
+
+    // Create PATH section
+    Label pathHeader = createSectionHeader("PATH");
+    pathSection = new VBox(5);
+    infoContent.getChildren().addAll(pathHeader, pathSection);
+
+    // Create a scroll pane for the info panel
+    ScrollPane infoScrollPane = new ScrollPane(infoContent);
+    infoScrollPane.setFitToWidth(true);
+    infoScrollPane.setPrefWidth(300); // Set preferred width for info panel
+    infoScrollPane.setStyle("-fx-background: #f4f4f4; -fx-background-color: #f4f4f4;");
+
+    // Add the info panel to the split pane (it will be on the left)
+    splitPane.getItems().add(infoScrollPane);
+
+    // Create the scene
+    Scene scene = new Scene(splitPane, 1000, 700);
+    stage.setScene(scene);
+  }
+
+  private Label createSectionHeader(String text) {
+    Label header = new Label(text);
+    header.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+    header.setMaxWidth(Double.MAX_VALUE);
+    header.setAlignment(javafx.geometry.Pos.CENTER);
+    header.setPadding(new Insets(5, 0, 5, 0));
+    return header;
   }
 
   public void updateFromModel(Knowledge knowledge) {
@@ -850,17 +951,18 @@ class KnowledgeVisualization {
   }
 
   private void createOrUpdateViewer(Graph graph, Knowledge knowledge) {
-    graph.setAttribute("ui.title", "Knowledge Map - Agent: " + agentName);
     graph.setAttribute("ui.stylesheet", DEFAULT_STYLESHEET);
 
     styleNodes(graph, knowledge);
     styleEdgesForPath(graph, knowledge);
-    createInfoPanel(graph, knowledge);
+    updateInfoPanel(knowledge);
 
     Platform.runLater(() -> {
       try {
         openGui(graph);
       } catch (Exception e) {
+        System.err.println("Error opening GUI: " + e.getMessage());
+        e.printStackTrace();
       }
     });
   }
@@ -875,8 +977,10 @@ class KnowledgeVisualization {
       try {
         styleNodes(graph, knowledge);
         styleEdgesForPath(graph, knowledge);
-        createInfoPanel(graph, knowledge);
+        updateInfoPanel(knowledge);
       } catch (Exception e) {
+        System.err.println("Error updating visualization: " + e.getMessage());
+        e.printStackTrace();
       }
     });
   }
@@ -964,11 +1068,9 @@ class KnowledgeVisualization {
     graph.edges().forEach(edge -> edge.removeAttribute("ui.class"));
     if (!knowledge.getGoalPath().isEmpty()) {
       Deque<String> path = knowledge.getGoalPath();
-
       path.addFirst(knowledge.getAgentData().getPosition());
 
       String[] pathArray = path.toArray(new String[0]);
-
       for (int i = 0; i < pathArray.length - 1; i++) {
         String currentNode = pathArray[i];
         String nextNode = pathArray[i + 1];
@@ -982,66 +1084,128 @@ class KnowledgeVisualization {
     }
   }
 
-  private void createInfoPanel(Graph graph, Knowledge knowledge) {
-    StringBuilder info = new StringBuilder();
+  private void updateInfoPanel(Knowledge knowledge) {
+    // Update the agent header
+    Platform.runLater(() -> {
+      // Update agent name
+      agentHeaderLabel.setText("Agent: " + agentName);
 
-    info.append("Agent: ").append(agentName).append("\n");
+      // Clear previous content from each section
+      statusSection.getChildren().clear();
+      treasuresSection.getChildren().clear();
+      agentsSection.getChildren().clear();
+      environmentSection.getChildren().clear();
+      pathSection.getChildren().clear();
 
-    info.append("Desires: Explore=")
-        .append(String.format("%d", knowledge.wantsToCollect() ? 0 : 1))
-        .append(" Collect=")
-        .append(String.format("%d", knowledge.wantsToCollect() ? 1 : 0))
-        .append("\n");
+      // Update STATUS section
+      Label desiresLabel = new Label(String.format("Desires: Explore=%d Collect=%d",
+          knowledge.wantsToCollect() ? 0 : 1,
+          knowledge.wantsToCollect() ? 1 : 0));
 
-    info.append("Introvert Counter: ")
-        .append(knowledge.getIntrovertCounter())
-        .append("\n");
+      Label introvertLabel = new Label("Introvert Counter: " + knowledge.getIntrovertCounter());
+      Label blockLabel = new Label("Block Counter: " + knowledge.getBlockCounter());
 
-    info.append("Block Counter: ")
-        .append(knowledge.getBlockCounter())
-        .append("\n");
+      // Add agent expertise and backpack info if available
+      AgentData myAgent = knowledge.getAgentData();
+      if (myAgent != null) {
+        // Add expertise information
+        if (myAgent.getExpertise() != null && !myAgent.getExpertise().isEmpty()) {
+          StringBuilder expertise = new StringBuilder("Expertise: ");
+          for (Map.Entry<Observation, Integer> exp : myAgent.getExpertise().entrySet()) {
+            expertise.append(exp.getKey()).append("=").append(exp.getValue()).append(" ");
+          }
+          Label expertiseLabel = new Label(expertise.toString().trim());
+          statusSection.getChildren().add(expertiseLabel);
+        }
 
-    info.append("Treasures:\n");
-    for (Map.Entry<String, TreasureData> entry : knowledge.getTreasures().entrySet()) {
-      TreasureData treasure = entry.getValue();
-      if (treasure.getQuantity() > 0) {
-        info.append("  ").append(entry.getKey()).append(": ")
-            .append(treasure.getType()).append(" (")
-            .append(treasure.getQuantity()).append(")\n");
+        // Add backpack information
+        Label backpackLabel = new Label(String.format("Backpack: %d/%d free",
+            myAgent.getBackpackFreeSpace(), myAgent.getBackpackCapacity()));
+
+        // Add treasure type if specified
+        if (myAgent.getTreasureType() != null) {
+          Label treasureTypeLabel = new Label("Collects: " + myAgent.getTreasureType());
+          statusSection.getChildren().add(treasureTypeLabel);
+        }
+
+        statusSection.getChildren().addAll(desiresLabel, introvertLabel, blockLabel, backpackLabel);
+      } else {
+        statusSection.getChildren().addAll(desiresLabel, introvertLabel, blockLabel);
       }
-    }
-    info.append("\n");
 
-    info.append("Agents:\n");
-    for (Map.Entry<String, AgentData> entry : knowledge.getAgents().entrySet()) {
-      AgentData agent = entry.getValue();
-      info.append("  ").append(entry.getKey()).append(": ")
-          .append("Pos=").append(agent.getPosition())
-          .append(" Status=").append(agent.getStatus()).append("\n");
-    }
-    info.append("\n");
+      // Update TREASURES section
+      for (Map.Entry<String, TreasureData> entry : knowledge.getTreasures().entrySet()) {
+        TreasureData treasure = entry.getValue();
+        if (treasure.getQuantity() > 0) {
+          StringBuilder treasureInfo = new StringBuilder();
+          treasureInfo.append(entry.getKey()).append(": ")
+              .append(treasure.getType()).append(" (")
+              .append(treasure.getQuantity()).append(")");
 
-    if (knowledge.getSilo() != null) {
-      info.append("Silo: ").append(knowledge.getSiloPosition())
-          .append(" (Age: ").append(knowledge.getSiloUpdateCounter()).append(")\n\n");
-    }
+          // Add lock information if it's locked
+          if (treasure.isLocked()) {
+            treasureInfo.append(" [Locked: ").append(treasure.getLockStrength()).append("]");
+          }
 
-    if (knowledge.getGolem() != null) {
-      info.append("Golem: ").append(knowledge.getGolemPosition())
-          .append(" (Age: ").append(knowledge.getGolemUpdateCounter()).append(")\n\n");
-    }
+          // Add pickup strength if needed
+          if (treasure.getPickStrength() > 0) {
+            treasureInfo.append(" [Strength: ").append(treasure.getPickStrength()).append("]");
+          }
 
-    if (!knowledge.getGoalPath().isEmpty()) {
-      info.append("Path to closest treasure: ");
-      for (String nodeId : knowledge.getGoalPath()) {
-        info.append(nodeId).append(" → ");
+          Label treasureLabel = new Label(treasureInfo.toString());
+          treasuresSection.getChildren().add(treasureLabel);
+        }
       }
-      if (info.length() > 2) {
-        info.delete(info.length() - 3, info.length());
-      }
-    }
 
-    graph.setAttribute("ui.info", info.toString());
+      // Update AGENTS section
+      for (Map.Entry<String, AgentData> entry : knowledge.getAgents().entrySet()) {
+        AgentData agent = entry.getValue();
+        StringBuilder agentInfo = new StringBuilder();
+        agentInfo.append(entry.getKey()).append(": ")
+            .append("Pos=").append(agent.getPosition())
+            .append(" Status=").append(agent.getStatus());
+
+        // Add expertise if available
+        if (agent.getExpertise() != null && !agent.getExpertise().isEmpty()) {
+          agentInfo.append(" Exp=[");
+          for (Map.Entry<Observation, Integer> exp : agent.getExpertise().entrySet()) {
+            agentInfo.append(exp.getKey()).append("=").append(exp.getValue()).append(" ");
+          }
+          agentInfo.append("]");
+        }
+
+        Label agentLabel = new Label(agentInfo.toString());
+        agentsSection.getChildren().add(agentLabel);
+      }
+
+      // Update ENVIRONMENT section
+      if (knowledge.getSilo() != null) {
+        Label siloLabel = new Label("Silo: " + knowledge.getSiloPosition() +
+            " (Age: " + knowledge.getSiloUpdateCounter() + ")");
+        environmentSection.getChildren().add(siloLabel);
+      }
+
+      if (knowledge.getGolem() != null) {
+        Label golemLabel = new Label("Golem: " + knowledge.getGolemPosition() +
+            " (Age: " + knowledge.getGolemUpdateCounter() + ")");
+        environmentSection.getChildren().add(golemLabel);
+      }
+
+      // Update PATH section
+      if (!knowledge.getGoalPath().isEmpty()) {
+        StringBuilder pathInfo = new StringBuilder("Path to closest treasure: ");
+        for (String nodeId : knowledge.getGoalPath()) {
+          pathInfo.append(nodeId).append(" → ");
+        }
+        if (pathInfo.length() > 2) {
+          pathInfo.delete(pathInfo.length() - 3, pathInfo.length());
+        }
+
+        Label pathLabel = new Label(pathInfo.toString());
+        pathLabel.setWrapText(true);
+        pathSection.getChildren().add(pathLabel);
+      }
+    });
   }
 
   private void openGui(Graph graph) {
@@ -1050,8 +1214,32 @@ class KnowledgeVisualization {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.viewer.enableAutoLayout();
         this.viewer.setCloseFramePolicy(FxViewer.CloseFramePolicy.CLOSE_VIEWER);
-        this.viewer.addDefaultView(true);
-        graph.display();
+
+        // Get the view from the viewer
+        View view = this.viewer.addDefaultView(false); // false means don't create its own window
+
+        // Add the view to the right side of the split pane
+        Platform.runLater(() -> {
+          // Make sure the splitPane has exactly 2 items (info panel and graph view)
+          if (splitPane.getItems().size() == 1) {
+            // Add the graph view to the second position (right side)
+            splitPane.getItems().add((javafx.scene.Node) view);
+
+            // Set the divider position (30% for info, 70% for graph)
+            splitPane.setDividerPositions(0.3);
+
+            // Show the stage if not already showing
+            if (!stage.isShowing()) {
+              stage.show();
+            }
+          }
+        });
+
+        // Add a viewer listener to detect when the window is closed
+        stage.setOnCloseRequest(event -> {
+          close();
+        });
+
         this.isViewerActive = true;
       }
     } catch (Exception e) {
@@ -1064,6 +1252,12 @@ class KnowledgeVisualization {
     if (this.viewer != null) {
       Platform.runLater(() -> {
         try {
+          // Close the main stage
+          if (stage != null) {
+            stage.close();
+          }
+
+          // Close the viewer
           this.viewer.close();
         } catch (NullPointerException e) {
           System.err.println(
