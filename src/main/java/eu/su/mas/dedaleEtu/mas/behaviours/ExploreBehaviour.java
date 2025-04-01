@@ -18,7 +18,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    System.out.println("Exploring");
+    // System.out.println("Exploring");
 
     this.knowledge.updateDesireExplore();
 

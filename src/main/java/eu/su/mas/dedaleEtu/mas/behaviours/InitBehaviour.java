@@ -16,6 +16,9 @@ public class InitBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    System.out.println("Initializing " + this.myAgent.getLocalName());
+    // System.out.println("Initializing " + this.myAgent.getLocalName());
+  }
+
+  private void init() {
   }
 }
