@@ -61,4 +61,14 @@ public class Utils {
   public static float lerp(float a, float b, float t) {
     return (1 - t) * a + t * b;
   }
+
+  public static void waitFor(Agent agent, int millseconds) {
+    try {
+      agent.doWait(500);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return;
+    }
+
+  }
 }

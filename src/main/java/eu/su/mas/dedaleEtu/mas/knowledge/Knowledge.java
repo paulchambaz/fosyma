@@ -1,7 +1,11 @@
 package eu.su.mas.dedaleEtu.mas.knowledge;
 
 import dataStructures.serializableGraph.*;
+import dataStructures.tuple.Couple;
+
 import java.io.Serializable;
+import jade.core.Agent;
+import eu.su.mas.dedale.env.Location;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -22,8 +26,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
 import org.graphstream.ui.view.View;
-import org.graphstream.ui.view.ViewerPipe;
-import org.graphstream.ui.view.ViewerListener;
 import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.EdgeRejectedException;
@@ -33,9 +35,8 @@ import org.graphstream.graph.IdAlreadyInUseException;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.fx_viewer.FxViewer;
-import org.graphstream.ui.view.Viewer;
 import eu.su.mas.dedale.env.Observation;
-
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class Knowledge implements Serializable {
@@ -68,7 +69,7 @@ public class Knowledge implements Serializable {
   private Integer blockCounter;
 
   private String goal;
-  private ArrayDeque<String> goalPath;
+  private Deque<String> goalPath;
 
   // visualizatoin reference
   private KnowledgeVisualization visualization;
@@ -89,16 +90,84 @@ public class Knowledge implements Serializable {
     this.desireCollect = 0;
   }
 
-  public void attachVisualization(KnowledgeVisualization visualization) {
+  public synchronized void attachVisualization(KnowledgeVisualization visualization) {
     this.visualization = visualization;
     notifyVisualization();
   }
 
-  public AgentData getAgentData() {
+  public synchronized void observe(Agent agent) {
+    setCurrentPosition(agent);
+
+    String position = getPosition();
+
+    List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) agent).observe();
+    addNode(position, MapAttribute.closed);
+
+    String nextNodeId = null;
+    for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
+      String accessibleNode = entry.getLeft().getLocationId();
+
+      // add new node to map representation
+      boolean isNewNode = addNewNode(accessibleNode);
+      if (!position.equals(accessibleNode)) {
+        addEdge(position, accessibleNode);
+        if (nextNodeId == null && isNewNode) {
+          nextNodeId = accessibleNode;
+        }
+      }
+
+      // collect agent names
+      for (Couple<Observation, String> observation : entry.getRight()) {
+        Observation observeKind = observation.getLeft();
+        String observed = observation.getRight();
+
+        switch (observeKind) {
+          case AGENTNAME:
+            if (observed.startsWith("Silo")) {
+              setSiloPosition(accessibleNode);
+            } else if (observed.startsWith("Golem")) {
+              setGolemPosition(accessibleNode);
+            } else {
+              updateAgentsPosition(observed, accessibleNode);
+            }
+            break;
+
+          case GOLD:
+          case DIAMOND:
+            // TODO : update treasure creation to include all information
+            System.out.println("Found treasure : " + observed);
+            int treasureValue = Integer.parseInt(observed);
+            addTreasure(accessibleNode, observeKind, treasureValue, -1, -1);
+            break;
+
+          default:
+            assert false : "Unhandled observation type: " + observeKind;
+        }
+      }
+    }
+  }
+
+  public synchronized float getDesireExplore() {
+    return this.desireExplore;
+  }
+
+  public synchronized AgentData getAgentData() {
     return this.agentData;
   }
 
-  public void updateDesireExplore() {
+  public synchronized String getPosition() {
+    return this.agentData.getPosition();
+  }
+
+  public synchronized String getGoal() {
+    return this.goal;
+  }
+
+  public synchronized void setGoalPath() {
+    this.goalPath = new ArrayDeque<>(getShortestPath(getPosition(), getGoal()));
+  }
+
+  public synchronized void updateDesireExplore() {
     float convergence = (float) 0.99;
     float effect = (float) 0.5;
     if (wantsToCollect()) {
@@ -122,11 +191,11 @@ public class Knowledge implements Serializable {
     }
   }
 
-  public boolean wantsToCollect() {
+  public synchronized boolean wantsToCollect() {
     return this.desireExplore < this.desireCollect;
   }
 
-  public Graph getGraph() {
+  public synchronized Graph getGraph() {
     return this.worldGraph;
   }
 
@@ -526,6 +595,18 @@ public class Knowledge implements Serializable {
     return shortestPath;
   }
 
+  public synchronized String getClosestOpenNode() {
+    return getOpenNodes().stream()
+        .map(node -> {
+          var path = getShortestPath(getPosition(), node);
+          int distance = (path != null) ? path.size() : 99999;
+          return new Couple<>(node, distance);
+        })
+        .min(Comparator.comparing(pair -> pair.getRight()))
+        .map(pair -> pair.getLeft())
+        .orElse(null);
+  }
+
   // getShortestPathToClosestOpenNode finds the closest unexplored node.
   // Useful for efficient exploration of the environment.
   public List<String> getShortestPathToClosestOpenNode(String myPosition) {
@@ -568,6 +649,14 @@ public class Knowledge implements Serializable {
       Node targetNode = currentEdge.getTargetNode();
       this.serializableGraph.addEdge(currentEdge.getId(), sourceNode.getId(), targetNode.getId());
     }
+  }
+
+  public synchronized void setCurrentPosition(Agent agent) {
+    Location position = ((AbstractDedaleAgent) agent).getCurrentPosition();
+    if (position == null) {
+      return;
+    }
+    updateAgentPosition(position.getLocationId());
   }
 
   // getSerializableGraph creates a serializable version of the map for
@@ -881,34 +970,34 @@ class KnowledgeVisualization {
     infoContent.setStyle("-fx-background-color: #f4f4f4;");
 
     // Create section for Agent header (centered and bold)
-    agentHeaderLabel = new Label("Agent: " + agentName);
-    agentHeaderLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+    agentHeaderLabel = new Label(agentName);
+    agentHeaderLabel.setStyle("-fx-font-size: 18px; -fx-font-style: italic; -fx-font-weight: bold;");
     agentHeaderLabel.setMaxWidth(Double.MAX_VALUE);
     agentHeaderLabel.setAlignment(javafx.geometry.Pos.CENTER);
     infoContent.getChildren().add(agentHeaderLabel);
 
     // Create STATUS section
-    Label statusHeader = createSectionHeader("STATUS");
+    Label statusHeader = createSectionHeader("Status");
     statusSection = new VBox(5);
     infoContent.getChildren().addAll(statusHeader, statusSection);
 
     // Create TREASURES section
-    Label treasuresHeader = createSectionHeader("TREASURES");
+    Label treasuresHeader = createSectionHeader("Treasures");
     treasuresSection = new VBox(5);
     infoContent.getChildren().addAll(treasuresHeader, treasuresSection);
 
     // Create AGENTS section
-    Label agentsHeader = createSectionHeader("AGENTS");
+    Label agentsHeader = createSectionHeader("Agents");
     agentsSection = new VBox(5);
     infoContent.getChildren().addAll(agentsHeader, agentsSection);
 
     // Create ENVIRONMENT section
-    Label environmentHeader = createSectionHeader("ENVIRONMENT");
+    Label environmentHeader = createSectionHeader("Environment");
     environmentSection = new VBox(5);
     infoContent.getChildren().addAll(environmentHeader, environmentSection);
 
     // Create PATH section
-    Label pathHeader = createSectionHeader("PATH");
+    Label pathHeader = createSectionHeader("Path");
     pathSection = new VBox(5);
     infoContent.getChildren().addAll(pathHeader, pathSection);
 
@@ -928,7 +1017,7 @@ class KnowledgeVisualization {
 
   private Label createSectionHeader(String text) {
     Label header = new Label(text);
-    header.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+    header.setStyle("-fx-font-weight: bold; -fx-font-style: italic;");
     header.setMaxWidth(Double.MAX_VALUE);
     header.setAlignment(javafx.geometry.Pos.CENTER);
     header.setPadding(new Insets(5, 0, 5, 0));
@@ -1067,7 +1156,7 @@ class KnowledgeVisualization {
   private void styleEdgesForPath(Graph graph, Knowledge knowledge) {
     graph.edges().forEach(edge -> edge.removeAttribute("ui.class"));
     if (!knowledge.getGoalPath().isEmpty()) {
-      Deque<String> path = knowledge.getGoalPath();
+      Deque<String> path = new ArrayDeque<>(knowledge.getGoalPath());
       path.addFirst(knowledge.getAgentData().getPosition());
 
       String[] pathArray = path.toArray(new String[0]);
@@ -1088,7 +1177,7 @@ class KnowledgeVisualization {
     // Update the agent header
     Platform.runLater(() -> {
       // Update agent name
-      agentHeaderLabel.setText("Agent: " + agentName);
+      agentHeaderLabel.setText(agentName);
 
       // Clear previous content from each section
       statusSection.getChildren().clear();

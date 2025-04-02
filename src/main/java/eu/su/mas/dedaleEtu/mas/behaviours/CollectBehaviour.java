@@ -18,8 +18,6 @@ public class CollectBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    // System.out.println("Collecting");
-
     this.knowledge.updateDesireExplore();
 
     if (!this.knowledge.wantsToCollect()) {

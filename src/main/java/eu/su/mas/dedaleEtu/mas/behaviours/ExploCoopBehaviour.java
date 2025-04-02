@@ -50,7 +50,6 @@ public class ExploCoopBehaviour extends OneShotBehaviour {
 
     // iterate on observations in order to handle them correctly
     String nextNodeId = null;
-    List<String> receiversAgents = new ArrayList<>();
     for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
       Location accessibleNode = entry.getLeft();
 
