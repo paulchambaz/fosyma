@@ -45,7 +45,7 @@ public class DropOffBehaviour extends OneShotBehaviour {
     public void action() {
         ((AbstractDedaleAgent) this.myAgent).dropOff();
 
-        System.out.println("DROPPED OFF");
+        System.out.println(this.myAgent.getLocalName() + " DROPPED OFF");
         this.exitValue = 1;
     }
 

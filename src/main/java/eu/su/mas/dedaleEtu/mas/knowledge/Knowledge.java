@@ -475,6 +475,8 @@ public class Knowledge implements Serializable {
   public synchronized List<String> getShortestPathToSilo(String currentPosition) {
     if (this.silo == null)
       return null;
+    System.out.println(this.silo.getPosition());
+    System.out.println(currentPosition);
     return getShortestPath(currentPosition, this.silo.getPosition());
   }
 
@@ -564,6 +566,7 @@ public class Knowledge implements Serializable {
   // Uses Dijkstra's algorithm to find the optimal route.
   public synchronized List<String> getShortestPath(String idFrom, String idTo) {
     if (idFrom == null || idTo == null) {
+      System.out.println("WTF TES POSITIONS SONT NULLES");
       return null;
     }
 
@@ -581,9 +584,12 @@ public class Knowledge implements Serializable {
     dijkstra.setSource(from);
     dijkstra.compute();
 
-    List<Node> path;
+    List<Node> path = new ArrayList<Node>();
     try {
-      path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
+      for (Node node : dijkstra.getPathNodes(tempGraph.getNode(idTo)))
+			  path.add(0, node);
+      //path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
+      System.out.println("HERE");
     } catch (Exception e) {
       return null;
     }
@@ -705,6 +711,7 @@ public class Knowledge implements Serializable {
     switch (this.goal) {
       case "SILO":
         this.goalPath = new ArrayDeque<>(getShortestPathToSilo(myPosition));
+        System.out.println("AFTER");
         break;
 
       case "TREASURE":

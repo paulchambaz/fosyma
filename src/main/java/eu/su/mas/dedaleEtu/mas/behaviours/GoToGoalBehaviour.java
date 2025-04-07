@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Deque;
 import jade.core.Agent;
 
-import eu.su.mas.dedaleEtu.princ.Utils;
-
 // GoToGoalBehaviour will engage after the exploration of the graph is over.
 // This behaviour will direct the agent to the closest treasures depending on its memory.
 // TODO : The route to the path is calculated with a Dijkstra algorithm but this will be fixed in the future to a more efficient approach.
@@ -31,19 +29,30 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
+    System.out.println("GOING TO GOAL " + myAgent.getLocalName());
     Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+    if (myPosition == null) {
+      return;
+    }
+    this.knowledge.updateAgentPosition(myPosition.getLocationId());
     this.knowledge.updateGoal(myPosition.getLocationId());
 
     this.pathToGoal = this.knowledge.getGoalPath();
+    System.out.println(this.pathToGoal);
     this.initialized = true;
   }
 
   @Override
   public void action() {
-    System.out.println("GOING TO GOAL" + myAgent.getLocalName());
     if (!initialized) {
       initialize();
     }
+    Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+    if (myPosition == null) {
+      return;
+    }
+    this.knowledge.updateAgentPosition(myPosition.getLocationId());
+
     try {
       this.myAgent.doWait(500);
     } catch (Exception e) {
@@ -83,7 +92,11 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
       this.knowledge.bumpBlockCounter();
       // we are stuck at a point, we can try and recalculate a dijkstra here to the
       // treasure
-      Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+      myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+      if (myPosition == null) {
+        return;
+      }
+      this.knowledge.updateAgentPosition(myPosition.getLocationId());
       this.knowledge.updateGoal(myPosition.getLocationId());
     }
   }

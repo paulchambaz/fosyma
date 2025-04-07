@@ -45,7 +45,7 @@ public class PickSoloBehaviour extends OneShotBehaviour {
     public void action() {
         int picked = ((AbstractDedaleAgent) this.myAgent).pick();
         
-        System.out.println("TREASURE PICKED = " + picked);
+        System.out.println(this.myAgent.getLocalName() + " TREASURE PICKED = " + picked);
         this.exitValue = 1;
     }
 

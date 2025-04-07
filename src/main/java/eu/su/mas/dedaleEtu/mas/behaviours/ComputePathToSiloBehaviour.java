@@ -44,6 +44,7 @@ public class ComputePathToSiloBehaviour extends OneShotBehaviour {
     }
 
     private void initialize(){
+        System.out.println(this.myAgent.getLocalName() + " COMPUTE SILO");
         this.knowledge.setGoal("SILO");
 
         this.initialized = true;

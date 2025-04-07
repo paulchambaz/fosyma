@@ -44,6 +44,7 @@ public class ComputeClosestTreasureBehaviour extends OneShotBehaviour {
     }
 
     private void initialize(){
+        System.out.println(this.myAgent.getLocalName() + " COMPUTE TREASURE");
         this.knowledge.setGoal("TREASURE");
         this.initialized = true;
     }
