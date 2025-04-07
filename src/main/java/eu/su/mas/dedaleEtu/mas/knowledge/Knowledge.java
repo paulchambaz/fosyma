@@ -12,7 +12,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.stream.Collectors;
@@ -104,6 +106,8 @@ public class Knowledge implements Serializable {
     List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) agent).observe();
     addNode(position, MapAttribute.closed);
 
+    Map<String, String> observedAgents = new HashMap<>();
+
     String nextNodeId = null;
     for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
       String accessibleNode = entry.getLeft().getLocationId();
@@ -124,6 +128,7 @@ public class Knowledge implements Serializable {
 
         switch (observeKind) {
           case AGENTNAME:
+            observedAgents.put(observed, accessibleNode);
             if (observed.startsWith("Silo")) {
               setSiloPosition(accessibleNode);
             } else if (observed.startsWith("Golem")) {
@@ -146,6 +151,51 @@ public class Knowledge implements Serializable {
         }
       }
     }
+
+    boolean isHere, shouldBeHere;
+
+    for (Map.Entry<String, AgentData> entry : this.agents.entrySet()) {
+      String agentName = entry.getKey();
+      String agentPosition = entry.getValue().getPosition();
+
+      isHere = false;
+      shouldBeHere = false;
+      for (Map.Entry<String, String> neighbour : observedAgents.entrySet()) {
+        if (agentName == neighbour.getKey()) {
+          isHere = true;
+        }
+        if (agentPosition == neighbour.getValue()) {
+          shouldBeHere = true;
+        }
+      }
+
+      if (agentMissing(entry.getKey(), entry.getValue().getPosition(), observedAgents)) {
+        updateAgentsPosition(agentName, null);
+      }
+    }
+
+    if (agentMissing("Silo", this.silo.getPosition(), observedAgents)) {
+      this.silo.setPosition(null);
+    }
+
+    if (agentMissing("Golem", this.golem.getPosition(), observedAgents)) {
+      this.golem.setPosition(null);
+    }
+  }
+
+  private boolean agentMissing(String name, String position, Map<String, String> observedAgents) {
+    boolean isHere = false;
+    boolean shouldBeHere = false;
+    for (Map.Entry<String, String> neighbour : observedAgents.entrySet()) {
+      if (name == neighbour.getKey()) {
+        isHere = true;
+      }
+      if (position == neighbour.getValue()) {
+        shouldBeHere = true;
+      }
+    }
+
+    return !isHere && shouldBeHere;
   }
 
   public synchronized float getDesireExplore() {
@@ -587,8 +637,8 @@ public class Knowledge implements Serializable {
     List<Node> path = new ArrayList<Node>();
     try {
       for (Node node : dijkstra.getPathNodes(tempGraph.getNode(idTo)))
-			  path.add(0, node);
-      //path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
+        path.add(0, node);
+      // path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
       System.out.println("HERE");
     } catch (Exception e) {
       return null;
