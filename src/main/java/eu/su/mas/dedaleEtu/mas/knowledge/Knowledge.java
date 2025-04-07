@@ -96,7 +96,8 @@ public class Knowledge implements Serializable {
   }
 
   public synchronized void observe(Agent agent) {
-    setCurrentPosition(agent);
+    String myPosition = ((AbstractDedaleAgent) agent).getCurrentPosition().getLocationId();
+    updateAgentPosition(myPosition);
 
     String position = getPosition();
 
@@ -164,7 +165,11 @@ public class Knowledge implements Serializable {
   }
 
   public synchronized void setGoalPath() {
-    this.goalPath = new ArrayDeque<>(getShortestPath(getPosition(), getGoal()));
+    List<String> path = getShortestPath(getPosition(), getGoal());
+    if (path == null) {
+      return;
+    }
+    this.goalPath = new ArrayDeque<>(path);
   }
 
   public synchronized void updateDesireExplore() {
@@ -564,6 +569,9 @@ public class Knowledge implements Serializable {
 
     Graph tempGraph = createTempGraph();
     Node from = tempGraph.getNode(idFrom);
+
+    System.out.println("from: " + idFrom + ", to: " + idTo);
+
     if (from == null) {
       return null;
     }
@@ -596,6 +604,7 @@ public class Knowledge implements Serializable {
   }
 
   public synchronized String getClosestOpenNode() {
+    System.out.println("Open nodes: " + getOpenNodes());
     return getOpenNodes().stream()
         .map(node -> {
           var path = getShortestPath(getPosition(), node);
@@ -649,14 +658,6 @@ public class Knowledge implements Serializable {
       Node targetNode = currentEdge.getTargetNode();
       this.serializableGraph.addEdge(currentEdge.getId(), sourceNode.getId(), targetNode.getId());
     }
-  }
-
-  public synchronized void setCurrentPosition(Agent agent) {
-    Location position = ((AbstractDedaleAgent) agent).getCurrentPosition();
-    if (position == null) {
-      return;
-    }
-    updateAgentPosition(position.getLocationId());
   }
 
   // getSerializableGraph creates a serializable version of the map for

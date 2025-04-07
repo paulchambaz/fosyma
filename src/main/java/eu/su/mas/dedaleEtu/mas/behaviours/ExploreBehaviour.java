@@ -20,28 +20,22 @@ public class ExploreBehaviour extends OneShotBehaviour {
   public void action() {
     this.knowledge.observe(this.myAgent);
 
-    String goal = this.knowledge.getClosestOpenNode();
-
-    if (goal == null) {
-      System.out.println(this.myAgent.getLocalName() + " wanted to go to a trash node");
-      this.exitValue = 1;
-      return;
-    }
-
-    this.knowledge.setGoal(goal);
-
     if (!this.knowledge.hasOpenNode() && this.knowledge.getDesireExplore() != 1) {
       System.out.println(this.myAgent.getLocalName() + " finished exploring");
       this.exitValue = 1;
       return;
     }
 
-    // this.knowledge.updateDesireExplore();
-    // if (this.knowledge.wantsToCollect()) {
-    // this.exitValue = 1;
-    // return;
-    // }
+    String goal = this.knowledge.getClosestOpenNode();
 
+    if (goal == null) {
+      // TODO: start LA RONDE
+      System.out.println(this.myAgent.getLocalName() + " wanted to go to a null node");
+      this.exitValue = 1;
+      return;
+    }
+
+    this.knowledge.setGoal(goal);
     System.out.println(this.myAgent.getLocalName() + " wants to go to " + goal);
   }
 

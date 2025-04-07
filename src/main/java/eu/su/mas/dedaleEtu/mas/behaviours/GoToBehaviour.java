@@ -15,17 +15,16 @@ public class GoToBehaviour extends OneShotBehaviour {
   private int exitValue = 0;
 
   private Knowledge knowledge;
-  private int loopback;
 
-  public GoToBehaviour(Agent myagent, Knowledge knowledge, int loopback) {
+  public GoToBehaviour(Agent myagent, Knowledge knowledge) {
     super(myagent);
     this.knowledge = knowledge;
-    this.loopback = loopback;
   }
 
   private void initialize() {
     System.out.println(this.myAgent.getLocalName() + " is being initialized");
     this.knowledge.setGoalPath();
+    this.exitValue = 0;
     this.initialized = true;
   }
 
@@ -37,19 +36,17 @@ public class GoToBehaviour extends OneShotBehaviour {
 
     this.knowledge.observe(this.myAgent);
 
-    Utils.waitFor(this.myAgent, 500);
+    Utils.waitFor(this.myAgent, 50);
 
     Deque<String> path = this.knowledge.getGoalPath();
 
     if (path.isEmpty()) {
-      this.exitValue = this.loopback;
       this.initialized = false;
+      this.exitValue = 1;
       return;
     }
 
-    System.out.println(this.myAgent.getLocalName() + "'s path is " + this.knowledge.getGoalPath());
     String next = path.removeFirst();
-    System.out.println(this.myAgent.getLocalName() + "'s next stop is " + next);
 
     try {
       ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(next));

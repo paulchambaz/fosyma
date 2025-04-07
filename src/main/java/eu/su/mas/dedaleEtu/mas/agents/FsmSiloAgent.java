@@ -6,13 +6,9 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
 
 import eu.su.mas.dedaleEtu.mas.behaviours.InitBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.GoToGoalBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ComputeClosestTreasureBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.PickSoloBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ComputePathToSiloBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.DropOffBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.EndBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
 
@@ -28,6 +24,7 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
 
   private static final String INIT = "Init";
   private static final String EXPLORE = "Explore";
+  private static final String EXPLORE_GOTO = "Explore Go To";
   private static final String END = "End";
 
   protected void setup() {
@@ -41,13 +38,18 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
 
     // register behaviours
     fsmBehaviour.registerFirstState(new InitBehaviour(this, this.knowledge), INIT);
-    fsmBehaviour.registerState(new ExploCoopBehaviour(this, this.knowledge), EXPLORE);
+    fsmBehaviour.registerState(new ExploreBehaviour(this, this.knowledge), EXPLORE);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), EXPLORE_GOTO);
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.knowledge), END);
 
     // register transitions
     fsmBehaviour.registerDefaultTransition(INIT, EXPLORE);
-    fsmBehaviour.registerDefaultTransition(EXPLORE, EXPLORE);
+
+    fsmBehaviour.registerDefaultTransition(EXPLORE, EXPLORE_GOTO);
     fsmBehaviour.registerTransition(EXPLORE, END, 1);
+
+    fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_GOTO);
+    fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);
