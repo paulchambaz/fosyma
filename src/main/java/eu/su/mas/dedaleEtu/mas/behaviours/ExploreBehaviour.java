@@ -36,7 +36,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
     }
 
     this.knowledge.setGoal(goal);
-    System.out.println(this.myAgent.getLocalName() + " wants to go to " + goal);
   }
 
   @Override

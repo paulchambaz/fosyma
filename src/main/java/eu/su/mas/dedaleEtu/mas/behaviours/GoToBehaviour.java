@@ -22,7 +22,6 @@ public class GoToBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    System.out.println(this.myAgent.getLocalName() + " is being initialized");
     this.knowledge.setGoalPath();
     this.exitValue = 0;
     this.initialized = true;

@@ -170,15 +170,16 @@ public class Knowledge implements Serializable {
       }
 
       if (agentMissing(entry.getKey(), entry.getValue().getPosition(), observedAgents)) {
+        System.out.println(entry.getKey() + " was supposed to be here but isn't...");
         updateAgentsPosition(agentName, null);
       }
     }
 
-    if (agentMissing("Silo", this.silo.getPosition(), observedAgents)) {
+    if (this.silo != null && agentMissing("Silo", this.silo.getPosition(), observedAgents)) {
       this.silo.setPosition(null);
     }
 
-    if (agentMissing("Golem", this.golem.getPosition(), observedAgents)) {
+    if (this.golem != null && agentMissing("Golem", this.golem.getPosition(), observedAgents)) {
       this.golem.setPosition(null);
     }
   }
@@ -616,14 +617,12 @@ public class Knowledge implements Serializable {
   // Uses Dijkstra's algorithm to find the optimal route.
   public synchronized List<String> getShortestPath(String idFrom, String idTo) {
     if (idFrom == null || idTo == null) {
-      System.out.println("WTF TES POSITIONS SONT NULLES");
+      // System.out.println("WTF TES POSITIONS SONT NULLES");
       return null;
     }
 
     Graph tempGraph = createTempGraph();
     Node from = tempGraph.getNode(idFrom);
-
-    System.out.println("from: " + idFrom + ", to: " + idTo);
 
     if (from == null) {
       return null;
@@ -639,7 +638,6 @@ public class Knowledge implements Serializable {
       for (Node node : dijkstra.getPathNodes(tempGraph.getNode(idTo)))
         path.add(0, node);
       // path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
-      System.out.println("HERE");
     } catch (Exception e) {
       return null;
     }
@@ -660,7 +658,6 @@ public class Knowledge implements Serializable {
   }
 
   public synchronized String getClosestOpenNode() {
-    System.out.println("Open nodes: " + getOpenNodes());
     return getOpenNodes().stream()
         .map(node -> {
           var path = getShortestPath(getPosition(), node);
@@ -761,7 +758,6 @@ public class Knowledge implements Serializable {
     switch (this.goal) {
       case "SILO":
         this.goalPath = new ArrayDeque<>(getShortestPathToSilo(myPosition));
-        System.out.println("AFTER");
         break;
 
       case "TREASURE":
