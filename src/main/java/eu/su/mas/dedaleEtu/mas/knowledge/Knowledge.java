@@ -66,7 +66,7 @@ public class Knowledge implements Serializable {
 
   // agent state
   private Integer introvertCounter;
-  private Integer blockCounter;
+  private Integer rageCounter;
 
   private String goal;
   private Deque<String> goalPath;
@@ -83,7 +83,7 @@ public class Knowledge implements Serializable {
     this.silo = null;
     this.golem = null;
     this.introvertCounter = 0;
-    this.blockCounter = 0;
+    this.rageCounter = 0;
     this.goal = "";
     this.goalPath = new ArrayDeque<>();
     this.desireExplore = 1;
@@ -346,6 +346,19 @@ public class Knowledge implements Serializable {
         .collect(Collectors.toList());
   }
 
+  public synchronized String getClosestTreasure(String myPosition){
+    System.out.println("Treasures: " + getTreasures());
+    return this.treasures.entrySet().stream()
+        .map(treasure -> {
+          var path = getShortestPath(getPosition(), treasure.getKey());
+          int distance = (path != null) ? path.size() : 99999;
+          return new Couple<>(treasure.getKey(), distance);
+        })
+        .min(Comparator.comparing(pair -> pair.getRight()))
+        .map(pair -> pair.getLeft())
+        .orElse(null);
+  }
+
   public synchronized void updateAgentPosition(String nodeId) {
     if (this.agentData == null) {
       this.agentData = new AgentData(nodeId);
@@ -588,8 +601,6 @@ public class Knowledge implements Serializable {
     try {
       for (Node node : dijkstra.getPathNodes(tempGraph.getNode(idTo)))
 			  path.add(0, node);
-      //path = dijkstra.getPath(tempGraph.getNode(idTo)).getNodePath();
-      System.out.println("HERE");
     } catch (Exception e) {
       return null;
     }
@@ -690,12 +701,12 @@ public class Knowledge implements Serializable {
     return this.golem;
   }
 
-  public synchronized Integer getBlockCounter() {
-    return this.blockCounter;
+  public synchronized Integer getRageCounter() {
+    return this.rageCounter;
   }
 
-  public synchronized void bumpBlockCounter() {
-    this.blockCounter += 1;
+  public synchronized void bumpRageCounter() {
+    this.rageCounter += 1;
     notifyVisualization();
   }
 
@@ -1200,7 +1211,7 @@ class KnowledgeVisualization {
           knowledge.wantsToCollect() ? 1 : 0));
 
       Label introvertLabel = new Label("Introvert Counter: " + knowledge.getIntrovertCounter());
-      Label blockLabel = new Label("Block Counter: " + knowledge.getBlockCounter());
+      Label blockLabel = new Label("Rage Counter: " + knowledge.getRageCounter());
 
       // Add agent expertise and backpack info if available
       AgentData myAgent = knowledge.getAgentData();

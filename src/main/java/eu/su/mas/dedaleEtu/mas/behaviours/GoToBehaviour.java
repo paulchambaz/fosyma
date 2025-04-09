@@ -1,8 +1,10 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.Deque;
+import java.util.List;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
+
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
@@ -51,7 +53,7 @@ public class GoToBehaviour extends OneShotBehaviour {
     try {
       ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(next));
     } catch (Exception e) {
-      this.knowledge.bumpBlockCounter();
+      this.knowledge.bumpRageCounter();
       this.knowledge.setGoalPath();
     }
 

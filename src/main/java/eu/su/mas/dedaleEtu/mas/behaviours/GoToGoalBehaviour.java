@@ -89,7 +89,7 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
     try {
       ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(pathToGoal.removeFirst()));
     } catch (Exception e) {
-      this.knowledge.bumpBlockCounter();
+      this.knowledge.bumpRageCounter();
       // we are stuck at a point, we can try and recalculate a dijkstra here to the
       // treasure
       myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();

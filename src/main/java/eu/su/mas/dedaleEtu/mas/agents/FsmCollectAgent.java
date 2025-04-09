@@ -27,6 +27,8 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final String EXPLORE = "Explore";
   private static final String EXPLORE_GOTO = "Explore Go To";
   private static final String COLLECT = "Collect";
+  private static final String COLLECT_GOTO = "Collect Go To";
+  private static final String SILO_GOTO = "Silo Go To";
   private static final String END = "End";
 
   // private static final String COMPUTETREASURE = "Compute Treasure";
@@ -49,6 +51,8 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new ExploreBehaviour(this, this.knowledge), EXPLORE);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), EXPLORE_GOTO);
     fsmBehaviour.registerState(new CollectBehaviour(this, this.knowledge), COLLECT);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), COLLECT_GOTO);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), SILO_GOTO);
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.knowledge), END);
 
     // register transitions
@@ -60,7 +64,12 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_GOTO);
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
 
-    fsmBehaviour.registerTransition(COLLECT, END, 1);
+    fsmBehaviour.registerDefaultTransition(COLLECT, COLLECT_GOTO);
+    fsmBehaviour.registerTransition(COLLECT, SILO_GOTO, 1);
+    fsmBehaviour.registerTransition(COLLECT, END, 2);
+
+    fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_GOTO);
+    fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT, 1);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);
