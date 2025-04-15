@@ -1,36 +1,25 @@
 package eu.su.mas.dedaleEtu.mas.knowledge;
 
-import dataStructures.serializableGraph.SerializableSimpleGraph;
-import dataStructures.serializableGraph.SerializableNode;
 import dataStructures.tuple.Couple;
 import java.io.Serializable;
 import jade.core.Agent;
 import eu.su.mas.dedale.env.Location;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import org.graphstream.algorithm.Dijkstra;
-import org.graphstream.graph.Edge;
-import org.graphstream.graph.EdgeRejectedException;
-import org.graphstream.graph.ElementNotFoundException;
-import org.graphstream.graph.Graph;
-import org.graphstream.graph.IdAlreadyInUseException;
-import org.graphstream.graph.Node;
-import org.graphstream.graph.implementations.SingleGraph;
 import eu.su.mas.dedale.env.Observation;
+import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalTime;
 
 public class Brain implements Serializable {
   private static final long serialVersionUID = -1333959882640838272L;
 
-  private String name;
-  public AgentMind mind;
-  public WorldMap map;
-  public EntityTracker entities;
+  public final String name;
+  public final AgentMind mind;
+  public final WorldMap map;
+  public final EntityTracker entities;
 
   private BrainVisualization visualization;
 
@@ -41,9 +30,37 @@ public class Brain implements Serializable {
     this.entities = new EntityTracker(this);
   }
 
-  public synchronized void attachVisualization(BrainVisualization visualization) {
-    this.visualization = visualization;
-    notifyVisualization();
+  public boolean moveTo(Agent agent, String node) {
+    try {
+      ((AbstractDedaleAgent) agent).moveTo(new GsLocation(node));
+    } catch (Exception e) {
+      return false;
+    }
+    String position = ((AbstractDedaleAgent) agent).getCurrentPosition().getLocationId();
+    if (position != entities.getPosition()) {
+      this.entities.updatePosition(position);
+      return true;
+    }
+    return false;
+  }
+
+  public synchronized String findClosestOpenNode() {
+    String position = this.entities.getPosition();
+    List<String> occupiedPositions = this.entities.getOccupiedPositions();
+    return map.findClosestOpenNode(position, occupiedPositions);
+  }
+
+  public synchronized void computePathToTarget() {
+    String position = this.entities.getPosition();
+    String target = this.mind.getTargetNode();
+    List<String> occupiedPositions = this.entities.getOccupiedPositions();
+    List<String> path = map.findShortestPath(position, target, occupiedPositions);
+    mind.setPathToTarget(path);
+  }
+
+  public synchronized String findRandomNode() {
+    List<String> occupiedPositions = this.entities.getOccupiedPositions();
+    return map.findRandomNode(occupiedPositions);
   }
 
   public synchronized void observe(Agent agent) {
@@ -77,19 +94,18 @@ public class Brain implements Serializable {
           case AGENTNAME:
             observedAgents.put(observed, accessibleNode);
             if (observed.startsWith("Silo")) {
-              // this.map.setSiloPosition(accessibleNode);
+              this.entities.setSiloPosition(accessibleNode);
             } else if (observed.startsWith("Golem")) {
-              // this.map.setGolemPosition(accessibleNode);
+              this.entities.setGolemPosition(accessibleNode);
             } else {
-              // this.map.updateAgentsPosition(observed, accessibleNode);
+              this.entities.updateAgentPosition(observed, accessibleNode);
             }
             break;
 
           case GOLD:
           case DIAMOND:
-            System.out.println("Found treasure : " + observed);
             int treasureValue = Integer.parseInt(observed);
-            // this.map.addTreasure(accessibleNode, observeKind, treasureValue, -1, -1);
+            this.entities.updateTreasure(accessibleNode, observeKind, treasureValue, true, -1, -1);
             break;
 
           default:
@@ -132,6 +148,25 @@ public class Brain implements Serializable {
     // }
   }
 
+  public synchronized void log(Object... args) {
+    StringBuilder message = new StringBuilder();
+
+    String timestamp = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    message.append(timestamp)
+        .append(" - ")
+        .append(this.name)
+        .append(" - ");
+
+    if (args.length > 0) {
+      message.append(args[0]);
+      for (int i = 1; i < args.length; i++) {
+        message.append(" ").append(args[i]);
+      }
+    }
+
+    System.out.println(message);
+  }
+
   public void notifyVisualization() {
     if (this.visualization != null) {
       this.visualization.updateFromModel(this);
@@ -139,15 +174,9 @@ public class Brain implements Serializable {
   }
 
   public void createVisualization() {
-    try {
-      this.visualization = new BrainVisualization(this.name);
-      if (this.visualization.initialize()) {
-        attachVisualization(this.visualization);
-      }
-    } catch (Exception e) {
-      System.err.println("Failed to create visualization: " + e.getMessage());
-      e.printStackTrace();
-    }
+    this.visualization = new BrainVisualization(this.name);
+    this.visualization.initialize();
+    notifyVisualization();
   }
 
   public void beforeMove() {

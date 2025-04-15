@@ -4,7 +4,7 @@ import java.util.Map;
 import java.io.Serializable;
 import dataStructures.serializableGraph.SerializableSimpleGraph;
 
-public class SerializableKnowledge implements Serializable {
+public class SerializableBrain implements Serializable {
   private static final long serialVersionUID = -1328748247824344372L;
 
   private SerializableSimpleGraph<String, MapAttribute> graph;
@@ -13,13 +13,12 @@ public class SerializableKnowledge implements Serializable {
   private SiloData silo;
   private GolemData golem;
 
-  public SerializableKnowledge(
-    SerializableSimpleGraph<String, MapAttribute> graph,
-    Map<String, TreasureData> treasures,
-    Map<String, AgentData> agents,
-    SiloData silo,
-    GolemData golem
-  ) {
+  public SerializableBrain(
+      SerializableSimpleGraph<String, MapAttribute> graph,
+      Map<String, TreasureData> treasures,
+      Map<String, AgentData> agents,
+      SiloData silo,
+      GolemData golem) {
     this.graph = graph;
     this.treasures = treasures;
     this.agents = agents;
@@ -48,4 +47,3 @@ public class SerializableKnowledge implements Serializable {
   }
 
 }
-

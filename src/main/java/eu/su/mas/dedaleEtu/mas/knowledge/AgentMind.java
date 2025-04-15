@@ -1,13 +1,15 @@
 package eu.su.mas.dedaleEtu.mas.knowledge;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Deque;
+import java.util.ArrayDeque;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class AgentMind implements Serializable {
   private static final long serialVersionUID = -5420389237029721035L;
   private static final int SOCIAL_COOLDOWN_PERIOD = 16;
+  private static final int STUCK_MAX = 10;
 
   private float explorationPriority;
   private float collectionPriority;
@@ -30,6 +32,14 @@ public class AgentMind implements Serializable {
     this.pathToTarget = new ArrayDeque<>();
   }
 
+  public float getExplorationPriority() {
+    return this.explorationPriority;
+  }
+
+  public float getCollectionPriority() {
+    return this.collectionPriority;
+  }
+
   public void updateBehaviouralPriorities() {
     float gradualTransition = 0.99f;
     float accelerateEffect = 0.5f;
@@ -49,12 +59,12 @@ public class AgentMind implements Serializable {
     brain.notifyVisualization();
   }
 
-  public float getExplorationPriority() {
-    return this.explorationPriority;
-  }
-
   public boolean isCollectionPreferred() {
     return this.collectionPriority > this.explorationPriority;
+  }
+
+  public int getSocialCooldown() {
+    return this.socialCooldown;
   }
 
   public void resetSocialCooldown() {
@@ -76,8 +86,20 @@ public class AgentMind implements Serializable {
     return this.socialCooldown > SOCIAL_COOLDOWN_PERIOD;
   }
 
+  public int getStuckCounter() {
+    return this.stuckCounter;
+  }
+
   public void incrementStuckCounter() {
     this.stuckCounter += 1;
+    brain.notifyVisualization();
+  }
+
+  public void decrementStuckCounter() {
+    this.stuckCounter -= 1;
+    if (this.stuckCounter < 0) {
+      this.stuckCounter = 0;
+    }
     brain.notifyVisualization();
   }
 
@@ -86,32 +108,25 @@ public class AgentMind implements Serializable {
     brain.notifyVisualization();
   }
 
-  public void setTargetNode(String nodeId) {
-    this.targetNodeId = nodeId;
+  public boolean isStuck() {
+    return this.stuckCounter > STUCK_MAX;
   }
 
-  public void calculatePathToTarget() {
-    // List<String> path =
-    // brain.map.findShortestPath(brain.entities.getPosition(),
-    // this.targetNodeId);
-    // if (path == null)
-    // return;
-    // this.pathToTarget = new ArrayDeque<>(path);
+  public String getTargetNode() {
+    return this.targetNodeId;
+  }
+
+  public void setTargetNode(String nodeId) {
+    this.targetNodeId = nodeId;
   }
 
   public Deque<String> getPathToTarget() {
     return this.pathToTarget;
   }
 
-  public int getSocialCooldown() {
-    return this.socialCooldown;
-  }
-
-  public int getStuckCounter() {
-    return this.stuckCounter;
-  }
-
-  public String getTargetNodeId() {
-    return this.targetNodeId;
+  public void setPathToTarget(List<String> path) {
+    if (path == null)
+      return;
+    this.pathToTarget = new ArrayDeque<>(path);
   }
 }

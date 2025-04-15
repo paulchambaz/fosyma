@@ -10,6 +10,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.EndBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.DeadlockBehaviour;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
@@ -24,6 +25,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final String INIT = "Init";
   private static final String EXPLORE = "Explore";
   private static final String EXPLORE_GOTO = "Explore Go To";
+  private static final String EXPLORE_DEADLOCK = "Explore deadlock";
   private static final String COLLECT = "Collect";
   private static final String END = "End";
 
@@ -38,6 +40,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerFirstState(new InitBehaviour(this, this.brain), INIT);
     fsmBehaviour.registerState(new ExploreBehaviour(this, this.brain), EXPLORE);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), EXPLORE_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), EXPLORE_DEADLOCK);
     fsmBehaviour.registerState(new CollectBehaviour(this, this.brain), COLLECT);
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
 
@@ -49,6 +52,9 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_GOTO);
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
+    fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(EXPLORE_DEADLOCK, EXPLORE_GOTO);
 
     fsmBehaviour.registerTransition(COLLECT, END, 1);
 

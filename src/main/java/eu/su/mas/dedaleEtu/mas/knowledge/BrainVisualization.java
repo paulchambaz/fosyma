@@ -3,6 +3,9 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
@@ -12,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
 import org.graphstream.ui.view.View;
 import org.graphstream.ui.fx_viewer.FxViewer;
+import org.graphstream.graph.Node;
 import org.graphstream.graph.Graph;
 
 class BrainVisualization {
@@ -39,10 +43,15 @@ class BrainVisualization {
   private boolean isViewerActive = false;
   private final String agentName;
 
-  // Add fields for the info panel
   // private Label infoLabel;
   private Stage stage;
   private SplitPane splitPane;
+
+  private VBox infoContent;
+
+  private Label agentHeaderLabel;
+  private VBox mindSection;
+  private VBox entitiesSection;
 
   public BrainVisualization(String agentName) {
     this.agentName = agentName;
@@ -67,73 +76,38 @@ class BrainVisualization {
     }
   }
 
-  // Content VBox to hold all info sections
-  private VBox infoContent;
-
-  // Section labels for each category
-  private Label agentHeaderLabel;
-  private VBox statusSection;
-  private VBox treasuresSection;
-  private VBox agentsSection;
-  private VBox environmentSection;
-  private VBox pathSection;
-
   private void initializeLayout() {
-    // Create the main window
     stage = new Stage();
-    stage.setTitle("Brain Map - Agent: " + agentName);
+    stage.setTitle("Brain of " + agentName);
 
-    // Create a split pane to hold both the graph and info panel
     splitPane = new SplitPane();
     splitPane.setOrientation(Orientation.HORIZONTAL);
 
-    // Create a VBox to hold styled information content
     infoContent = new VBox(10);
     infoContent.setPadding(new Insets(15));
     infoContent.setStyle("-fx-background-color: #f4f4f4;");
 
-    // Create section for Agent header (centered and bold)
     agentHeaderLabel = new Label(agentName);
     agentHeaderLabel.setStyle("-fx-font-size: 18px; -fx-font-style: italic; -fx-font-weight: bold;");
     agentHeaderLabel.setMaxWidth(Double.MAX_VALUE);
     agentHeaderLabel.setAlignment(javafx.geometry.Pos.CENTER);
     infoContent.getChildren().add(agentHeaderLabel);
 
-    // Create STATUS section
-    Label statusHeader = createSectionHeader("Status");
-    statusSection = new VBox(5);
-    infoContent.getChildren().addAll(statusHeader, statusSection);
+    Label mindHeader = createSectionHeader("Mind");
+    mindSection = new VBox(5);
+    infoContent.getChildren().addAll(mindHeader, mindSection);
 
-    // Create TREASURES section
-    Label treasuresHeader = createSectionHeader("Treasures");
-    treasuresSection = new VBox(5);
-    infoContent.getChildren().addAll(treasuresHeader, treasuresSection);
+    Label entitiesHeader = createSectionHeader("Entities");
+    entitiesSection = new VBox(5);
+    infoContent.getChildren().addAll(entitiesHeader, entitiesSection);
 
-    // Create AGENTS section
-    Label agentsHeader = createSectionHeader("Agents");
-    agentsSection = new VBox(5);
-    infoContent.getChildren().addAll(agentsHeader, agentsSection);
-
-    // Create ENVIRONMENT section
-    Label environmentHeader = createSectionHeader("Environment");
-    environmentSection = new VBox(5);
-    infoContent.getChildren().addAll(environmentHeader, environmentSection);
-
-    // Create PATH section
-    Label pathHeader = createSectionHeader("Path");
-    pathSection = new VBox(5);
-    infoContent.getChildren().addAll(pathHeader, pathSection);
-
-    // Create a scroll pane for the info panel
     ScrollPane infoScrollPane = new ScrollPane(infoContent);
     infoScrollPane.setFitToWidth(true);
-    infoScrollPane.setPrefWidth(300); // Set preferred width for info panel
+    infoScrollPane.setPrefWidth(300);
     infoScrollPane.setStyle("-fx-background: #f4f4f4; -fx-background-color: #f4f4f4;");
 
-    // Add the info panel to the split pane (it will be on the left)
     splitPane.getItems().add(infoScrollPane);
 
-    // Create the scene
     Scene scene = new Scene(splitPane, 1000, 700);
     stage.setScene(scene);
   }
@@ -198,89 +172,10 @@ class BrainVisualization {
   }
 
   private void styleNodes(Graph graph, Brain brain) {
-    // graph.nodes().forEach(node -> {
-    // String nodeId = node.getId();
-    //
-    // // Set default label
-    // node.setAttribute("ui.label", nodeId);
-    //
-    // // Get node class (default to closed if not open)
-    // String nodeClass = (String) node.getAttribute("ui.class");
-    // if (nodeClass == null || (!nodeClass.equals("open") &&
-    // !nodeClass.equals("closed"))) {
-    // nodeClass = "closed";
+    List<Node> nodesList = new ArrayList<>();
+    // for (Node node : graph.getNodeSet()) {
+    // nodesList.add(node);
     // }
-    //
-    // // Determine what's at this node
-    // boolean hasTreasure = brain.entities.hasTreasure(nodeId);
-    // String agentHere = brain.entities.getAgentAtPosition(nodeId);
-    // boolean isSilo = nodeId.equals(brain.entities.getSiloPosition());
-    // boolean isGolem = nodeId.equals(brain.entities.getGolemPosition());
-    // boolean isCurrentPosition =
-    // nodeId.equals(brain.entities.getAgentData().getPosition());
-    //
-    // // Set node class and label based on content
-    // if (isCurrentPosition) {
-    // // Current agent position takes precedence
-    // node.setAttribute("ui.class", "me");
-    //
-    // // Include treasure info in label if present
-    // if (hasTreasure) {
-    // TreasureData treasure = brain.getTreasureData(nodeId);
-    // node.setAttribute("ui.label",
-    // nodeId + "-" + this.agentName + "-" + treasure.getType() + "(" +
-    // treasure.getQuantity() + ")");
-    // } else {
-    // node.setAttribute("ui.label", nodeId + "-" + this.agentName);
-    // }
-    // } else if (agentHere != null) {
-    // // Other agent is here
-    // node.setAttribute("ui.class", "agent");
-    //
-    // // Include treasure info in label if present
-    // if (hasTreasure) {
-    // TreasureData treasure = brain.getTreasureData(nodeId);
-    // node.setAttribute("ui.label",
-    // nodeId + "-" + agentHere + "-" + treasure.getType() + "(" +
-    // treasure.getQuantity() + ")");
-    // } else {
-    // node.setAttribute("ui.label", nodeId + "-" + agentHere);
-    // }
-    // } else if (isGolem) {
-    // // Golem is here
-    // node.setAttribute("ui.class", "golem");
-    //
-    // // Include treasure info in label if present
-    // if (hasTreasure) {
-    // TreasureData treasure = brain.getTreasureData(nodeId);
-    // node.setAttribute("ui.label", nodeId + "-Golem-" + treasure.getType() + "(" +
-    // treasure.getQuantity() + ")");
-    // } else {
-    // node.setAttribute("ui.label", nodeId + "-Golem");
-    // }
-    // } else if (isSilo) {
-    // // Silo is here
-    // node.setAttribute("ui.class", "silo");
-    //
-    // // Include treasure info in label if present
-    // if (hasTreasure) {
-    // TreasureData treasure = brain.getTreasureData(nodeId);
-    // node.setAttribute("ui.label", nodeId + "-Silo-" + treasure.getType() + "(" +
-    // treasure.getQuantity() + ")");
-    // } else {
-    // node.setAttribute("ui.label", nodeId + "-Silo");
-    // }
-    // } else if (hasTreasure) {
-    // // Only treasure is here
-    // TreasureData treasure = brain.getTreasureData(nodeId);
-    // node.setAttribute("ui.class", "treasure");
-    // node.setAttribute("ui.label", nodeId + "-" + treasure.getType() + "(" +
-    // treasure.getQuantity() + ")");
-    // } else {
-    // // Just a regular node (open or closed)
-    // node.setAttribute("ui.class", nodeClass);
-    // }
-    // });
   }
 
   private void styleEdgesForPath(Graph graph, Brain brain) {
@@ -304,138 +199,75 @@ class BrainVisualization {
   }
 
   private void updateInfoPanel(Brain brain) {
-    // // Update the agent header
-    // Platform.runLater(() -> {
-    // // Update agent name
-    // agentHeaderLabel.setText(agentName);
-    //
-    // // Clear previous content from each section
-    // statusSection.getChildren().clear();
-    // treasuresSection.getChildren().clear();
-    // agentsSection.getChildren().clear();
-    // environmentSection.getChildren().clear();
-    // pathSection.getChildren().clear();
-    //
-    // // Update STATUS section
-    // Label desiresLabel = new Label(String.format("Desires: Explore=%d
-    // Collect=%d",
-    // brain.mind.isCollectionPreferred() ? 0 : 1,
-    // brain.mind.isCollectionPreferred() ? 1 : 0));
-    //
-    // Label introvertLabel = new Label("Introvert Counter: " +
-    // brain.mind.getSocialCooldown());
-    // Label blockLabel = new Label("Block Counter: " +
-    // brain.mind.getStuckCounter());
-    //
-    // // Add agent expertise and backpack info if available
-    // AgentData myAgent = brain.getAgentData();
-    // if (myAgent != null) {
-    // // Add expertise information
-    // if (myAgent.getExpertise() != null && !myAgent.getExpertise().isEmpty()) {
-    // StringBuilder expertise = new StringBuilder("Expertise: ");
-    // for (Map.Entry<Observation, Integer> exp : myAgent.getExpertise().entrySet())
-    // {
-    // expertise.append(exp.getKey()).append("=").append(exp.getValue()).append("
-    // ");
-    // }
-    // Label expertiseLabel = new Label(expertise.toString().trim());
-    // statusSection.getChildren().add(expertiseLabel);
-    // }
-    //
-    // // Add backpack information
-    // Label backpackLabel = new Label(String.format("Backpack: %d/%d free",
-    // myAgent.getBackpackFreeSpace(), myAgent.getBackpackCapacity()));
-    //
-    // // Add treasure type if specified
-    // if (myAgent.getTreasureType() != null) {
-    // Label treasureTypeLabel = new Label("Collects: " +
-    // myAgent.getTreasureType());
-    // statusSection.getChildren().add(treasureTypeLabel);
-    // }
-    //
-    // statusSection.getChildren().addAll(desiresLabel, introvertLabel, blockLabel,
-    // backpackLabel);
-    // } else {
-    // statusSection.getChildren().addAll(desiresLabel, introvertLabel, blockLabel);
-    // }
-    //
-    // // Update TREASURES section
-    // for (Map.Entry<String, TreasureData> entry :
-    // brain.getTreasures().entrySet()) {
-    // TreasureData treasure = entry.getValue();
-    // if (treasure.getQuantity() > 0) {
-    // StringBuilder treasureInfo = new StringBuilder();
-    // treasureInfo.append(entry.getKey()).append(": ")
-    // .append(treasure.getType()).append(" (")
-    // .append(treasure.getQuantity()).append(")");
-    //
-    // // Add lock information if it's locked
-    // if (treasure.isLocked()) {
-    // treasureInfo.append(" [Locked:
-    // ").append(treasure.getLockStrength()).append("]");
-    // }
-    //
-    // // Add pickup strength if needed
-    // if (treasure.getPickStrength() > 0) {
-    // treasureInfo.append(" [Strength:
-    // ").append(treasure.getPickStrength()).append("]");
-    // }
-    //
-    // Label treasureLabel = new Label(treasureInfo.toString());
-    // treasuresSection.getChildren().add(treasureLabel);
-    // }
-    // }
-    //
-    // // Update AGENTS section
-    // for (Map.Entry<String, AgentData> entry : brain.getAgents().entrySet()) {
-    // AgentData agent = entry.getValue();
-    // StringBuilder agentInfo = new StringBuilder();
-    // agentInfo.append(entry.getKey()).append(": ")
-    // .append("Pos=").append(agent.getPosition())
-    // .append(" Status=").append(agent.getStatus());
-    //
-    // // Add expertise if available
-    // if (agent.getExpertise() != null && !agent.getExpertise().isEmpty()) {
-    // agentInfo.append(" Exp=[");
-    // for (Map.Entry<Observation, Integer> exp : agent.getExpertise().entrySet()) {
-    // agentInfo.append(exp.getKey()).append("=").append(exp.getValue()).append("
-    // ");
-    // }
-    // agentInfo.append("]");
-    // }
-    //
-    // Label agentLabel = new Label(agentInfo.toString());
-    // agentsSection.getChildren().add(agentLabel);
-    // }
-    //
-    // // Update ENVIRONMENT section
-    // if (brain.getSilo() != null) {
-    // Label siloLabel = new Label("Silo: " + brain.getSiloPosition() +
-    // " (Age: " + brain.getSiloUpdateCounter() + ")");
-    // environmentSection.getChildren().add(siloLabel);
-    // }
-    //
-    // if (brain.getGolem() != null) {
-    // Label golemLabel = new Label("Golem: " + brain.getGolemPosition() +
-    // " (Age: " + brain.getGolemUpdateCounter() + ")");
-    // environmentSection.getChildren().add(golemLabel);
-    // }
-    //
-    // // Update PATH section
-    // if (!brain.mind.getPathToTarget().isEmpty()) {
-    // StringBuilder pathInfo = new StringBuilder("Path to closest treasure: ");
-    // for (String nodeId : brain.mind.getPathToTarget()) {
-    // pathInfo.append(nodeId).append(" → ");
-    // }
-    // if (pathInfo.length() > 2) {
-    // pathInfo.delete(pathInfo.length() - 3, pathInfo.length());
-    // }
-    //
-    // Label pathLabel = new Label(pathInfo.toString());
-    // pathLabel.setWrapText(true);
-    // pathSection.getChildren().add(pathLabel);
-    // }
-    // });
+    Platform.runLater(() -> {
+
+      Label explorationPriority = new Label(
+          "Exploration priority : " + String.valueOf(brain.mind.getExplorationPriority()));
+      Label collectionPriority = new Label(
+          "Collection priority : " + String.valueOf(brain.mind.getCollectionPriority()));
+      Label socialCooldown = new Label(String.valueOf("Social cooldown : " + brain.mind.getSocialCooldown()));
+      Label stuckCounter = new Label(String.valueOf("Stuck counter : " + brain.mind.getStuckCounter()));
+      Label targetNode = new Label(String.valueOf("Target node : " + brain.mind.getTargetNode()));
+      Label pathToTarget = new Label(String.valueOf("Path to target : " + brain.mind.getPathToTarget()));
+
+      mindSection.getChildren().clear();
+      mindSection.getChildren().addAll(
+          explorationPriority,
+          collectionPriority,
+          socialCooldown,
+          stuckCounter,
+          targetNode,
+          pathToTarget);
+
+      List<Label> entities = new ArrayList<>();
+
+      for (Map.Entry<String, TreasureData> treasure : brain.entities.getTreasures().entrySet()) {
+        entities.add(new Label(String.format(
+            "Treasure %s - age: %d, quantity: %d, locked: %s, lock: %d, pick: %d",
+            treasure.getKey(),
+            treasure.getValue().getUpdateCounter(),
+            treasure.getValue().getQuantity(),
+            treasure.getValue().isLocked() ? "true" : "false",
+            treasure.getValue().getLockStrength(),
+            treasure.getValue().getPickStrength())));
+      }
+
+      if (brain.entities.getMyself() != null) {
+        entities.add(new Label(String.format(
+            "Me (%s) - position: %s, capacity: %d, freespace: %d",
+            brain.name,
+            brain.entities.getMyself().getPosition(),
+            brain.entities.getMyself().getBackpackCapacity(),
+            brain.entities.getMyself().getBackpackFreeSpace())));
+      }
+
+      for (Map.Entry<String, AgentData> agent : brain.entities.getAgents().entrySet()) {
+        entities.add(new Label(String.format(
+            "%s - position: %s, age: %d, capacity: %d, freespace: %d",
+            agent.getKey(),
+            agent.getValue().getPosition(),
+            agent.getValue().getUpdateCounter(),
+            agent.getValue().getBackpackCapacity(),
+            agent.getValue().getBackpackFreeSpace())));
+      }
+
+      if (brain.entities.getSilo() != null) {
+        entities.add(new Label(String.format(
+            "Silo - position: %s, age: %d",
+            brain.entities.getSilo().getPosition(),
+            brain.entities.getSilo().getUpdateCounter())));
+      }
+
+      if (brain.entities.getGolem() != null) {
+        entities.add(new Label(String.format(
+            "Golem - position: %s, age: %d",
+            brain.entities.getGolem().getPosition(),
+            brain.entities.getGolem().getUpdateCounter())));
+      }
+
+      entitiesSection.getChildren().clear();
+      entitiesSection.getChildren().addAll(entities);
+    });
   }
 
   private void openGui(Graph graph) {

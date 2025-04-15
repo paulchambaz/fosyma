@@ -22,7 +22,7 @@ public class GoToBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    this.brain.mind.calculatePathToTarget();
+    brain.computePathToTarget();
     this.exitValue = 0;
     this.initialized = true;
   }
@@ -47,14 +47,19 @@ public class GoToBehaviour extends OneShotBehaviour {
 
     String next = path.removeFirst();
 
-    try {
-      ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(next));
-    } catch (Exception e) {
-      this.brain.mind.incrementStuckCounter();
-      this.brain.mind.calculatePathToTarget();
+    if (brain.moveTo(this.myAgent, next)) {
+      brain.mind.decrementStuckCounter();
+      brain.mind.incrementSocialCooldown();
+      brain.entities.ageEntities();
+    } else {
+      brain.mind.incrementStuckCounter();
+      brain.computePathToTarget();
     }
 
-    this.brain.mind.incrementSocialCooldown();
+    if (brain.mind.isStuck()) {
+      this.initialized = false;
+      this.exitValue = 2;
+    }
   }
 
   @Override

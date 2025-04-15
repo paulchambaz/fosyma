@@ -18,26 +18,24 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    this.brain.observe(this.myAgent);
+    brain.observe(this.myAgent);
 
-    // if (!this.brain.map.hasOpenNode() &&
-    // this.brain.mind.getExplorationPriority() != 1) {
-    // System.out.println(this.myAgent.getLocalName() + " finished exploring");
-    // this.exitValue = 1;
-    // return;
-    // }
+    if (!brain.map.hasOpenNode() && this.brain.mind.getExplorationPriority() != 1) {
+      System.out.println(this.myAgent.getLocalName() + " finished exploring");
+      this.exitValue = 1;
+      return;
+    }
 
-    // String goal = this.brain.map.getClosestOpenNode();
-    //
-    // if (goal == null) {
-    // // TODO: start LA RONDE
-    // System.out.println(this.myAgent.getLocalName() + " wanted to go to a null
-    // node");
-    // this.exitValue = 1;
-    // return;
-    // }
-    //
-    // this.brain.mind.setTargetNode(goal);
+    String goal = brain.findClosestOpenNode();
+
+    if (goal == null) {
+      // TODO: start LA RONDE
+      System.out.println(this.myAgent.getLocalName() + " wanted to go to a null node");
+      this.exitValue = 1;
+      return;
+    }
+
+    brain.mind.setTargetNode(goal);
   }
 
   @Override

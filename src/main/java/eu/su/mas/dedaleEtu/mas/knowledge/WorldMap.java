@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Random;
 import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
 import dataStructures.serializableGraph.SerializableNode;
@@ -96,8 +97,7 @@ public class WorldMap implements Serializable {
   }
 
   public List<String> findShortestPath(String idFrom, String idTo, List<String> occupiedPositions) {
-    // TODO: we want to switch from Dijkstra to A* (even possibly factored A*) -
-    // since it is way faster
+
     Graph tempGraph = createNavigableGraph(occupiedPositions);
     Node from = tempGraph.getNode(idFrom);
     if (from == null) {
@@ -123,6 +123,8 @@ public class WorldMap implements Serializable {
       return null;
     }
 
+    shortestPath = shortestPath.reversed();
+
     shortestPath.remove(0);
     return shortestPath;
   }
@@ -132,6 +134,24 @@ public class WorldMap implements Serializable {
         .filter(entry -> entry.getValue() == MapAttribute.OPEN)
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
+  }
+
+  public boolean hasOpenNode() {
+    return this.nodeAttributes.entrySet().stream()
+        .anyMatch(entry -> entry.getValue() == MapAttribute.OPEN);
+  }
+
+  public String findRandomNode(List<String> occupiedPositions) {
+    Graph navigableGraph = createNavigableGraph(occupiedPositions);
+
+    List<String> availableNodes = new ArrayList<>();
+    navigableGraph.nodes().forEach(node -> {
+      availableNodes.add(node.getId());
+    });
+
+    Random random = new Random();
+    int randomIndex = random.nextInt(availableNodes.size());
+    return availableNodes.get(randomIndex);
   }
 
   public String findClosestOpenNode(String startPosition, List<String> occupiedPositions) {

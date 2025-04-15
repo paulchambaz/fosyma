@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import eu.su.mas.dedale.env.Observation;
@@ -32,6 +33,22 @@ public class EntityTracker implements Serializable {
     return this.myself;
   }
 
+  public Map<String, TreasureData> getTreasures() {
+    return this.treasures;
+  }
+
+  public Map<String, AgentData> getAgents() {
+    return this.agents;
+  }
+
+  public SiloData getSilo() {
+    return this.silo;
+  }
+
+  public GolemData getGolem() {
+    return this.golem;
+  }
+
   public String getPosition() {
     return (this.myself != null) ? this.myself.getPosition() : null;
   }
@@ -43,10 +60,6 @@ public class EntityTracker implements Serializable {
       this.myself.setPosition(nodeId);
     }
     brain.notifyVisualization();
-  }
-
-  public Map<String, TreasureData> getTreasures() {
-    return this.treasures;
   }
 
   public void updateTreasure(String nodeId, Observation type, int quantity, boolean locked, int lockStrength,
@@ -78,8 +91,8 @@ public class EntityTracker implements Serializable {
         .collect(Collectors.toList());
   }
 
-  public Map<String, AgentData> getAgents() {
-    return this.agents;
+  public boolean hasTreasure(String nodeId) {
+    return this.treasures.containsKey(nodeId);
   }
 
   public void loseAgentPosition(String agentName) {
@@ -106,6 +119,17 @@ public class EntityTracker implements Serializable {
       agent.setBackpackCapacity(capacity);
       agent.setBackpackFreeSpace(freeSpace);
       agent.setStatus(status);
+      this.agents.put(agentName, agent);
+    }
+  }
+
+  public void updateAgentPosition(String agentName, String nodeId) {
+    if (this.agents.containsKey(agentName)) {
+      AgentData agent = this.agents.get(agentName);
+      agent.setPosition(nodeId);
+      agent.resetCounter();
+    } else {
+      AgentData agent = new AgentData(nodeId);
       this.agents.put(agentName, agent);
     }
   }
@@ -144,6 +168,14 @@ public class EntityTracker implements Serializable {
     }
 
     return !isHere && shouldBeHere;
+  }
+
+  public String getAgentAtPosition(String nodeId) {
+    return this.agents.entrySet().stream()
+        .filter(entry -> nodeId.equals(entry.getValue().getPosition()))
+        .map(Map.Entry::getKey)
+        .findFirst()
+        .orElse(null);
   }
 
   public void setSiloPosition(String nodeId) {
@@ -241,5 +273,32 @@ public class EntityTracker implements Serializable {
     }
 
     brain.notifyVisualization();
+  }
+
+  public List<String> getOccupiedPositions() {
+    List<String> occupiedPositions = new ArrayList<>();
+
+    for (AgentData agent : this.agents.values()) {
+      String position = agent.getPosition();
+      if (position != null) {
+        occupiedPositions.add(position);
+      }
+    }
+
+    if (silo != null) {
+      String siloPosition = silo.getPosition();
+      if (siloPosition != null) {
+        occupiedPositions.add(siloPosition);
+      }
+    }
+
+    if (golem != null) {
+      String golemPosition = silo.getPosition();
+      if (golemPosition != null) {
+        occupiedPositions.add(golemPosition);
+      }
+    }
+
+    return occupiedPositions;
   }
 }

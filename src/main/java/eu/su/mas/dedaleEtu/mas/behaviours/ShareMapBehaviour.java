@@ -3,7 +3,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
-import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.SerializableBrain;
 import dataStructures.serializableGraph.SerializableSimpleGraph;
 import eu.su.mas.dedaleEtu.princ.Utils;
 import eu.su.mas.dedaleEtu.princ.Protocols;
@@ -12,7 +12,6 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 import jade.lang.acl.ACLMessage;
 
 public class ShareMapBehaviour extends SimpleBehaviour {
