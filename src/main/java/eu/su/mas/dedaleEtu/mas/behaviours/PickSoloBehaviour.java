@@ -1,56 +1,31 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import dataStructures.serializableGraph.SerializableSimpleGraph;
-import dataStructures.tuple.Couple;
-import eu.su.mas.dedale.env.Location;
-import eu.su.mas.dedale.env.Observation;
-import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
-import eu.su.mas.dedaleEtu.mas.knowledge.Memory;
-import eu.su.mas.dedaleEtu.mas.knowledge.TreasureData;
-import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
-import org.graphstream.algorithm.Dijkstra;
+import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Deque;
-import java.util.ArrayDeque;
-import java.util.Map;
-import java.util.HashSet;
-import jade.core.AID;
 import jade.core.Agent;
-import java.io.IOException;
-import java.util.ArrayList;
-
-
-import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class PickSoloBehaviour extends OneShotBehaviour {
-    private static final long serialVersionUID = 1231959282640838272L;
+  private static final long serialVersionUID = 1231959282640838272L;
 
-    private Knowledge knowledge;
-    private int exitValue;
+  private Brain brain;
+  private int exitValue;
 
-    public PickSoloBehaviour (Agent myagent, Knowledge knowledge){
-        super(myagent);
-        this.knowledge = knowledge;
-    }
+  public PickSoloBehaviour(Agent myagent, Brain brain) {
+    super(myagent);
+    this.brain = brain;
+  }
 
-    @Override
-    public void action() {
-        int picked = ((AbstractDedaleAgent) this.myAgent).pick();
-        
-        System.out.println(this.myAgent.getLocalName() + " TREASURE PICKED = " + picked);
-        this.exitValue = 1;
-    }
+  @Override
+  public void action() {
+    int picked = ((AbstractDedaleAgent) this.myAgent).pick();
 
-    @Override
-    public int onEnd() {
-        return this.exitValue;
-    }
+    System.out.println(this.myAgent.getLocalName() + " TREASURE PICKED = " + picked);
+    this.exitValue = 1;
+  }
+
+  @Override
+  public int onEnd() {
+    return this.exitValue;
+  }
 }

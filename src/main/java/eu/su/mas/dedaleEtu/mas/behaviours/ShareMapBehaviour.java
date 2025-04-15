@@ -1,8 +1,10 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.SerializableKnowledge;
+import dataStructures.serializableGraph.SerializableSimpleGraph;
 import eu.su.mas.dedaleEtu.princ.Utils;
 import eu.su.mas.dedaleEtu.princ.Protocols;
 import eu.su.mas.dedaleEtu.princ.Communication;
@@ -17,24 +19,24 @@ public class ShareMapBehaviour extends SimpleBehaviour {
   private static final long serialVersionUID = -568863390879327961L;
   private boolean finished = false;
 
-  private Knowledge knowledge;
+  private Brain brain;
 
   private static int TIMEOUT = 100;
   private static String PROTOCOL_NAME = "share-map";
 
-  public ShareMapBehaviour(Agent agent, Knowledge knowledge) {
+  public ShareMapBehaviour(Agent agent, Brain brain) {
     super(agent);
-    this.knowledge = knowledge;
+    this.brain = brain;
   }
 
   @Override
   public void action() {
-    Communication comms = Protocols.handshake(this.myAgent, this.knowledge, TIMEOUT, PROTOCOL_NAME);
+    Communication comms = Protocols.handshake(this.myAgent, this.brain, TIMEOUT, PROTOCOL_NAME);
 
     if (comms == null) {
       return;
     }
-    this.knowledge.introvertReset();
+    this.brain.mind.resetSocialCooldown();
 
     System.out.println(
         this.myAgent.getLocalName() + " - result of the handshake protocol : " + comms.getFriend().getLocalName());
@@ -49,28 +51,27 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
     for (int i = 0; i < 2; i++) {
       if (speaker) {
-        sendKnowledge(friend);
+        sendBrain(friend);
       } else {
-        receiveKnowledge(friend);
+        receiveBrain(friend);
       }
       speaker = !speaker;
     }
   }
 
-  private void sendKnowledge(AID friend) {
+  private void sendBrain(AID friend) {
     System.out.println(this.myAgent.getLocalName() + " is speaking");
     ACLMessage message = Utils.createACLMessage(
         this.myAgent,
         PROTOCOL_NAME,
         friend,
-        this.knowledge.getSerializableKnowledge());
-    // TODO: we need to understand why sometimes this does not arrive to its proper
-    // destination
+        // TODO; we should also send the entities
+        this.brain.map.getSerializableGraph());
     ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
-    System.out.println(this.myAgent.getLocalName() + " just sent knowledge");
+    System.out.println(this.myAgent.getLocalName() + " just sent brain");
   }
 
-  private void receiveKnowledge(AID friend) {
+  private void receiveBrain(AID friend) {
     MessageTemplate filter = MessageTemplate.and(
         MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -84,16 +85,16 @@ public class ShareMapBehaviour extends SimpleBehaviour {
       return;
     }
 
-    SerializableKnowledge knowledgeReceived = null;
+    SerializableSimpleGraph<String, MapAttribute> brainReceived = null;
     try {
-      knowledgeReceived = (SerializableKnowledge) message.getContentObject();
-    } catch (UnreadableException e) {
+      brainReceived = (SerializableSimpleGraph<String, MapAttribute>) message.getContentObject();
+    } catch (Exception e) {
       e.printStackTrace();
       return;
     }
 
-    System.out.println(this.myAgent.getLocalName() + " just received knowledge");
-    this.knowledge.mergeKnowledge(knowledgeReceived);
+    System.out.println(this.myAgent.getLocalName() + " just received brain");
+    this.brain.map.mergeWithReceivedMap(brainReceived);
   }
 
   @Override

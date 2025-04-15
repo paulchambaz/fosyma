@@ -1,0 +1,247 @@
+package eu.su.mas.dedaleEtu.mas.knowledge;
+
+import dataStructures.tuple.Couple;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.graphstream.graph.EdgeRejectedException;
+import org.graphstream.graph.Graph;
+import dataStructures.serializableGraph.SerializableNode;
+import dataStructures.serializableGraph.SerializableSimpleGraph;
+import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.SingleGraph;
+
+public class WorldMap implements Serializable {
+  private static final long serialVersionUID = -8761824239823746289L;
+
+  private final Brain brain;
+
+  private Graph worldGraph;
+  private int edgeCounter;
+  private Map<String, MapAttribute> nodeAttributes;
+
+  private SerializableSimpleGraph<String, MapAttribute> serializableGraph;
+
+  public WorldMap(Brain brain) {
+    this.brain = brain;
+    this.worldGraph = new SingleGraph("world");
+    this.edgeCounter = 0;
+    this.nodeAttributes = new HashMap<>();
+    this.serializableGraph = null;
+  }
+
+  public Graph getGraph() {
+    return this.worldGraph;
+  }
+
+  public void addNode(String id, MapAttribute mapAttribute) {
+    this.nodeAttributes.put(id, mapAttribute);
+
+    if (this.worldGraph.getNode(id) == null) {
+      this.worldGraph.addNode(id);
+    }
+
+    brain.notifyVisualization();
+  }
+
+  public boolean addNewNode(String id) {
+    if (!this.nodeAttributes.containsKey(id)) {
+      addNode(id, MapAttribute.OPEN);
+      return true;
+    }
+    return false;
+  }
+
+  public void addEdge(String idNode1, String idNode2) {
+    if (!this.nodeAttributes.containsKey(idNode1)) {
+      addNode(idNode1, MapAttribute.OPEN);
+    }
+    if (!this.nodeAttributes.containsKey(idNode2)) {
+      addNode(idNode2, MapAttribute.OPEN);
+    }
+    this.edgeCounter++;
+
+    try {
+      this.worldGraph.addEdge(String.valueOf(this.edgeCounter), idNode1, idNode2);
+    } catch (EdgeRejectedException e) {
+      this.edgeCounter--;
+    }
+  }
+
+  public Graph createNavigableGraph(List<String> occupiedPositions) {
+    Graph tempGraph = new SingleGraph("Temporary graph");
+
+    this.nodeAttributes.keySet().stream()
+        .filter(id -> !occupiedPositions.contains(id))
+        .forEach(tempGraph::addNode);
+
+    this.worldGraph.edges().forEach(edge -> {
+      String sourceId = edge.getSourceNode().getId();
+      String targetId = edge.getTargetNode().getId();
+
+      if (tempGraph.getNode(sourceId) != null && tempGraph.getNode(targetId) != null) {
+        try {
+          tempGraph.addEdge(edge.getId(), sourceId, targetId);
+        } catch (Exception e) {
+        }
+      }
+    });
+
+    return tempGraph;
+  }
+
+  public List<String> findShortestPath(String idFrom, String idTo, List<String> occupiedPositions) {
+    // TODO: we want to switch from Dijkstra to A* (even possibly factored A*) -
+    // since it is way faster
+    Graph tempGraph = createNavigableGraph(occupiedPositions);
+    Node from = tempGraph.getNode(idFrom);
+    if (from == null) {
+      return null;
+    }
+
+    Dijkstra dijkstra = new Dijkstra();
+    dijkstra.init(tempGraph);
+    dijkstra.setSource(from);
+    dijkstra.compute();
+
+    List<String> shortestPath = new ArrayList<>();
+    try {
+      for (Node node : dijkstra.getPathNodes(tempGraph.getNode(idTo))) {
+        shortestPath.add(node.getId());
+      }
+    } catch (Exception e) {
+      return null;
+    }
+
+    dijkstra.clear();
+    if (shortestPath.isEmpty()) {
+      return null;
+    }
+
+    shortestPath.remove(0);
+    return shortestPath;
+  }
+
+  public List<String> getOpenNodes() {
+    return this.nodeAttributes.entrySet().stream()
+        .filter(entry -> entry.getValue() == MapAttribute.OPEN)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+  }
+
+  public String findClosestOpenNode(String startPosition, List<String> occupiedPositions) {
+    return getOpenNodes().stream()
+        .map(node -> {
+          List<String> path = findShortestPath(startPosition, node, occupiedPositions);
+          int distance = (path != null) ? path.size() : Integer.MAX_VALUE;
+          return new Couple<>(node, distance);
+        })
+        .min(Comparator.comparing(pair -> pair.getRight()))
+        .map(pair -> pair.getLeft())
+        .orElse(null);
+  }
+
+  public List<String> findPathToClosestOpenNode(String startPosition, List<String> occupiedPositions) {
+    List<String> openNodes = getOpenNodes();
+
+    return openNodes.stream()
+        .map(currentNode -> findShortestPath(startPosition, currentNode, occupiedPositions))
+        .filter(path -> path != null)
+        .min(Comparator.comparing(List::size))
+        .orElse(null);
+  }
+
+  public boolean hasUnexploredNodes() {
+    return this.nodeAttributes.values().stream()
+        .anyMatch(attr -> attr == MapAttribute.OPEN);
+  }
+
+  public SerializableSimpleGraph<String, MapAttribute> getSerializableGraph() {
+    serializeTopology();
+    return this.serializableGraph;
+  }
+
+  public void mergeWithReceivedMap(SerializableSimpleGraph<String, MapAttribute> receivedGraph) {
+    for (SerializableNode<String, MapAttribute> receivedNode : receivedGraph.getAllNodes()) {
+      String nodeId = receivedNode.getNodeId();
+      MapAttribute receivedAttribute = receivedNode.getNodeContent();
+
+      if (this.worldGraph.getNode(nodeId) == null) {
+        this.worldGraph.addNode(nodeId);
+      }
+
+      if (this.nodeAttributes.containsKey(nodeId)) {
+        if (receivedAttribute == MapAttribute.CLOSED || this.nodeAttributes.get(nodeId) == MapAttribute.CLOSED) {
+          this.nodeAttributes.put(nodeId, MapAttribute.CLOSED);
+        } else {
+          this.nodeAttributes.put(nodeId, receivedAttribute);
+        }
+      }
+    }
+
+    for (SerializableNode<String, MapAttribute> currentNode : receivedGraph.getAllNodes()) {
+      for (String neighbor : receivedGraph.getEdges(currentNode.getNodeId())) {
+        addEdge(currentNode.getNodeId(), neighbor);
+      }
+    }
+
+    brain.notifyVisualization();
+  }
+
+  private void serializeTopology() {
+    this.serializableGraph = new SerializableSimpleGraph<>();
+
+    for (Map.Entry<String, MapAttribute> entry : this.nodeAttributes.entrySet()) {
+      this.serializableGraph.addNode(entry.getKey(), entry.getValue());
+    }
+
+    this.worldGraph.edges().forEach(currentEdge -> {
+      Node sourceNode = currentEdge.getSourceNode();
+      Node targetNode = currentEdge.getTargetNode();
+      this.serializableGraph.addEdge(currentEdge.getId(), sourceNode.getId(), targetNode.getId());
+    });
+  }
+
+  private void deserializeTopology() {
+    this.worldGraph = new SingleGraph("world");
+    this.nodeAttributes.clear();
+
+    for (SerializableNode<String, MapAttribute> currentNode : this.serializableGraph.getAllNodes()) {
+      String nodeId = currentNode.getNodeId();
+      MapAttribute attribute = currentNode.getNodeContent();
+
+      this.worldGraph.addNode(nodeId);
+      this.nodeAttributes.put(nodeId, attribute);
+    }
+
+    int newEdgeCounter = 0;
+    for (SerializableNode<String, MapAttribute> currentNode : this.serializableGraph.getAllNodes()) {
+      String nodeId = currentNode.getNodeId();
+
+      for (String neighbor : this.serializableGraph.getEdges(nodeId)) {
+        try {
+          this.worldGraph.addEdge(String.valueOf(newEdgeCounter), nodeId, neighbor);
+          newEdgeCounter++;
+        } catch (Exception e) {
+        }
+      }
+    }
+
+    this.edgeCounter = newEdgeCounter;
+  }
+
+  public void beforeMove() {
+    serializeTopology();
+    this.worldGraph = null;
+  }
+
+  public void afterMove() {
+    deserializeTopology();
+    brain.notifyVisualization();
+  }
+}

@@ -5,7 +5,7 @@ import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.env.gs.GsLocation;
-import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class GoToBehaviour extends OneShotBehaviour {
@@ -14,15 +14,15 @@ public class GoToBehaviour extends OneShotBehaviour {
   private boolean initialized = false;
   private int exitValue = 0;
 
-  private Knowledge knowledge;
+  private Brain brain;
 
-  public GoToBehaviour(Agent myagent, Knowledge knowledge) {
+  public GoToBehaviour(Agent myagent, Brain brain) {
     super(myagent);
-    this.knowledge = knowledge;
+    this.brain = brain;
   }
 
   private void initialize() {
-    this.knowledge.setGoalPath();
+    this.brain.mind.calculatePathToTarget();
     this.exitValue = 0;
     this.initialized = true;
   }
@@ -33,11 +33,11 @@ public class GoToBehaviour extends OneShotBehaviour {
       initialize();
     }
 
-    this.knowledge.observe(this.myAgent);
+    this.brain.observe(this.myAgent);
 
     Utils.waitFor(this.myAgent, 50);
 
-    Deque<String> path = this.knowledge.getGoalPath();
+    Deque<String> path = this.brain.mind.getPathToTarget();
 
     if (path.isEmpty()) {
       this.initialized = false;
@@ -50,11 +50,11 @@ public class GoToBehaviour extends OneShotBehaviour {
     try {
       ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(next));
     } catch (Exception e) {
-      this.knowledge.bumpBlockCounter();
-      this.knowledge.setGoalPath();
+      this.brain.mind.incrementStuckCounter();
+      this.brain.mind.calculatePathToTarget();
     }
 
-    this.knowledge.introvertRecovery();
+    this.brain.mind.incrementSocialCooldown();
   }
 
   @Override
