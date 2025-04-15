@@ -43,14 +43,7 @@ public class DropOffBehaviour extends OneShotBehaviour {
 
     @Override
     public void action() {
-        ((AbstractDedaleAgent) this.myAgent).dropOff();
-
-        System.out.println(this.myAgent.getLocalName() + " DROPPED OFF");
-        this.exitValue = 1;
-    }
-
-    @Override
-    public int onEnd() {
-        return this.exitValue;
+        ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(this.myAgent.getLocalName());
+        System.out.println(this.myAgent.getLocalName() + " dropped off their backpack into the silo");
     }
 }

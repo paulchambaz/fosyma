@@ -10,6 +10,8 @@ import eu.su.mas.dedaleEtu.mas.behaviours.EndBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.PickSoloBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.DropOffBehaviour;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
 
@@ -29,13 +31,9 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final String COLLECT = "Collect";
   private static final String COLLECT_GOTO = "Collect Go To";
   private static final String SILO_GOTO = "Silo Go To";
+  private static final String PICK_SOLO = "Pick Solo";
+  private static final String DROP_OFF = "Drop Off";
   private static final String END = "End";
-
-  // private static final String COMPUTETREASURE = "Compute Treasure";
-  // private static final String GOTO = "Go To Goal";
-  // private static final String PICKSOLO = "Pick Solo";
-  // private static final String COMPUTESILO = "Compute Silo";
-  // private static final String DROPOFF = "Drop Off";
 
   protected void setup() {
     super.setup();
@@ -52,7 +50,9 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), EXPLORE_GOTO);
     fsmBehaviour.registerState(new CollectBehaviour(this, this.knowledge), COLLECT);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), COLLECT_GOTO);
+    fsmBehaviour.registerState(new PickSoloBehaviour(this, this.knowledge), PICK_SOLO);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), SILO_GOTO);
+    fsmBehaviour.registerState(new DropOffBehaviour(this, this.knowledge), DROP_OFF);
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.knowledge), END);
 
     // register transitions
@@ -65,11 +65,20 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
 
     fsmBehaviour.registerDefaultTransition(COLLECT, COLLECT_GOTO);
-    fsmBehaviour.registerTransition(COLLECT, SILO_GOTO, 1);
+    fsmBehaviour.registerTransition(COLLECT, EXPLORE, 1);
     fsmBehaviour.registerTransition(COLLECT, END, 2);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_GOTO);
-    fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT, 1);
+    fsmBehaviour.registerTransition(COLLECT_GOTO, PICK_SOLO, 1);
+
+    fsmBehaviour.registerDefaultTransition(PICK_SOLO, COLLECT);
+    fsmBehaviour.registerTransition(PICK_SOLO, SILO_GOTO, 1);
+    fsmBehaviour.registerTransition(PICK_SOLO, END, 2);
+
+    fsmBehaviour.registerDefaultTransition(SILO_GOTO, SILO_GOTO);
+    fsmBehaviour.registerTransition(SILO_GOTO, DROP_OFF, 1);
+
+    fsmBehaviour.registerDefaultTransition(DROP_OFF, COLLECT);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);

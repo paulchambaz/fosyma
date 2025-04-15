@@ -579,7 +579,6 @@ public class Knowledge implements Serializable {
   // Uses Dijkstra's algorithm to find the optimal route.
   public synchronized List<String> getShortestPath(String idFrom, String idTo) {
     if (idFrom == null || idTo == null) {
-      System.out.println("WTF TES POSITIONS SONT NULLES");
       return null;
     }
 
