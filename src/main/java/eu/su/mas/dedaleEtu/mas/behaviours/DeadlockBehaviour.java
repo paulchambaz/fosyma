@@ -18,6 +18,7 @@ public class DeadlockBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Deadlock");
     brain.observe(this.myAgent);
     String goal = brain.findRandomNode();
     brain.log("i was stuck so im going to", goal);

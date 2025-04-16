@@ -24,6 +24,7 @@ public class ComputeClosestTreasureBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Compute Closest Treasure");
     if (!initialized) {
       initialize();
       this.exitValue = 1;

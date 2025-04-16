@@ -18,6 +18,8 @@ public class PickSoloBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Pick Solo");
+
     int picked = ((AbstractDedaleAgent) this.myAgent).pick();
 
     System.out.println(this.myAgent.getLocalName() + " TREASURE PICKED = " + picked);

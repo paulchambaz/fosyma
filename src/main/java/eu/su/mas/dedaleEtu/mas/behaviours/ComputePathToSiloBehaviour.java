@@ -26,6 +26,7 @@ public class ComputePathToSiloBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Compute Path To Silo");
     if (!initialized) {
       initialize();
       this.exitValue = 1;

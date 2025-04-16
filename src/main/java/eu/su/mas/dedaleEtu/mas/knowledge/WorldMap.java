@@ -36,11 +36,19 @@ public class WorldMap implements Serializable {
     this.serializableGraph = null;
   }
 
-  public Graph getGraph() {
+  public synchronized Graph getGraph() {
     return this.worldGraph;
   }
 
-  public void addNode(String id, MapAttribute mapAttribute) {
+  public synchronized Map<String, MapAttribute> getNodeAttributes() {
+    return this.nodeAttributes;
+  }
+
+  public synchronized MapAttribute getNodeAttribute(String nodeId) {
+    return nodeAttributes.get(nodeId);
+  }
+
+  public synchronized void addNode(String id, MapAttribute mapAttribute) {
     this.nodeAttributes.put(id, mapAttribute);
 
     if (this.worldGraph.getNode(id) == null) {
@@ -50,7 +58,7 @@ public class WorldMap implements Serializable {
     brain.notifyVisualization();
   }
 
-  public boolean addNewNode(String id) {
+  public synchronized boolean addNewNode(String id) {
     if (!this.nodeAttributes.containsKey(id)) {
       addNode(id, MapAttribute.OPEN);
       return true;
@@ -58,7 +66,7 @@ public class WorldMap implements Serializable {
     return false;
   }
 
-  public void addEdge(String idNode1, String idNode2) {
+  public synchronized void addEdge(String idNode1, String idNode2) {
     if (!this.nodeAttributes.containsKey(idNode1)) {
       addNode(idNode1, MapAttribute.OPEN);
     }
@@ -74,7 +82,7 @@ public class WorldMap implements Serializable {
     }
   }
 
-  public Graph createNavigableGraph(List<String> occupiedPositions) {
+  public synchronized Graph createNavigableGraph(List<String> occupiedPositions) {
     Graph tempGraph = new SingleGraph("Temporary graph");
 
     this.nodeAttributes.keySet().stream()
@@ -96,7 +104,7 @@ public class WorldMap implements Serializable {
     return tempGraph;
   }
 
-  public List<String> findShortestPath(String idFrom, String idTo, List<String> occupiedPositions) {
+  public synchronized List<String> findShortestPath(String idFrom, String idTo, List<String> occupiedPositions) {
 
     Graph tempGraph = createNavigableGraph(occupiedPositions);
     Node from = tempGraph.getNode(idFrom);
@@ -129,19 +137,19 @@ public class WorldMap implements Serializable {
     return shortestPath;
   }
 
-  public List<String> getOpenNodes() {
+  public synchronized List<String> getOpenNodes() {
     return this.nodeAttributes.entrySet().stream()
         .filter(entry -> entry.getValue() == MapAttribute.OPEN)
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
 
-  public boolean hasOpenNode() {
+  public synchronized boolean hasOpenNode() {
     return this.nodeAttributes.entrySet().stream()
         .anyMatch(entry -> entry.getValue() == MapAttribute.OPEN);
   }
 
-  public String findRandomNode(List<String> occupiedPositions) {
+  public synchronized String findRandomNode(List<String> occupiedPositions) {
     Graph navigableGraph = createNavigableGraph(occupiedPositions);
 
     List<String> availableNodes = new ArrayList<>();
@@ -154,7 +162,7 @@ public class WorldMap implements Serializable {
     return availableNodes.get(randomIndex);
   }
 
-  public String findClosestOpenNode(String startPosition, List<String> occupiedPositions) {
+  public synchronized String findClosestOpenNode(String startPosition, List<String> occupiedPositions) {
     return getOpenNodes().stream()
         .map(node -> {
           List<String> path = findShortestPath(startPosition, node, occupiedPositions);
@@ -166,7 +174,7 @@ public class WorldMap implements Serializable {
         .orElse(null);
   }
 
-  public List<String> findPathToClosestOpenNode(String startPosition, List<String> occupiedPositions) {
+  public synchronized List<String> findPathToClosestOpenNode(String startPosition, List<String> occupiedPositions) {
     List<String> openNodes = getOpenNodes();
 
     return openNodes.stream()
@@ -176,17 +184,17 @@ public class WorldMap implements Serializable {
         .orElse(null);
   }
 
-  public boolean hasUnexploredNodes() {
+  public synchronized boolean hasUnexploredNodes() {
     return this.nodeAttributes.values().stream()
         .anyMatch(attr -> attr == MapAttribute.OPEN);
   }
 
-  public SerializableSimpleGraph<String, MapAttribute> getSerializableGraph() {
+  public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializableGraph() {
     serializeTopology();
     return this.serializableGraph;
   }
 
-  public void mergeWithReceivedMap(SerializableSimpleGraph<String, MapAttribute> receivedGraph) {
+  public synchronized void mergeWithReceivedMap(SerializableSimpleGraph<String, MapAttribute> receivedGraph) {
     for (SerializableNode<String, MapAttribute> receivedNode : receivedGraph.getAllNodes()) {
       String nodeId = receivedNode.getNodeId();
       MapAttribute receivedAttribute = receivedNode.getNodeContent();
@@ -255,12 +263,12 @@ public class WorldMap implements Serializable {
     this.edgeCounter = newEdgeCounter;
   }
 
-  public void beforeMove() {
+  public synchronized void beforeMove() {
     serializeTopology();
     this.worldGraph = null;
   }
 
-  public void afterMove() {
+  public synchronized void afterMove() {
     deserializeTopology();
     brain.notifyVisualization();
   }

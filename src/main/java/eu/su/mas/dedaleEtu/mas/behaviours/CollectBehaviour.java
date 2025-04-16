@@ -18,9 +18,11 @@ public class CollectBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    this.brain.mind.updateBehaviouralPriorities();
+    brain.mind.setBehaviour("Collect");
 
-    if (!this.brain.mind.isCollectionPreferred()) {
+    brain.mind.updateBehaviouralPriorities();
+
+    if (!brain.mind.isCollectionPreferred()) {
       this.exitValue = 2;
       return;
     }

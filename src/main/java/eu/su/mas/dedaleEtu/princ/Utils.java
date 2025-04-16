@@ -62,9 +62,9 @@ public class Utils {
     return (1 - t) * a + t * b;
   }
 
-  public static void waitFor(Agent agent, int millseconds) {
+  public static void waitFor(Agent agent, long millseconds) {
     try {
-      agent.doWait(500);
+      agent.doWait(millseconds);
     } catch (Exception e) {
       e.printStackTrace();
       return;

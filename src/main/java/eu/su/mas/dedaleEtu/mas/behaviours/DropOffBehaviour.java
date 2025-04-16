@@ -18,6 +18,7 @@ public class DropOffBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Drop Off");
     ((AbstractDedaleAgent) this.myAgent).dropOff();
 
     System.out.println(this.myAgent.getLocalName() + " DROPPED OFF");

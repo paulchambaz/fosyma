@@ -29,31 +29,31 @@ public class EntityTracker implements Serializable {
     this.golem = null;
   }
 
-  public AgentData getMyself() {
+  public synchronized AgentData getMyself() {
     return this.myself;
   }
 
-  public Map<String, TreasureData> getTreasures() {
+  public synchronized Map<String, TreasureData> getTreasures() {
     return this.treasures;
   }
 
-  public Map<String, AgentData> getAgents() {
+  public synchronized Map<String, AgentData> getAgents() {
     return this.agents;
   }
 
-  public SiloData getSilo() {
+  public synchronized SiloData getSilo() {
     return this.silo;
   }
 
-  public GolemData getGolem() {
+  public synchronized GolemData getGolem() {
     return this.golem;
   }
 
-  public String getPosition() {
+  public synchronized String getPosition() {
     return (this.myself != null) ? this.myself.getPosition() : null;
   }
 
-  public void updatePosition(String nodeId) {
+  public synchronized void updatePosition(String nodeId) {
     if (this.myself == null) {
       this.myself = new AgentData(nodeId);
     } else {
@@ -62,7 +62,8 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public void updateTreasure(String nodeId, Observation type, int quantity, boolean locked, int lockStrength,
+  public synchronized void updateTreasure(String nodeId, Observation type, int quantity, boolean locked,
+      int lockStrength,
       int pickStrength) {
     if (this.treasures.containsKey(nodeId)) {
       TreasureData treasure = this.treasures.get(nodeId);
@@ -84,18 +85,18 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public List<String> getNodesWithTreasureType(Observation type) {
+  public synchronized List<String> getNodesWithTreasureType(Observation type) {
     return this.treasures.entrySet().stream()
         .filter(entry -> entry.getValue().getType() == type && entry.getValue().getQuantity() > 0)
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
 
-  public boolean hasTreasure(String nodeId) {
+  public synchronized boolean hasTreasure(String nodeId) {
     return this.treasures.containsKey(nodeId);
   }
 
-  public void loseAgentPosition(String agentName) {
+  public synchronized void loseAgentPosition(String agentName) {
     if (this.agents.containsKey(agentName)) {
       AgentData agent = this.agents.get(agentName);
       agent.setPosition(null);
@@ -103,7 +104,8 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public void updateAgent(String agentName, String nodeId, Map<Observation, Integer> expertise, int capacity,
+  public synchronized void updateAgent(String agentName, String nodeId, Map<Observation, Integer> expertise,
+      int capacity,
       int freeSpace, String status) {
     if (this.agents.containsKey(agentName)) {
       AgentData agent = this.agents.get(agentName);
@@ -123,7 +125,7 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public void updateAgentPosition(String agentName, String nodeId) {
+  public synchronized void updateAgentPosition(String agentName, String nodeId) {
     if (this.agents.containsKey(agentName)) {
       AgentData agent = this.agents.get(agentName);
       agent.setPosition(nodeId);
@@ -141,21 +143,21 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public List<String> getAgentsWithLockpickingStrength(int requiredStrength) {
+  public synchronized List<String> getAgentsWithLockpickingStrength(int requiredStrength) {
     return this.agents.entrySet().stream()
         .filter(entry -> entry.getValue().canOpenLock(requiredStrength))
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
 
-  public List<String> getAgentsWithCarryingStrength(int requiredStrength) {
+  public synchronized List<String> getAgentsWithCarryingStrength(int requiredStrength) {
     return this.agents.entrySet().stream()
         .filter(entry -> entry.getValue().canPickTreasure(requiredStrength))
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
 
-  public boolean isAgentMissing(String name, String position, Map<String, String> observedAgents) {
+  public synchronized boolean isAgentMissing(String name, String position, Map<String, String> observedAgents) {
     boolean isHere = false;
     boolean shouldBeHere = false;
     for (Map.Entry<String, String> neighbour : observedAgents.entrySet()) {
@@ -170,7 +172,7 @@ public class EntityTracker implements Serializable {
     return !isHere && shouldBeHere;
   }
 
-  public String getAgentAtPosition(String nodeId) {
+  public synchronized String getAgentAtPosition(String nodeId) {
     return this.agents.entrySet().stream()
         .filter(entry -> nodeId.equals(entry.getValue().getPosition()))
         .map(Map.Entry::getKey)
@@ -178,7 +180,7 @@ public class EntityTracker implements Serializable {
         .orElse(null);
   }
 
-  public void setSiloPosition(String nodeId) {
+  public synchronized void setSiloPosition(String nodeId) {
     if (silo == null) {
       this.silo = new SiloData(nodeId);
     } else {
@@ -195,7 +197,7 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public void setGolemPosition(String nodeId) {
+  public synchronized void setGolemPosition(String nodeId) {
     if (this.golem == null) {
       this.golem = new GolemData(nodeId);
     } else {
@@ -212,14 +214,14 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public void ageEntities() {
+  public synchronized void ageEntities() {
     ageTreasureData();
     ageAgentData();
     ageSiloData();
     ageGolemData();
   }
 
-  public void mergeTreasures(Map<String, TreasureData> receivedTreasures) {
+  public synchronized void mergeTreasures(Map<String, TreasureData> receivedTreasures) {
     for (Map.Entry<String, TreasureData> entry : receivedTreasures.entrySet()) {
       String nodeId = entry.getKey();
       TreasureData receivedTreasure = entry.getValue();
@@ -233,7 +235,7 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public void mergeAgents(Map<String, AgentData> receivedAgents) {
+  public synchronized void mergeAgents(Map<String, AgentData> receivedAgents) {
     for (Map.Entry<String, AgentData> entry : receivedAgents.entrySet()) {
       String agentName = entry.getKey();
       AgentData receivedAgent = entry.getValue();
@@ -247,7 +249,7 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public void mergeSilo(SiloData receivedSilo) {
+  public synchronized void mergeSilo(SiloData receivedSilo) {
     if (receivedSilo == null) {
       return;
     }
@@ -261,7 +263,7 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public void mergeGolem(GolemData receivedGolem) {
+  public synchronized void mergeGolem(GolemData receivedGolem) {
     if (receivedGolem == null) {
       return;
     }
@@ -275,7 +277,7 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public List<String> getOccupiedPositions() {
+  public synchronized List<String> getOccupiedPositions() {
     List<String> occupiedPositions = new ArrayList<>();
 
     for (AgentData agent : this.agents.values()) {

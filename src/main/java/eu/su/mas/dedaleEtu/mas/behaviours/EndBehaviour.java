@@ -16,6 +16,8 @@ public class EndBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    // System.out.println("End of " + this.myAgent.getLocalName());
+    brain.mind.setBehaviour("End");
+
+    brain.log("end of the cycle");
   }
 }

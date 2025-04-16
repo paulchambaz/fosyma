@@ -3,10 +3,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import java.util.Deque;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
-import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
-import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class GoToBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
@@ -22,20 +19,24 @@ public class GoToBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    brain.computePathToTarget();
+    brain.computePathToTarget(true);
+    if (this.brain.mind.getPathToTarget().isEmpty()) {
+      brain.computePathToTarget(false);
+    }
+
     this.exitValue = 0;
     this.initialized = true;
   }
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Go To");
+
     if (!this.initialized) {
       initialize();
     }
 
     this.brain.observe(this.myAgent);
-
-    Utils.waitFor(this.myAgent, 50);
 
     Deque<String> path = this.brain.mind.getPathToTarget();
 
@@ -53,7 +54,7 @@ public class GoToBehaviour extends OneShotBehaviour {
       brain.entities.ageEntities();
     } else {
       brain.mind.incrementStuckCounter();
-      brain.computePathToTarget();
+      brain.computePathToTarget(false);
     }
 
     if (brain.mind.isStuck()) {

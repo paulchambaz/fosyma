@@ -36,6 +36,7 @@ public class GoToGoalBehaviour extends OneShotBehaviour {
   //
   @Override
   public void action() {
+    brain.mind.setBehaviour("Go To Goal");
     // if (!initialized) {
     // initialize();
     // }

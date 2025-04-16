@@ -5,6 +5,7 @@ import java.io.Serializable;
 import jade.core.Agent;
 import eu.su.mas.dedale.env.Location;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import eu.su.mas.dedale.env.Observation;
@@ -12,6 +13,7 @@ import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalTime;
+import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class Brain implements Serializable {
   private static final long serialVersionUID = -1333959882640838272L;
@@ -30,7 +32,8 @@ public class Brain implements Serializable {
     this.entities = new EntityTracker(this);
   }
 
-  public boolean moveTo(Agent agent, String node) {
+  public synchronized boolean moveTo(Agent agent, String node) {
+    Utils.waitFor(agent, 200);
     try {
       ((AbstractDedaleAgent) agent).moveTo(new GsLocation(node));
     } catch (Exception e) {
@@ -44,17 +47,18 @@ public class Brain implements Serializable {
     return false;
   }
 
-  public synchronized String findClosestOpenNode() {
+  public synchronized String findClosestOpenNode(boolean excludeOccupied) {
     String position = this.entities.getPosition();
     List<String> occupiedPositions = this.entities.getOccupiedPositions();
-    return map.findClosestOpenNode(position, occupiedPositions);
+    return map.findClosestOpenNode(position, (excludeOccupied) ? occupiedPositions : new ArrayList<>());
   }
 
-  public synchronized void computePathToTarget() {
+  public synchronized void computePathToTarget(boolean excludeOccupied) {
     String position = this.entities.getPosition();
     String target = this.mind.getTargetNode();
     List<String> occupiedPositions = this.entities.getOccupiedPositions();
-    List<String> path = map.findShortestPath(position, target, occupiedPositions);
+    List<String> path = map.findShortestPath(position, target,
+        (excludeOccupied) ? occupiedPositions : new ArrayList<>());
     mind.setPathToTarget(path);
   }
 
@@ -167,23 +171,25 @@ public class Brain implements Serializable {
     System.out.println(message);
   }
 
-  public void notifyVisualization() {
+  public synchronized void notifyVisualization() {
     if (this.visualization != null) {
-      this.visualization.updateFromModel(this);
+      this.visualization.updateFromModel();
     }
   }
 
-  public void createVisualization() {
-    this.visualization = new BrainVisualization(this.name);
-    this.visualization.initialize();
-    notifyVisualization();
+  public synchronized void createVisualization() {
+    this.visualization = new BrainVisualization(this, this.name);
+
+    if (this.visualization.initialize()) {
+      notifyVisualization();
+    }
   }
 
-  public void beforeMove() {
+  public synchronized void beforeMove() {
     this.map.beforeMove();
   }
 
-  public void afterMove() {
+  public synchronized void afterMove() {
     this.map.afterMove();
   }
 }

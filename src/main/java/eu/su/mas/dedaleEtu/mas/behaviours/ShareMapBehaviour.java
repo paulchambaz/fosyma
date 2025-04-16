@@ -30,6 +30,8 @@ public class ShareMapBehaviour extends SimpleBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Share Map");
+
     Communication comms = Protocols.handshake(this.myAgent, this.brain, TIMEOUT, PROTOCOL_NAME);
 
     if (comms == null) {

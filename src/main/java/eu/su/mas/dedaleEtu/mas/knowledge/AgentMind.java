@@ -11,6 +11,8 @@ public class AgentMind implements Serializable {
   private static final int SOCIAL_COOLDOWN_PERIOD = 16;
   private static final int STUCK_MAX = 10;
 
+  private String behaviour;
+
   private float explorationPriority;
   private float collectionPriority;
 
@@ -32,15 +34,24 @@ public class AgentMind implements Serializable {
     this.pathToTarget = new ArrayDeque<>();
   }
 
-  public float getExplorationPriority() {
+  public synchronized String getBehaviour() {
+    return this.behaviour;
+  }
+
+  public synchronized void setBehaviour(String behaviour) {
+    this.behaviour = behaviour;
+    brain.notifyVisualization();
+  }
+
+  public synchronized float getExplorationPriority() {
     return this.explorationPriority;
   }
 
-  public float getCollectionPriority() {
+  public synchronized float getCollectionPriority() {
     return this.collectionPriority;
   }
 
-  public void updateBehaviouralPriorities() {
+  public synchronized void updateBehaviouralPriorities() {
     float gradualTransition = 0.99f;
     float accelerateEffect = 0.5f;
     boolean wasCollectionPreferred = isCollectionPreferred();
@@ -59,43 +70,43 @@ public class AgentMind implements Serializable {
     brain.notifyVisualization();
   }
 
-  public boolean isCollectionPreferred() {
+  public synchronized boolean isCollectionPreferred() {
     return this.collectionPriority > this.explorationPriority;
   }
 
-  public int getSocialCooldown() {
+  public synchronized int getSocialCooldown() {
     return this.socialCooldown;
   }
 
-  public void resetSocialCooldown() {
+  public synchronized void resetSocialCooldown() {
     this.socialCooldown = 0;
     brain.notifyVisualization();
   }
 
-  public void initiateSocialCooldown() {
+  public synchronized void initiateSocialCooldown() {
     this.socialCooldown = SOCIAL_COOLDOWN_PERIOD;
     brain.notifyVisualization();
   }
 
-  public void incrementSocialCooldown() {
+  public synchronized void incrementSocialCooldown() {
     this.socialCooldown += 1;
     brain.notifyVisualization();
   }
 
-  public boolean isReadyForSocialInteraction() {
+  public synchronized boolean isReadyForSocialInteraction() {
     return this.socialCooldown > SOCIAL_COOLDOWN_PERIOD;
   }
 
-  public int getStuckCounter() {
+  public synchronized int getStuckCounter() {
     return this.stuckCounter;
   }
 
-  public void incrementStuckCounter() {
+  public synchronized void incrementStuckCounter() {
     this.stuckCounter += 1;
     brain.notifyVisualization();
   }
 
-  public void decrementStuckCounter() {
+  public synchronized void decrementStuckCounter() {
     this.stuckCounter -= 1;
     if (this.stuckCounter < 0) {
       this.stuckCounter = 0;
@@ -103,28 +114,28 @@ public class AgentMind implements Serializable {
     brain.notifyVisualization();
   }
 
-  public void resetStuckCounter() {
+  public synchronized void resetStuckCounter() {
     this.stuckCounter = 0;
     brain.notifyVisualization();
   }
 
-  public boolean isStuck() {
+  public synchronized boolean isStuck() {
     return this.stuckCounter > STUCK_MAX;
   }
 
-  public String getTargetNode() {
+  public synchronized String getTargetNode() {
     return this.targetNodeId;
   }
 
-  public void setTargetNode(String nodeId) {
+  public synchronized void setTargetNode(String nodeId) {
     this.targetNodeId = nodeId;
   }
 
-  public Deque<String> getPathToTarget() {
+  public synchronized Deque<String> getPathToTarget() {
     return this.pathToTarget;
   }
 
-  public void setPathToTarget(List<String> path) {
+  public synchronized void setPathToTarget(List<String> path) {
     if (path == null)
       return;
     this.pathToTarget = new ArrayDeque<>(path);

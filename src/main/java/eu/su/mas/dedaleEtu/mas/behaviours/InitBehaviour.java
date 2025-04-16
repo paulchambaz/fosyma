@@ -16,6 +16,7 @@ public class InitBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    brain.mind.setBehaviour("Init");
     this.brain.createVisualization();
   }
 }
