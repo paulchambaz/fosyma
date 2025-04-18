@@ -40,10 +40,6 @@ public class Computes {
     return connectivy;
   }
 
-  public static Map<String, Integer> calculateNodeDistancesToTreasures(WorldMap map, EntityTracker entities) {
-    return new HashMap<>();
-  }
-
   public static Map<String, Integer> calculateNodeDistancesToTreasures(
       WorldMap map, String nodeId, List<String> treasureLocations) {
     Map<String, Integer> distances = new HashMap<>();

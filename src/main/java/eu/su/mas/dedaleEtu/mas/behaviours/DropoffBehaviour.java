@@ -21,9 +21,7 @@ public class DropoffBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour("Dropoff");
 
-    AbstractDedaleAgent agent = ((AbstractDedaleAgent) this.myAgent);
-
-    if (agent.emptyMyBackPack("Silo")) {
+    if (((AbstractDedaleAgent) this.myAgent).emptyMyBackPack("Silo")) {
       this.exitValue = 0;
     } else {
       this.exitValue = 1;
