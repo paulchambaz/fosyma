@@ -62,6 +62,14 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
+  public synchronized void setTreasureType(Observation treasureType) {
+    myself.setTreasureType(treasureType);
+  }
+
+  public synchronized void setExpertise(Observation expertise, Integer value) {
+    myself.setExpertise(expertise, value);
+  }
+
   public synchronized void updateTreasure(String nodeId, Observation type, int quantity, boolean locked,
       int lockStrength,
       int pickStrength) {
@@ -74,6 +82,33 @@ public class EntityTracker implements Serializable {
     } else {
       TreasureData treasure = new TreasureData(nodeId, type, quantity, locked, lockStrength, pickStrength);
       this.treasures.put(nodeId, treasure);
+    }
+    brain.notifyVisualization();
+  }
+
+  public synchronized void updateTreasureStatus(String nodeId, boolean locked) {
+    if (this.treasures.containsKey(nodeId)) {
+      TreasureData treasure = this.treasures.get(nodeId);
+      treasure.setLocked(locked);
+      treasure.resetCounter();
+    }
+    brain.notifyVisualization();
+  }
+
+  public synchronized void updateTreasureLockpinging(String nodeId, int lockpicking) {
+    if (this.treasures.containsKey(nodeId)) {
+      TreasureData treasure = this.treasures.get(nodeId);
+      treasure.setLockpicking(lockpicking);
+      treasure.resetCounter();
+    }
+    brain.notifyVisualization();
+  }
+
+  public synchronized void updateTreasureStrength(String nodeId, int strength) {
+    if (this.treasures.containsKey(nodeId)) {
+      TreasureData treasure = this.treasures.get(nodeId);
+      treasure.setStrength(strength);
+      treasure.resetCounter();
     }
     brain.notifyVisualization();
   }
@@ -104,26 +139,42 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public synchronized void updateAgent(String agentName, String nodeId, Map<Observation, Integer> expertise,
-      int capacity,
-      int freeSpace, String status) {
-    if (this.agents.containsKey(agentName)) {
-      AgentData agent = this.agents.get(agentName);
-      agent.setPosition(nodeId);
-      agent.setExpertise(expertise);
-      agent.setBackpackCapacity(capacity);
-      agent.setBackpackFreeSpace(freeSpace);
-      agent.setStatus(status);
-      agent.resetCounter();
-    } else {
-      AgentData agent = new AgentData(nodeId);
-      agent.setExpertise(expertise);
-      agent.setBackpackCapacity(capacity);
-      agent.setBackpackFreeSpace(freeSpace);
-      agent.setStatus(status);
-      this.agents.put(agentName, agent);
+  public synchronized void loseSiloPosition() {
+    if (silo != null) {
+      silo.setPosition(null);
+      brain.notifyVisualization();
     }
   }
+
+  public synchronized void loseGolemPosition() {
+    if (golem != null) {
+      golem.setPosition(null);
+      brain.notifyVisualization();
+    }
+  }
+
+  // TODO: we need to rethink this a bit
+  // public synchronized void updateAgent(String agentName, String nodeId,
+  // Map<Observation, Integer> expertise,
+  // int capacity,
+  // int freeSpace, String status) {
+  // if (this.agents.containsKey(agentName)) {
+  // AgentData agent = this.agents.get(agentName);
+  // agent.setPosition(nodeId);
+  // agent.setExpertise(expertise);
+  // agent.setBackpackCapacity(capacity);
+  // agent.setBackpackFreeSpace(freeSpace);
+  // agent.setStatus(status);
+  // agent.resetCounter();
+  // } else {
+  // AgentData agent = new AgentData(nodeId);
+  // agent.setExpertise(expertise);
+  // agent.setBackpackCapacity(capacity);
+  // agent.setBackpackFreeSpace(freeSpace);
+  // agent.setStatus(status);
+  // this.agents.put(agentName, agent);
+  // }
+  // }
 
   public synchronized void updateAgentPosition(String agentName, String nodeId) {
     if (this.agents.containsKey(agentName)) {

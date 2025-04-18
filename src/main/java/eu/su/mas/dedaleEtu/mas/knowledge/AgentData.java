@@ -10,9 +10,9 @@ public class AgentData implements Serializable {
 
   private String position; // current position of the agent
   private int updateCounter; // counter since last update (not Unix timestamp)
-  private Map<Observation, Integer> expertise; // strength / lockpick capacity
   private int backpackCapacity; // total capacity of the backpack
   private int backpackFreeSpace; // free space in the backpack
+  private Map<Observation, Integer> expertise; // strength / lockpicking
   private Observation treasureType; // type of treasure that the agent can collect
   private String status; // current agent status (exploring, collecting, etc.)
 
@@ -57,8 +57,8 @@ public class AgentData implements Serializable {
     this.position = position;
   }
 
-  public void setExpertise(Map<Observation, Integer> expertise) {
-    this.expertise = expertise;
+  public void setExpertise(Observation expertise, Integer value) {
+    this.expertise.put(expertise, value);
   }
 
   public void setBackpackCapacity(int backpackCapacity) {

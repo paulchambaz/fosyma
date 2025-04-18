@@ -8,8 +8,7 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class Protocols {
-
-  private static String PROTOCOL_HANDSHAKE = "hs";
+  private static String PROTOCOL_HANDSHAKE = "handshake";
 
   public static Communication handshake(Agent agent, Brain brain, int timeout, String protocol) {
     emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "2");

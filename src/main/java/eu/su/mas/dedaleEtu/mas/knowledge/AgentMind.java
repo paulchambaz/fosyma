@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Deque;
 import java.util.ArrayDeque;
 import eu.su.mas.dedaleEtu.princ.Utils;
+import eu.su.mas.dedaleEtu.princ.Communication;
 
 public class AgentMind implements Serializable {
   private static final long serialVersionUID = -5420389237029721035L;
@@ -12,6 +13,7 @@ public class AgentMind implements Serializable {
   private static final int STUCK_MAX = 10;
 
   private String behaviour;
+  private Communication currentCommunication;
 
   private float explorationPriority;
   private float collectionPriority;
@@ -39,8 +41,21 @@ public class AgentMind implements Serializable {
   }
 
   public synchronized void setBehaviour(String behaviour) {
+    brain.log("BEHAVIOUR", behaviour);
     this.behaviour = behaviour;
     brain.notifyVisualization();
+  }
+
+  public synchronized Communication getCommunication() {
+    return this.currentCommunication;
+  }
+
+  public synchronized void setCommunication(Communication comms) {
+    this.currentCommunication = comms;
+  }
+
+  public synchronized void resetCommunication() {
+    this.currentCommunication = null;
   }
 
   public synchronized float getExplorationPriority() {
@@ -52,15 +67,19 @@ public class AgentMind implements Serializable {
   }
 
   public synchronized void updateBehaviouralPriorities() {
-    float gradualTransition = 0.99f;
+    float gradualTransition = 0.0001f;
     float accelerateEffect = 0.5f;
     boolean wasCollectionPreferred = isCollectionPreferred();
 
     float targetExploration = wasCollectionPreferred ? 1.0f : 0.0f;
     float targetCollection = wasCollectionPreferred ? 0.0f : 1.0f;
 
+    // brain.log("exploration before", explorationPriority);
     this.explorationPriority = Utils.lerp(this.explorationPriority, targetExploration, gradualTransition);
+    // brain.log("exploration after", explorationPriority);
+    // brain.log("collection before", collectionPriority);
     this.collectionPriority = Utils.lerp(this.collectionPriority, targetCollection, gradualTransition);
+    // brain.log("collection after", collectionPriority);
 
     if (isCollectionPreferred() != wasCollectionPreferred) {
       this.explorationPriority = Utils.lerp(this.explorationPriority, targetExploration, accelerateEffect);
@@ -78,13 +97,18 @@ public class AgentMind implements Serializable {
     return this.socialCooldown;
   }
 
+  public synchronized void wantsToTalk() {
+    this.socialCooldown = SOCIAL_COOLDOWN_PERIOD + 1;
+    brain.notifyVisualization();
+  }
+
   public synchronized void resetSocialCooldown() {
     this.socialCooldown = 0;
     brain.notifyVisualization();
   }
 
   public synchronized void initiateSocialCooldown() {
-    this.socialCooldown = SOCIAL_COOLDOWN_PERIOD;
+    this.socialCooldown = SOCIAL_COOLDOWN_PERIOD - 1;
     brain.notifyVisualization();
   }
 

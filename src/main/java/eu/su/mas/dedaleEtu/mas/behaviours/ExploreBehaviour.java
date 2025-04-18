@@ -20,9 +20,17 @@ public class ExploreBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour("Explore");
 
+    brain.mind.updateBehaviouralPriorities();
+
+    if (brain.mind.isCollectionPreferred()) {
+      this.exitValue = 1;
+      return;
+    }
+
     brain.observe(this.myAgent);
 
     if (!brain.map.hasOpenNode()) {
+      brain.mind.wantsToTalk();
       this.exitValue = 1;
       return;
     }

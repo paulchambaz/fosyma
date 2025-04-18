@@ -29,7 +29,6 @@ import org.graphstream.graph.implementations.SingleGraph;
 
 public class BrainVisualization {
   private static final long UPDATE_THROTTLE_MS = 33;
-  private static final long FORCE_UPDATE_MS = 1000;
 
   private static final String DEFAULT_STYLESHEET = "node {" +
       "  fill-color: black;" +
@@ -48,7 +47,7 @@ public class BrainVisualization {
       "node.silo { fill-color: orange; }" +
       "node.golem { fill-color: red; }" +
       "edge { fill-color: #999; }" +
-      "edge.path { fill-color: green; stroke-width: 10px; }";
+      "edge.path { fill-color: green; size: 4px; }";
 
   private long lastUpdateTime = 0;
   private boolean initialized = false;
@@ -204,7 +203,6 @@ public class BrainVisualization {
 
     // Copy all necessary data directly from the brain
     snapshot.nodeAttributes = new HashMap<>(brain.map.getNodeAttributes());
-    snapshot.currentPosition = brain.entities.getPosition();
     snapshot.pathToTarget = new ArrayList<>(brain.mind.getPathToTarget());
     snapshot.treasures = new HashMap<>(brain.entities.getTreasures());
     snapshot.agents = new HashMap<>(brain.entities.getAgents());
@@ -358,7 +356,7 @@ public class BrainVisualization {
 
       boolean isSilo = snapshot.silo != null && nodeId.equals(snapshot.silo.getPosition());
       boolean isGolem = snapshot.golem != null && nodeId.equals(snapshot.golem.getPosition());
-      boolean isCurrentPosition = nodeId.equals(snapshot.currentPosition);
+      boolean isCurrentPosition = nodeId.equals(snapshot.myself.getPosition());
 
       if (isCurrentPosition) {
         node.setAttribute("ui.class", "me");
@@ -418,8 +416,8 @@ public class BrainVisualization {
 
     if (snapshot.pathToTarget != null && !snapshot.pathToTarget.isEmpty()) {
       Deque<String> path = new ArrayDeque<>(snapshot.pathToTarget);
-      if (snapshot.currentPosition != null) {
-        path.addFirst(snapshot.currentPosition);
+      if (snapshot.myself.getPosition() != null) {
+        path.addFirst(snapshot.myself.getPosition());
       }
 
       String[] pathArray = path.toArray(new String[0]);
@@ -438,14 +436,12 @@ public class BrainVisualization {
 
   private void updateInfoPanelFromSnapshot(BrainSnapshot snapshot) {
     Label behaviour = new Label(String.format("Behaviour: %s", snapshot.behaviour));
-    Label explorationPriority = new Label(
-        "Exploration priority: " + String.valueOf(snapshot.explorationPriority));
-    Label collectionPriority = new Label(
-        "Collection priority: " + String.valueOf(snapshot.collectionPriority));
-    Label socialCooldown = new Label(String.valueOf("Social cooldown: " + snapshot.socialCooldown));
-    Label stuckCounter = new Label(String.valueOf("Stuck counter: " + snapshot.stuckCounter));
-    Label targetNode = new Label(String.valueOf("Target node: " + snapshot.targetNode));
-    Label pathToTarget = new Label(String.valueOf("Path to target: " + snapshot.pathToTarget));
+    Label explorationPriority = new Label(String.format("Exploration priority: %f", snapshot.explorationPriority));
+    Label collectionPriority = new Label(String.format("Collection priority: %f", snapshot.collectionPriority));
+    Label socialCooldown = new Label(String.format("Social cooldown: %d", snapshot.socialCooldown));
+    Label stuckCounter = new Label(String.format("Stuck counter: %d", snapshot.stuckCounter));
+    Label targetNode = new Label(String.format("Target node: %s", snapshot.targetNode));
+    Label pathToTarget = new Label(String.format("Path to target: %s", snapshot.pathToTarget));
 
     mindSection.getChildren().clear();
     mindSection.getChildren().addAll(
@@ -460,10 +456,12 @@ public class BrainVisualization {
     List<Label> entities = new ArrayList<>();
 
     for (Map.Entry<String, TreasureData> treasure : snapshot.treasures.entrySet()) {
+      // parentBrain.log(treasure.getValue().getType());
       entities.add(new Label(String.format(
-          "Treasure %s - age: %d, quantity: %d, locked: %s, lock: %d, pick: %d",
+          "Treasure %s - age: %d, type: %s, quantity: %d, locked: %s, strength: %d, lockpicking: %d",
           treasure.getKey(),
           treasure.getValue().getUpdateCounter(),
+          treasure.getValue().getType(),
           treasure.getValue().getQuantity(),
           treasure.getValue().isLocked() ? "true" : "false",
           treasure.getValue().getLockStrength(),
@@ -472,21 +470,25 @@ public class BrainVisualization {
 
     if (snapshot.myself != null) {
       entities.add(new Label(String.format(
-          "Me (%s) - position: %s, capacity: %d, freespace: %d",
+          "Me (%s) - position: %s, capacity: %d, freespace: %d, expertise: %s, type: %s",
           snapshot.agentName,
           snapshot.myself.getPosition(),
           snapshot.myself.getBackpackCapacity(),
-          snapshot.myself.getBackpackFreeSpace())));
+          snapshot.myself.getBackpackFreeSpace(),
+          snapshot.myself.getExpertise(),
+          snapshot.myself.getTreasureType())));
     }
 
     for (Map.Entry<String, AgentData> agent : snapshot.agents.entrySet()) {
       entities.add(new Label(String.format(
-          "%s - position: %s, age: %d, capacity: %d, freespace: %d",
+          "%s - position: %s, age: %d, capacity: %d, freespace: %d, expertise: %s, type: %s",
           agent.getKey(),
           agent.getValue().getPosition(),
           agent.getValue().getUpdateCounter(),
           agent.getValue().getBackpackCapacity(),
-          agent.getValue().getBackpackFreeSpace())));
+          agent.getValue().getBackpackFreeSpace(),
+          agent.getValue().getExpertise(),
+          agent.getValue().getTreasureType())));
     }
 
     if (snapshot.silo != null) {
@@ -586,13 +588,12 @@ public class BrainVisualization {
 
     public Map<String, MapAttribute> nodeAttributes;
 
-    public String currentPosition;
+    public AgentData myself;
     public List<String> pathToTarget;
     public Map<String, TreasureData> treasures;
     public Map<String, AgentData> agents;
     public SiloData silo;
     public GolemData golem;
-    public AgentData myself;
 
     public String behaviour;
     public float explorationPriority;

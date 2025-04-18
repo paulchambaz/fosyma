@@ -5,6 +5,7 @@ import java.io.Serializable;
 import jade.core.Agent;
 import eu.su.mas.dedale.env.Location;
 import java.util.List;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,18 +34,12 @@ public class Brain implements Serializable {
   }
 
   public synchronized boolean moveTo(Agent agent, String node) {
-    Utils.waitFor(agent, 200);
+    Utils.waitFor(agent, 500);
     try {
-      ((AbstractDedaleAgent) agent).moveTo(new GsLocation(node));
+      return ((AbstractDedaleAgent) agent).moveTo(new GsLocation(node));
     } catch (Exception e) {
       return false;
     }
-    String position = ((AbstractDedaleAgent) agent).getCurrentPosition().getLocationId();
-    if (position != entities.getPosition()) {
-      this.entities.updatePosition(position);
-      return true;
-    }
-    return false;
   }
 
   public synchronized String findClosestOpenNode(boolean excludeOccupied) {
@@ -112,8 +107,23 @@ public class Brain implements Serializable {
             this.entities.updateTreasure(accessibleNode, observeKind, treasureValue, true, -1, -1);
             break;
 
+          case LOCKSTATUS:
+            boolean treasureStatus = !Boolean.parseBoolean(observed);
+            this.entities.updateTreasureStatus(accessibleNode, treasureStatus);
+            break;
+
+          case LOCKPICKING:
+            int treasureLockpicking = Integer.parseInt(observed);
+            this.entities.updateTreasureLockpinging(accessibleNode, treasureLockpicking);
+            break;
+
+          case STRENGH:
+            int treasureStrength = Integer.parseInt(observed);
+            this.entities.updateTreasureStrength(accessibleNode, treasureStrength);
+            break;
+
           default:
-            assert false : "Unhandled observation type: " + observeKind;
+            break;
         }
       }
     }
@@ -137,19 +147,33 @@ public class Brain implements Serializable {
       if (this.entities.isAgentMissing(entry.getKey(), entry.getValue().getPosition(),
           observedAgents)) {
         System.out.println(entry.getKey() + " was supposed to be here but isn't...");
-        // this.entities.updateAgentsPosition(agentName, null);
+        this.entities.loseAgentPosition(agentName);
       }
     }
 
-    // if (this.silo != null && agentMissing("Silo", this.silo.getPosition(),
-    // observedAgents)) {
-    // this.silo.setPosition(null);
-    // }
+    if (this.entities.getSilo() != null
+        && entities.isAgentMissing("Silo", this.entities.getSilo().getPosition(), observedAgents)) {
+      this.entities.getSilo().setPosition(null);
+    }
 
-    // if (this.golem != null && agentMissing("Golem", this.golem.getPosition(),
-    // observedAgents)) {
-    // this.golem.setPosition(null);
-    // }
+    if (this.entities.getGolem() != null
+        && entities.isAgentMissing("Golem", this.entities.getGolem().getPosition(), observedAgents)) {
+      this.entities.getGolem().setPosition(null);
+    }
+  }
+
+  public synchronized void selfLearn(Agent agent) {
+    Observation treasureType = ((AbstractDedaleAgent) agent).getMyTreasureType();
+    entities.setTreasureType(treasureType);
+
+    Set<Couple<Observation, Integer>> expertise = ((AbstractDedaleAgent) agent).getMyExpertise();
+    for (Couple<Observation, Integer> observation : expertise) {
+      Observation observeKind = observation.getLeft();
+      Integer observed = observation.getRight();
+      entities.setExpertise(observeKind, observed);
+
+    }
+
   }
 
   public synchronized void log(Object... args) {
