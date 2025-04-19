@@ -20,7 +20,7 @@ public class GoToBehaviour extends OneShotBehaviour {
 
   private void initialize() {
     brain.computePathToTarget(true);
-    if (this.brain.mind.getPathToTarget().isEmpty()) {
+    if (brain.mind.getPathToTarget() == null || brain.mind.getPathToTarget().isEmpty()) {
       brain.computePathToTarget(false);
     }
 
@@ -45,7 +45,6 @@ public class GoToBehaviour extends OneShotBehaviour {
     this.brain.observe(this.myAgent);
 
     Deque<String> path = this.brain.mind.getPathToTarget();
-    brain.log("path", path);
     if (path.isEmpty()) {
       brain.mind.wantsToTalk();
       this.initialized = false;
@@ -54,7 +53,6 @@ public class GoToBehaviour extends OneShotBehaviour {
     }
 
     String next = path.removeFirst();
-    brain.log("next", next);
 
     if (brain.moveTo(this.myAgent, next)) {
       brain.mind.decrementStuckCounter();

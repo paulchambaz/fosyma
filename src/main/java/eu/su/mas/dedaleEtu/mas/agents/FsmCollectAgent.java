@@ -17,6 +17,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.PickBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.LocateSiloBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DropoffBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.PlanExplorationBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     // communication behaviours
     fsmBehaviour.registerState(new ShareMapBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
+    fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), COMMUNICATION_PLANEXPLORATION);
 
     // end behaviours
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
@@ -146,7 +148,8 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(COLLECT_DEADLOCK_SILO, COLLECT_GOTO_UNTIL_SILO);
 
     // communication transitions
-    fsmBehaviour.registerDefaultTransition(COMMUNICATION_SHAREMAP, EXPLORE_GOTO);
+    fsmBehaviour.registerDefaultTransition(COMMUNICATION_SHAREMAP, COMMUNICATION_PLANEXPLORATION);
+    fsmBehaviour.registerDefaultTransition(COMMUNICATION_PLANEXPLORATION, EXPLORE_GOTO);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);

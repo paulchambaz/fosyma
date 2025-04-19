@@ -172,4 +172,50 @@ public class Computes {
 
     return null;
   }
+
+  public static double[] toSoftmax(double[] values) {
+    double max = Arrays.stream(values).max().orElse(0);
+
+    double[] exps = new double[values.length];
+    double sum = 0;
+    for (int i = 0; i < values.length; i++) {
+      exps[i] = Math.exp(values[i] - max);
+      sum += exps[i];
+    }
+
+    double[] probabilities = new double[values.length];
+    for (int i = 0; i < values.length; i++) {
+      probabilities[i] = exps[i] / sum;
+    }
+
+    return probabilities;
+  }
+
+  public static List<Integer> sampleFromDistribution(double[] probabilities, int n) {
+    int size = Math.min(n, probabilities.length);
+    List<Integer> result = new ArrayList<>(size);
+
+    double[] remainingProbs = Arrays.copyOf(probabilities, probabilities.length);
+
+    for (int i = 0; i < size; i++) {
+      double sum = Arrays.stream(remainingProbs).sum();
+      double rand = Math.random() * sum;
+
+      double cumulativeProb = 0;
+      int selectedIndex = -1;
+
+      for (int j = 0; j < remainingProbs.length; j++) {
+        cumulativeProb += remainingProbs[j];
+        if (cumulativeProb >= rand) {
+          selectedIndex = j;
+          break;
+        }
+      }
+
+      result.add(selectedIndex);
+      remainingProbs[selectedIndex] = 0;
+    }
+
+    return result;
+  }
 }

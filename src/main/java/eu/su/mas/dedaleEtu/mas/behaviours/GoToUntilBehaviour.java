@@ -34,7 +34,7 @@ public class GoToUntilBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Go To");
+    brain.mind.setBehaviour("Go To Until");
 
     if (!this.initialized) {
       initialize();

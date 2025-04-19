@@ -2,8 +2,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
-import dataStructures.serializableGraph.SerializableSimpleGraph;
+import eu.su.mas.dedaleEtu.mas.knowledge.SerializableBrain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 import eu.su.mas.dedaleEtu.princ.Communication;
 import jade.core.AID;
@@ -14,6 +13,8 @@ import jade.lang.acl.ACLMessage;
 
 public class ShareMapBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -568863390879327961L;
+
+  private int exitValue = 0;
 
   private Brain brain;
 
@@ -35,6 +36,7 @@ public class ShareMapBehaviour extends OneShotBehaviour {
     boolean speaker = comms.shouldSpeak();
 
     for (int i = 0; i < 2; i++) {
+      brain.log("CURRENT AGENTS", brain.entities.getAgents().keySet());
       if (speaker) {
         sendBrain(friend);
       } else {
@@ -46,10 +48,7 @@ public class ShareMapBehaviour extends OneShotBehaviour {
 
   private void sendBrain(AID friend) {
     ACLMessage message = Utils.createACLMessage(
-        this.myAgent,
-        PROTOCOL_NAME,
-        friend,
-        this.brain.map.getSerializableGraph());
+        this.myAgent, PROTOCOL_NAME, friend, new SerializableBrain(brain));
     ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
     brain.log("just shared brain with", friend.getLocalName());
   }
@@ -61,21 +60,26 @@ public class ShareMapBehaviour extends OneShotBehaviour {
             MessageTemplate.MatchProtocol(PROTOCOL_NAME)),
         MessageTemplate.MatchSender(friend));
 
-    ACLMessage message = this.myAgent.blockingReceive(filter, 100 * TIMEOUT);
+    ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
 
     if (message == null) {
       return;
     }
 
-    SerializableSimpleGraph<String, MapAttribute> brainReceived = null;
+    SerializableBrain brainReceived = null;
     try {
-      brainReceived = (SerializableSimpleGraph<String, MapAttribute>) message.getContentObject();
+      brainReceived = (SerializableBrain) message.getContentObject();
     } catch (Exception e) {
       e.printStackTrace();
       return;
     }
 
     brain.log("just received brain from", friend.getLocalName());
-    this.brain.map.mergeWithReceivedMap(brainReceived);
+    brain.merge(brainReceived);
+  }
+
+  @Override
+  public int onEnd() {
+    return this.exitValue;
   }
 }

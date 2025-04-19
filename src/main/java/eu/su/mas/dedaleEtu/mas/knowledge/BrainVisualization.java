@@ -22,6 +22,9 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
 import org.graphstream.ui.view.View;
+
+import eu.su.mas.dedaleEtu.princ.Communication;
+
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
@@ -42,10 +45,11 @@ public class BrainVisualization {
       "node.open { fill-color: blue; }" +
       "node.closed { fill-color: grey; }" +
       "node.me { fill-color: black; size: 20px; }" +
+      "node.target { fill-color: red; size: 15px; }" +
       "node.treasure { fill-color: yellow; }" +
-      "node.agent { fill-color: forestgreen; }" +
-      "node.silo { fill-color: orange; }" +
-      "node.golem { fill-color: red; }" +
+      "node.agent { fill-color: forestgreen; size: 10px; }" +
+      "node.silo { fill-color: orange; size: 10px; }" +
+      "node.golem { fill-color: red; size: 10px; }" +
       "edge { fill-color: #999; }" +
       "edge.path { fill-color: green; size: 4px; }";
 
@@ -209,6 +213,7 @@ public class BrainVisualization {
     snapshot.silo = brain.entities.getSilo();
     snapshot.golem = brain.entities.getGolem();
     snapshot.behaviour = brain.mind.getBehaviour();
+    snapshot.communication = brain.mind.getCommunication();
     snapshot.explorationPriority = brain.mind.getExplorationPriority();
     snapshot.collectionPriority = brain.mind.getCollectionPriority();
     snapshot.socialCooldown = brain.mind.getSocialCooldown();
@@ -282,28 +287,24 @@ public class BrainVisualization {
   }
 
   private void synchronizeGraphWithSnapshot(BrainSnapshot snapshot) {
-    // Find nodes to add and remove
     Set<String> currentNodeIds = new HashSet<>();
     uiGraph.nodes().forEach(node -> currentNodeIds.add(node.getId()));
 
     Set<String> newNodeIds = new HashSet<>();
     snapshot.nodes.forEach(nodeInfo -> newNodeIds.add(nodeInfo.id));
 
-    // Remove nodes that no longer exist
     Set<String> nodesToRemove = new HashSet<>(currentNodeIds);
     nodesToRemove.removeAll(newNodeIds);
     for (String nodeId : nodesToRemove) {
       uiGraph.removeNode(nodeId);
     }
 
-    // Add new nodes
     Set<String> nodesToAdd = new HashSet<>(newNodeIds);
     nodesToAdd.removeAll(currentNodeIds);
     for (String nodeId : nodesToAdd) {
       uiGraph.addNode(nodeId);
     }
 
-    // Find edges to add and remove
     Map<String, EdgeInfo> newEdges = new HashMap<>();
     for (EdgeInfo edge : snapshot.edges) {
       newEdges.put(edge.id, edge);
@@ -316,12 +317,10 @@ public class BrainVisualization {
       }
     });
 
-    // Remove edges that no longer exist
     for (String edgeId : edgesToRemove) {
       uiGraph.removeEdge(edgeId);
     }
 
-    // Add new edges
     for (EdgeInfo edge : snapshot.edges) {
       if (uiGraph.getEdge(edge.id) == null &&
           uiGraph.getNode(edge.sourceId) != null &&
@@ -337,7 +336,6 @@ public class BrainVisualization {
     }
   }
 
-  // Styling methods remain the same
   private void styleNodesFromSnapshot(BrainSnapshot snapshot) {
     uiGraph.nodes().forEach(node -> {
       String nodeId = node.getId();
@@ -357,6 +355,7 @@ public class BrainVisualization {
       boolean isSilo = snapshot.silo != null && nodeId.equals(snapshot.silo.getPosition());
       boolean isGolem = snapshot.golem != null && nodeId.equals(snapshot.golem.getPosition());
       boolean isCurrentPosition = nodeId.equals(snapshot.myself.getPosition());
+      boolean isCurrentTarget = nodeId.equals(snapshot.targetNode);
 
       if (isCurrentPosition) {
         node.setAttribute("ui.class", "me");
@@ -367,6 +366,34 @@ public class BrainVisualization {
               "%s - %s (%d)", nodeId, treasure.getType(), treasure.getQuantity()));
         } else {
           node.setAttribute("ui.label", nodeId);
+        }
+      } else if (isCurrentTarget) {
+        node.setAttribute("ui.class", "target");
+
+        String entityInfo = "";
+        if (agentHere != null) {
+          entityInfo = agentHere;
+        } else if (isGolem) {
+          entityInfo = "Golem";
+        } else if (isSilo) {
+          entityInfo = "Silo";
+        }
+
+        if (hasTreasure) {
+          TreasureData treasure = snapshot.treasures.get(nodeId);
+          if (!entityInfo.isEmpty()) {
+            node.setAttribute("ui.label", String.format(
+                "%s %s - %s (%d)", nodeId, entityInfo, treasure.getType(), treasure.getQuantity()));
+          } else {
+            node.setAttribute("ui.label", String.format(
+                "%s - %s (%d)", nodeId, treasure.getType(), treasure.getQuantity()));
+          }
+        } else {
+          if (!entityInfo.isEmpty()) {
+            node.setAttribute("ui.label", String.format("%s %s", nodeId, entityInfo));
+          } else {
+            node.setAttribute("ui.label", nodeId);
+          }
         }
       } else if (agentHere != null) {
         node.setAttribute("ui.class", "agent");
@@ -443,9 +470,16 @@ public class BrainVisualization {
     Label targetNode = new Label(String.format("Target node: %s", snapshot.targetNode));
     Label pathToTarget = new Label(String.format("Path to target: %s", snapshot.pathToTarget));
 
+    Label communication = new Label(
+        (snapshot.communication != null)
+            ? String.format("Communication: %s - %s - %s", snapshot.communication.getFriend().getLocalName(),
+                snapshot.communication.getProtocol(), snapshot.communication.shouldSpeak() ? "true" : "false")
+            : "Communication:");
+
     mindSection.getChildren().clear();
     mindSection.getChildren().addAll(
         behaviour,
+        communication,
         explorationPriority,
         collectionPriority,
         socialCooldown,
@@ -470,23 +504,23 @@ public class BrainVisualization {
 
     if (snapshot.myself != null) {
       entities.add(new Label(String.format(
-          "Me (%s) - position: %s, capacity: %d, freespace: %d, expertise: %s, type: %s",
+          "Me (%s) - position: %s, gold: %d/%d, diamond: %d/%d, expertise: %s, type: %s",
           snapshot.agentName,
           snapshot.myself.getPosition(),
-          snapshot.myself.getBackpackCapacity(),
-          snapshot.myself.getBackpackFreeSpace(),
+          snapshot.myself.getGoldAmount(), snapshot.myself.getGoldCapacity(),
+          snapshot.myself.getDiamondAmount(), snapshot.myself.getDiamondCapacity(),
           snapshot.myself.getExpertise(),
           snapshot.myself.getTreasureType())));
     }
 
     for (Map.Entry<String, AgentData> agent : snapshot.agents.entrySet()) {
       entities.add(new Label(String.format(
-          "%s - position: %s, age: %d, capacity: %d, freespace: %d, expertise: %s, type: %s",
+          "%s - position: %s, age: %d, gold: %d/%d, diamond: %d/%d, expertise: %s, type: %s",
           agent.getKey(),
           agent.getValue().getPosition(),
           agent.getValue().getUpdateCounter(),
-          agent.getValue().getBackpackCapacity(),
-          agent.getValue().getBackpackFreeSpace(),
+          agent.getValue().getGoldAmount(), agent.getValue().getGoldCapacity(),
+          agent.getValue().getDiamondAmount(), agent.getValue().getDiamondCapacity(),
           agent.getValue().getExpertise(),
           agent.getValue().getTreasureType())));
     }
@@ -595,6 +629,7 @@ public class BrainVisualization {
     public SiloData silo;
     public GolemData golem;
 
+    public Communication communication;
     public String behaviour;
     public float explorationPriority;
     public float collectionPriority;

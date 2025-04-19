@@ -22,6 +22,7 @@ public class OpenLockBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour("Open lock");
+    brain.observe(this.myAgent);
 
     String position = brain.entities.getPosition();
     TreasureData treasure = brain.entities.getTreasures().get(position);

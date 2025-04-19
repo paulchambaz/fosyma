@@ -34,7 +34,7 @@ public class Brain implements Serializable {
   }
 
   public synchronized boolean moveTo(Agent agent, String node) {
-    Utils.waitFor(agent, 500);
+    Utils.waitFor(agent, 100);
     try {
       return ((AbstractDedaleAgent) agent).moveTo(new GsLocation(node));
     } catch (Exception e) {
@@ -67,59 +67,53 @@ public class Brain implements Serializable {
     this.entities.updatePosition(position);
 
     List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) agent).observe();
-    this.map.addNode(position, MapAttribute.CLOSED);
 
-    Map<String, String> observedAgents = new HashMap<>();
+    updateTopology(position, observations);
+    Map<String, String> observedAgents = processObservations(observations);
+    detectForgottenEntities(observedAgents);
 
-    String nextNodeId = null;
+  }
+
+  private void updateTopology(String position, List<Couple<Location, List<Couple<Observation, String>>>> observations) {
+    map.addNode(position, MapAttribute.CLOSED);
     for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
       String accessibleNode = entry.getLeft().getLocationId();
-
-      // add new node to map representation
-      boolean isNewNode = this.map.addNewNode(accessibleNode);
+      map.addNewNode(accessibleNode);
       if (!position.equals(accessibleNode)) {
-        this.map.addEdge(position, accessibleNode);
-        if (nextNodeId == null && isNewNode) {
-          nextNodeId = accessibleNode;
-        }
+        map.addEdge(position, accessibleNode);
       }
+    }
+  }
 
-      // collect agent names
+  private Map<String, String> processObservations(
+      List<Couple<Location, List<Couple<Observation, String>>>> observations) {
+    Map<String, String> observedAgents = new HashMap<>();
+    for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
+      String accessibleNode = entry.getLeft().getLocationId();
       for (Couple<Observation, String> observation : entry.getRight()) {
         Observation observeKind = observation.getLeft();
         String observed = observation.getRight();
 
         switch (observeKind) {
           case AGENTNAME:
-            observedAgents.put(observed, accessibleNode);
-            if (observed.startsWith("Silo")) {
-              this.entities.setSiloPosition(accessibleNode);
-            } else if (observed.startsWith("Golem")) {
-              this.entities.setGolemPosition(accessibleNode);
-            } else {
-              this.entities.updateAgentPosition(observed, accessibleNode);
-            }
+            processAgentObservation(observed, accessibleNode, observedAgents);
             break;
 
           case GOLD:
           case DIAMOND:
-            int treasureValue = Integer.parseInt(observed);
-            this.entities.updateTreasure(accessibleNode, observeKind, treasureValue, true, -1, -1);
+            processTreasureObservation(accessibleNode, observeKind, observed);
             break;
 
           case LOCKSTATUS:
-            boolean treasureStatus = !Boolean.parseBoolean(observed);
-            this.entities.updateTreasureStatus(accessibleNode, treasureStatus);
+            processTreasureLockStatus(accessibleNode, observed);
             break;
 
           case LOCKPICKING:
-            int treasureLockpicking = Integer.parseInt(observed);
-            this.entities.updateTreasureLockpinging(accessibleNode, treasureLockpicking);
+            processTreasureLockpicking(accessibleNode, observed);
             break;
 
           case STRENGH:
-            int treasureStrength = Integer.parseInt(observed);
-            this.entities.updateTreasureStrength(accessibleNode, treasureStrength);
+            processTreasureStrength(accessibleNode, observed);
             break;
 
           default:
@@ -128,37 +122,70 @@ public class Brain implements Serializable {
       }
     }
 
-    boolean isHere, shouldBeHere;
-    for (Map.Entry<String, AgentData> entry : this.entities.getAgents().entrySet()) {
+    return observedAgents;
+  }
+
+  private void processAgentObservation(String agentName, String position, Map<String, String> observedAgents) {
+    observedAgents.put(agentName, position);
+
+    if (agentName.startsWith("Silo")) {
+      entities.setSiloPosition(position);
+    } else if (agentName.startsWith("Golem")) {
+      entities.setGolemPosition(position);
+    } else {
+      entities.updateAgentPosition(agentName, position);
+    }
+  }
+
+  private void processTreasureObservation(String nodeId, Observation type, String value) {
+    int treasureValue = Integer.parseInt(value);
+    entities.updateTreasure(nodeId, type, treasureValue, true, -1, -1);
+  }
+
+  private void processTreasureLockStatus(String nodeId, String value) {
+    boolean treasureStatus = !Boolean.parseBoolean(value);
+    entities.updateTreasureStatus(nodeId, treasureStatus);
+  }
+
+  private void processTreasureLockpicking(String nodeId, String value) {
+    int treasureLockpicking = Integer.parseInt(value);
+    entities.updateTreasureLockpinging(nodeId, treasureLockpicking);
+  }
+
+  private void processTreasureStrength(String nodeId, String value) {
+    int treasureStrength = Integer.parseInt(value);
+    entities.updateTreasureStrength(nodeId, treasureStrength);
+  }
+
+  private void detectForgottenEntities(Map<String, String> observedAgents) {
+    for (Map.Entry<String, AgentData> entry : entities.getAgents().entrySet()) {
       String agentName = entry.getKey();
-      String agentPosition = entry.getValue().getPosition();
+      AgentData agentData = entry.getValue();
+      String agentPosition = agentData.getPosition();
 
-      isHere = false;
-      shouldBeHere = false;
-      for (Map.Entry<String, String> neighbour : observedAgents.entrySet()) {
-        if (agentName == neighbour.getKey()) {
-          isHere = true;
+      if (agentPosition != null) {
+        if (entities.isAgentMissing(agentName, agentPosition, observedAgents)
+            && agentData.getUpdateCounter() > 10) {
+          System.out.println("Agent lost: " + agentName);
+          entities.loseAgentPosition(agentName);
         }
-        if (agentPosition == neighbour.getValue()) {
-          shouldBeHere = true;
-        }
-      }
-
-      if (this.entities.isAgentMissing(entry.getKey(), entry.getValue().getPosition(),
-          observedAgents)) {
-        System.out.println(entry.getKey() + " was supposed to be here but isn't...");
-        this.entities.loseAgentPosition(agentName);
       }
     }
 
-    if (this.entities.getSilo() != null
-        && entities.isAgentMissing("Silo", this.entities.getSilo().getPosition(), observedAgents)) {
-      this.entities.getSilo().setPosition(null);
+    if (entities.getSilo() != null && entities.getSilo().getPosition() != null) {
+      if (entities.isAgentMissing("Silo", entities.getSilo().getPosition(), observedAgents)
+          && entities.getSilo().getUpdateCounter() > 10) {
+        System.out.println("Silo lost");
+        entities.getSilo().setPosition(null);
+      }
     }
 
-    if (this.entities.getGolem() != null
-        && entities.isAgentMissing("Golem", this.entities.getGolem().getPosition(), observedAgents)) {
-      this.entities.getGolem().setPosition(null);
+    if (entities.getGolem() != null && entities.getGolem().getPosition() != null) {
+      if (entities.isAgentMissing("Golem", entities.getGolem().getPosition(), observedAgents)
+          && entities.getGolem().getUpdateCounter() > 10) {
+        System.out.println("Golem lost");
+        entities.getGolem().setPosition(null);
+      }
     }
   }
 
@@ -174,6 +201,27 @@ public class Brain implements Serializable {
 
     }
 
+    List<Couple<Observation, Integer>> observationsFreespace = ((AbstractDedaleAgent) agent).getBackPackFreeSpace();
+    for (Couple<Observation, Integer> freespace : observationsFreespace) {
+      switch (freespace.getLeft()) {
+        case GOLD:
+          entities.setGoldCapacity(freespace.getRight());
+          break;
+        case DIAMOND:
+          entities.setDiamondCapacity(freespace.getRight());
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  public synchronized void merge(SerializableBrain serializedBrain) {
+    map.mergeWithReceivedMap(serializedBrain.getGraph());
+    entities.mergeAgents(serializedBrain.getAgents());
+    entities.mergeTreasures(serializedBrain.getTreasures());
+    entities.mergeSilo(serializedBrain.getSilo());
+    entities.mergeGolem(serializedBrain.getGolem());
   }
 
   public synchronized void log(Object... args) {

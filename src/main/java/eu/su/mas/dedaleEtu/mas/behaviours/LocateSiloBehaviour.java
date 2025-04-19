@@ -31,14 +31,19 @@ public class LocateSiloBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour("Locate silo");
 
+    brain.observe(this.myAgent);
+
     AgentData myself = brain.entities.getMyself();
     SiloData silo = brain.entities.getSilo();
 
     if (silo != null && silo.getPosition() != null) {
       List<String> occupiedPositions = brain.entities.getOccupiedPositions();
       List<String> path = brain.map.findShortestPath(myself.getPosition(), silo.getPosition(), occupiedPositions);
-      if (path == null) {
+      if (path == null || path.size() == 0) {
         path = brain.map.findShortestPath(myself.getPosition(), silo.getPosition(), new ArrayList<>());
+      }
+      if (path == null || path.size() == 0) {
+        return;
       }
       String goal = path.getLast();
       brain.mind.setTargetNode(goal);

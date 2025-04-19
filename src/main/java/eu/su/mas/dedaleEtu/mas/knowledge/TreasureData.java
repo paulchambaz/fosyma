@@ -25,6 +25,16 @@ public class TreasureData implements Serializable {
     this.pickStrength = pickStrength;
   }
 
+  public TreasureData(TreasureData o) {
+    this.nodeId = o.getNodeId();
+    this.type = o.getType();
+    this.updateCounter = o.getUpdateCounter();
+    this.quantity = o.getQuantity();
+    this.isLocked = o.isLocked();
+    this.lockStrength = o.getLockStrength();
+    this.pickStrength = o.getPickStrength();
+  }
+
   public String getNodeId() {
     return nodeId;
   }

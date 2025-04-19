@@ -19,7 +19,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour("Explore");
-
     brain.mind.updateBehaviouralPriorities();
 
     if (brain.mind.isCollectionPreferred()) {

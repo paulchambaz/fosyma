@@ -35,6 +35,8 @@ public class CollectBehaviour extends OneShotBehaviour {
       return;
     }
 
+    brain.observe(this.myAgent);
+
     String currentPosition = brain.entities.getPosition();
     String goal = findOptimalTreasureNode(brain.map, brain.entities, currentPosition);
 
@@ -44,10 +46,10 @@ public class CollectBehaviour extends OneShotBehaviour {
       this.exitValue = 0;
     } else {
       brain.log("No suitable treasure found to collect");
-      // TODO: if there are no more treasure AND we have explored the entire map
-      // then it really is the end, for now we just return to exploration but it
-      // will return here ad infinite unless we just stopped because collection
-      // changed
+      // TODO: if there are no more treasure AND we have explored the entire
+      // map then it really is the end, for now we just return to exploration
+      // but it will return here ad infinite unless we just stopped because
+      // collection changed
       this.exitValue = 1;
     }
   }

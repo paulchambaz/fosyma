@@ -70,6 +70,14 @@ public class EntityTracker implements Serializable {
     myself.setExpertise(expertise, value);
   }
 
+  public synchronized void setGoldCapacity(Integer value) {
+    myself.setGoldCapacity(value);
+  }
+
+  public synchronized void setDiamondCapacity(Integer value) {
+    myself.setDiamondCapacity(value);
+  }
+
   public synchronized void updateTreasure(String nodeId, Observation type, int quantity, boolean locked,
       int lockStrength,
       int pickStrength) {
@@ -153,29 +161,6 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  // TODO: we need to rethink this a bit
-  // public synchronized void updateAgent(String agentName, String nodeId,
-  // Map<Observation, Integer> expertise,
-  // int capacity,
-  // int freeSpace, String status) {
-  // if (this.agents.containsKey(agentName)) {
-  // AgentData agent = this.agents.get(agentName);
-  // agent.setPosition(nodeId);
-  // agent.setExpertise(expertise);
-  // agent.setBackpackCapacity(capacity);
-  // agent.setBackpackFreeSpace(freeSpace);
-  // agent.setStatus(status);
-  // agent.resetCounter();
-  // } else {
-  // AgentData agent = new AgentData(nodeId);
-  // agent.setExpertise(expertise);
-  // agent.setBackpackCapacity(capacity);
-  // agent.setBackpackFreeSpace(freeSpace);
-  // agent.setStatus(status);
-  // this.agents.put(agentName, agent);
-  // }
-  // }
-
   public synchronized void updateAgentPosition(String agentName, String nodeId) {
     if (this.agents.containsKey(agentName)) {
       AgentData agent = this.agents.get(agentName);
@@ -209,18 +194,21 @@ public class EntityTracker implements Serializable {
   }
 
   public synchronized boolean isAgentMissing(String name, String position, Map<String, String> observedAgents) {
-    boolean isHere = false;
-    boolean shouldBeHere = false;
-    for (Map.Entry<String, String> neighbour : observedAgents.entrySet()) {
-      if (name == neighbour.getKey()) {
-        isHere = true;
+    boolean isObserved = false;
+
+    boolean positionIsObserved = false;
+
+    for (Map.Entry<String, String> entry : observedAgents.entrySet()) {
+      if (name.equals(entry.getKey())) {
+        isObserved = true;
       }
-      if (position == neighbour.getValue()) {
-        shouldBeHere = true;
+
+      if (position.equals(entry.getValue())) {
+        positionIsObserved = true;
       }
     }
 
-    return !isHere && shouldBeHere;
+    return !isObserved && positionIsObserved;
   }
 
   public synchronized String getAgentAtPosition(String nodeId) {
@@ -275,7 +263,7 @@ public class EntityTracker implements Serializable {
   public synchronized void mergeTreasures(Map<String, TreasureData> receivedTreasures) {
     for (Map.Entry<String, TreasureData> entry : receivedTreasures.entrySet()) {
       String nodeId = entry.getKey();
-      TreasureData receivedTreasure = entry.getValue();
+      TreasureData receivedTreasure = new TreasureData(entry.getValue());
 
       if (!this.treasures.containsKey(nodeId)
           || this.treasures.get(nodeId).getUpdateCounter() > receivedTreasure.getUpdateCounter()) {
@@ -287,13 +275,20 @@ public class EntityTracker implements Serializable {
   }
 
   public synchronized void mergeAgents(Map<String, AgentData> receivedAgents) {
+    brain.log("AGENTS AT START:", this.agents.keySet());
     for (Map.Entry<String, AgentData> entry : receivedAgents.entrySet()) {
       String agentName = entry.getKey();
-      AgentData receivedAgent = entry.getValue();
+
+      if (agentName.equals(brain.name) || agentName.equals("Silo") || agentName.equals("Golem")) {
+        continue;
+      }
+
+      AgentData receivedAgent = new AgentData(entry.getValue());
 
       if (!this.agents.containsKey(agentName)
           || this.agents.get(agentName).getUpdateCounter() > receivedAgent.getUpdateCounter()) {
         this.agents.put(agentName, receivedAgent);
+        brain.log("AFTER ADDING", agentName, this.agents.keySet());
       }
     }
 
@@ -302,6 +297,10 @@ public class EntityTracker implements Serializable {
 
   public synchronized void mergeSilo(SiloData receivedSilo) {
     if (receivedSilo == null) {
+      return;
+    }
+
+    if (brain.name.equals("Silo")) {
       return;
     }
 

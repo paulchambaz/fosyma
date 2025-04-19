@@ -41,7 +41,6 @@ public class AgentMind implements Serializable {
   }
 
   public synchronized void setBehaviour(String behaviour) {
-    brain.log("BEHAVIOUR", behaviour);
     this.behaviour = behaviour;
     brain.notifyVisualization();
   }

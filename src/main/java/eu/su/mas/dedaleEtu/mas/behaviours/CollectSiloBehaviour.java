@@ -37,6 +37,8 @@ public class CollectSiloBehaviour extends OneShotBehaviour {
       return;
     }
 
+    brain.observe(this.myAgent);
+
     String goal = findOptimalWaitingNode(brain.map, brain.entities, 2.0);
 
     brain.log("finished, going to wait in", goal);

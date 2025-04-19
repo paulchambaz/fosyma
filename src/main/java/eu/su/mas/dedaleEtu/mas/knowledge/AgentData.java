@@ -10,19 +10,34 @@ public class AgentData implements Serializable {
 
   private String position; // current position of the agent
   private int updateCounter; // counter since last update (not Unix timestamp)
-  private int backpackCapacity; // total capacity of the backpack
-  private int backpackFreeSpace; // free space in the backpack
+
+  private int goldCapacity;
+  private int goldAmount;
+
+  private int diamondCapacity;
+  private int diamondAmount;
+
   private Map<Observation, Integer> expertise; // strength / lockpicking
   private Observation treasureType; // type of treasure that the agent can collect
-  private String status; // current agent status (exploring, collecting, etc.)
 
   public AgentData(String position) {
     this.position = position;
     this.updateCounter = 0;
     this.expertise = new HashMap<>();
-    this.backpackCapacity = 0;
-    this.backpackFreeSpace = 0;
-    this.status = "exploring";
+    this.goldCapacity = 0;
+    this.goldAmount = 0;
+    this.diamondCapacity = 0;
+    this.diamondAmount = 0;
+  }
+
+  public AgentData(AgentData o) {
+    this.position = o.getPosition();
+    this.updateCounter = o.getUpdateCounter();
+    this.expertise = o.getExpertise();
+    this.goldCapacity = o.getGoldCapacity();
+    this.goldAmount = o.getGoldAmount();
+    this.diamondCapacity = o.getDiamondCapacity();
+    this.diamondAmount = o.getDiamondAmount();
   }
 
   public String getPosition() {
@@ -33,12 +48,20 @@ public class AgentData implements Serializable {
     return expertise;
   }
 
-  public int getBackpackCapacity() {
-    return backpackCapacity;
+  public int getGoldCapacity() {
+    return goldCapacity;
   }
 
-  public int getBackpackFreeSpace() {
-    return backpackFreeSpace;
+  public int getGoldAmount() {
+    return goldAmount;
+  }
+
+  public int getDiamondCapacity() {
+    return diamondCapacity;
+  }
+
+  public int getDiamondAmount() {
+    return diamondAmount;
   }
 
   public Observation getTreasureType() {
@@ -49,10 +72,6 @@ public class AgentData implements Serializable {
     return updateCounter;
   }
 
-  public String getStatus() {
-    return status;
-  }
-
   public void setPosition(String position) {
     this.position = position;
   }
@@ -61,12 +80,22 @@ public class AgentData implements Serializable {
     this.expertise.put(expertise, value);
   }
 
-  public void setBackpackCapacity(int backpackCapacity) {
-    this.backpackCapacity = backpackCapacity;
+  public void setGoldCapacity(int goldCapacity) {
+    this.goldCapacity = goldCapacity;
+    this.goldAmount = 0;
   }
 
-  public void setBackpackFreeSpace(int backpackFreeSpace) {
-    this.backpackFreeSpace = backpackFreeSpace;
+  public void setDiamondCapacity(int diamondCapacity) {
+    this.diamondCapacity = diamondCapacity;
+    this.diamondAmount = 0;
+  }
+
+  public void updateGoldAmount(int amount) {
+    this.goldAmount += amount;
+  }
+
+  public void updateDiamondAmount(int amount) {
+    this.diamondAmount += amount;
   }
 
   public void setTreasureType(Observation treasureType) {
@@ -75,10 +104,6 @@ public class AgentData implements Serializable {
 
   public void setUpdateCounter(int counter) {
     this.updateCounter = counter;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
   }
 
   public void incrementCounter() {
@@ -95,9 +120,5 @@ public class AgentData implements Serializable {
 
   public boolean canPickTreasure(int requiredStrength) {
     return expertise.getOrDefault(Observation.STRENGH, 0) >= requiredStrength;
-  }
-
-  public int calculateRemainingSpace() {
-    return backpackCapacity - (backpackCapacity - backpackFreeSpace);
   }
 }

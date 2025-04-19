@@ -20,6 +20,7 @@ public class PickBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour("Pick");
+    brain.observe(this.myAgent);
 
     ((AbstractDedaleAgent) this.myAgent).pick();
 

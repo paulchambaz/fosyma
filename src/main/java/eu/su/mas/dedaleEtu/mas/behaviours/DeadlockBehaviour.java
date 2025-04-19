@@ -1,5 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.util.List;
+import java.util.ArrayList;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
@@ -20,7 +22,19 @@ public class DeadlockBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour("Deadlock");
     brain.observe(this.myAgent);
-    String goal = brain.findRandomNode();
+
+    String goal;
+    do {
+      goal = brain.findRandomNode();
+
+      String position = brain.entities.getPosition();
+
+      List<String> path = brain.map.findShortestPath(position, goal, new ArrayList<>());
+      if (!path.isEmpty()) {
+        break;
+      }
+    } while (true);
+
     brain.log("i was stuck so im going to", goal);
     brain.mind.setTargetNode(goal);
     brain.mind.resetStuckCounter();
