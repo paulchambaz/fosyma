@@ -1,27 +1,30 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import java.util.Deque;
 import java.util.List;
+import java.util.Deque;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.princ.Computes;
 
-public class GoToBehaviour extends OneShotBehaviour {
+public class GoToUntilBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
 
   private boolean initialized = false;
   private int exitValue = 0;
 
   private Brain brain;
+  private List<String> searchingAgents;
 
-  public GoToBehaviour(Agent myagent, Brain brain) {
+  public GoToUntilBehaviour(Agent myagent, Brain brain, List<String> searchingAgents) {
     super(myagent);
     this.brain = brain;
+    this.searchingAgents = searchingAgents;
   }
 
   private void initialize() {
     brain.computePathToTarget(true);
-    if (brain.mind.getPathToTarget() == null || brain.mind.getPathToTarget().isEmpty()) {
+    if (this.brain.mind.getPathToTarget().isEmpty()) {
       brain.computePathToTarget(false);
     }
 
@@ -31,7 +34,7 @@ public class GoToBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Go To");
+    brain.mind.setBehaviour("Go To Until");
 
     if (!this.initialized) {
       initialize();
@@ -53,6 +56,13 @@ public class GoToBehaviour extends OneShotBehaviour {
       return;
     }
 
+    String position = brain.entities.getPosition();
+    String foundAgent = Computes.findSearchedAgentInNeighborhood(brain.map, brain.entities, position,
+        this.searchingAgents);
+    if (foundAgent != null) {
+      this.exitValue = 3;
+    }
+
     String next = path.removeFirst();
 
     if (brain.moveTo(this.myAgent, next)) {
@@ -63,6 +73,8 @@ public class GoToBehaviour extends OneShotBehaviour {
       brain.mind.incrementStuckCounter();
       brain.computePathToTarget(false);
     }
+
+    this.exitValue = 0;
   }
 
   @Override

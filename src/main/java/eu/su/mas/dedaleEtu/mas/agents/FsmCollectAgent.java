@@ -4,81 +4,152 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
-
 import eu.su.mas.dedaleEtu.mas.behaviours.InitBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.EndBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.PickSoloBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.DropOffBehaviour;
-
-import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
-
+import eu.su.mas.dedaleEtu.mas.behaviours.DeadlockBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.CommunicationBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.OpenLockBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.PickBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.LocateSiloBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.DropoffBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.PlanExplorationBehaviour;
+import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final long serialVersionUID = -78659868426454587L;
 
-  private Knowledge knowledge;
-
-  private final int agentSpeed = 10; // in nodes per seconds
+  private Brain brain;
 
   private static final String INIT = "Init";
+
   private static final String EXPLORE = "Explore";
-  private static final String EXPLORE_GOTO = "Explore Go To";
+  private static final String EXPLORE_GOTO = "Explore go to";
+  private static final String EXPLORE_DEADLOCK = "Explore deadlock";
+  private static final String EXPLORE_COMMUNICATION = "Explore communication";
+
   private static final String COLLECT = "Collect";
-  private static final String COLLECT_GOTO = "Collect Go To";
-  private static final String SILO_GOTO = "Silo Go To";
-  private static final String PICK_SOLO = "Pick Solo";
-  private static final String DROP_OFF = "Drop Off";
+  private static final String COLLECT_GOTO = "Collect go to";
+  private static final String COLLECT_DEADLOCK = "Collect deadlock";
+  private static final String COLLECT_OPENLOCK = "Collect open lock";
+  private static final String COLLECT_PICK = "Collect Pick";
+  private static final String COLLECT_LOCATE_SILO = "Collect Locate Silo";
+  private static final String COLLECT_GOTO_UNTIL_SILO = "Collect go to until silo";
+  private static final String COLLECT_DEADLOCK_SILO = "Collect deadlock silo";
+  private static final String COLLECT_DROPOFF = "Collect dropoff";
+
+  private static final String COMMUNICATION_SHAREMAP = "Communication share map";
+  private static final String COMMUNICATION_SOLVEDEADLOCK = "Communication solve deadlock";
+  private static final String COMMUNICATION_PLANEXPLORATION = "Communication plan exploration";
+  private static final String COMMUNICATION_SETMEETINGPOINT = "Communication set meeting point";
+
   private static final String END = "End";
 
   protected void setup() {
     super.setup();
 
-    this.knowledge = new Knowledge(this.getLocalName());
-
-    int waitTime = 1000 / agentSpeed;
+    this.brain = new Brain(this.getLocalName());
 
     FSMBehaviour fsmBehaviour = new FSMBehaviour();
 
-    // register behaviours
-    fsmBehaviour.registerFirstState(new InitBehaviour(this, this.knowledge), INIT);
-    fsmBehaviour.registerState(new ExploreBehaviour(this, this.knowledge), EXPLORE);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), EXPLORE_GOTO);
-    fsmBehaviour.registerState(new CollectBehaviour(this, this.knowledge), COLLECT);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), COLLECT_GOTO);
-    fsmBehaviour.registerState(new PickSoloBehaviour(this, this.knowledge), PICK_SOLO);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.knowledge), SILO_GOTO);
-    fsmBehaviour.registerState(new DropOffBehaviour(this, this.knowledge), DROP_OFF);
-    fsmBehaviour.registerLastState(new EndBehaviour(this, this.knowledge), END);
+    // behaviours
 
-    // register transitions
+    // init behaviour
+    fsmBehaviour.registerFirstState(new InitBehaviour(this, this.brain), INIT);
+
+    // exploration behaviours
+    fsmBehaviour.registerState(new ExploreBehaviour(this, this.brain), EXPLORE);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), EXPLORE_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), EXPLORE_DEADLOCK);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain,
+        new HashMap<String, Integer>() {
+          {
+            put("sharemap", 1);
+            put("solvedeadlock", 2);
+            put("planexploration", 3);
+            put("setmeetingpoint", 4);
+          }
+        }),
+        EXPLORE_COMMUNICATION);
+
+    // collect behaviours
+    fsmBehaviour.registerState(new CollectBehaviour(this, this.brain), COLLECT);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), COLLECT_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), COLLECT_DEADLOCK);
+    fsmBehaviour.registerState(new OpenLockBehaviour(this, this.brain), COLLECT_OPENLOCK);
+    fsmBehaviour.registerState(new PickBehaviour(this, this.brain), COLLECT_PICK);
+    fsmBehaviour.registerState(new LocateSiloBehaviour(this, this.brain), COLLECT_PICK);
+    fsmBehaviour.registerState(new LocateSiloBehaviour(this, this.brain), COLLECT_LOCATE_SILO);
+    fsmBehaviour.registerState(new GoToUntilBehaviour(this, this.brain, new ArrayList<>(Arrays.asList("Silo"))),
+        COLLECT_GOTO_UNTIL_SILO);
+    fsmBehaviour.registerState(new DropoffBehaviour(this, this.brain), COLLECT_DROPOFF);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), COLLECT_DEADLOCK_SILO);
+
+    // communication behaviours
+    fsmBehaviour.registerState(new ShareMapBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
+    fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), COMMUNICATION_PLANEXPLORATION);
+
+    // end behaviours
+    fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
+
+    // transitions
+
+    // init transitions
     fsmBehaviour.registerDefaultTransition(INIT, EXPLORE);
 
+    // explore transitions
     fsmBehaviour.registerDefaultTransition(EXPLORE, EXPLORE_GOTO);
     fsmBehaviour.registerTransition(EXPLORE, COLLECT, 1);
 
-    fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_GOTO);
+    fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_COMMUNICATION);
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
+    fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE_DEADLOCK, 2);
 
+    fsmBehaviour.registerDefaultTransition(EXPLORE_COMMUNICATION, EXPLORE_GOTO);
+    fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, COMMUNICATION_SHAREMAP, 1);
+    // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, SOLVEDEADLOCK, 2);
+    // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, PLANEXPLORE, 3);
+    // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, SETMEETINGPOINT, 4);
+
+    fsmBehaviour.registerDefaultTransition(EXPLORE_DEADLOCK, EXPLORE_GOTO);
+
+    // collect transitions
     fsmBehaviour.registerDefaultTransition(COLLECT, COLLECT_GOTO);
-    fsmBehaviour.registerTransition(COLLECT, EXPLORE, 1);
-    fsmBehaviour.registerTransition(COLLECT, END, 2);
+    fsmBehaviour.registerTransition(COLLECT, END, 1);
+    fsmBehaviour.registerTransition(COLLECT, EXPLORE, 2);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_GOTO);
-    fsmBehaviour.registerTransition(COLLECT_GOTO, PICK_SOLO, 1);
+    fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_OPENLOCK, 1);
+    fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_DEADLOCK, 2);
 
-    fsmBehaviour.registerDefaultTransition(PICK_SOLO, COLLECT);
-    fsmBehaviour.registerTransition(PICK_SOLO, SILO_GOTO, 1);
-    fsmBehaviour.registerTransition(PICK_SOLO, END, 2);
+    fsmBehaviour.registerDefaultTransition(COLLECT_OPENLOCK, COLLECT_PICK);
 
-    fsmBehaviour.registerDefaultTransition(SILO_GOTO, SILO_GOTO);
-    fsmBehaviour.registerTransition(SILO_GOTO, DROP_OFF, 1);
+    fsmBehaviour.registerDefaultTransition(COLLECT_PICK, COLLECT_LOCATE_SILO);
 
-    fsmBehaviour.registerDefaultTransition(DROP_OFF, COLLECT);
+    fsmBehaviour.registerDefaultTransition(COLLECT_LOCATE_SILO, COLLECT_GOTO_UNTIL_SILO);
+
+    fsmBehaviour.registerDefaultTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_GOTO_UNTIL_SILO);
+    fsmBehaviour.registerTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_LOCATE_SILO, 1);
+    fsmBehaviour.registerTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_DEADLOCK_SILO, 2);
+    fsmBehaviour.registerTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_DROPOFF, 3);
+
+    fsmBehaviour.registerDefaultTransition(COLLECT_DROPOFF, COLLECT);
+    fsmBehaviour.registerTransition(COLLECT_DROPOFF, COLLECT_LOCATE_SILO, 1);
+
+    fsmBehaviour.registerDefaultTransition(COLLECT_DEADLOCK, COLLECT_GOTO);
+    fsmBehaviour.registerDefaultTransition(COLLECT_DEADLOCK_SILO, COLLECT_GOTO_UNTIL_SILO);
+
+    // communication transitions
+    fsmBehaviour.registerDefaultTransition(COMMUNICATION_SHAREMAP, COMMUNICATION_PLANEXPLORATION);
+    fsmBehaviour.registerDefaultTransition(COMMUNICATION_PLANEXPLORATION, EXPLORE_GOTO);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);
@@ -90,12 +161,12 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   }
 
   protected void beforeMove() {
-    this.knowledge.beforeMove();
+    this.brain.beforeMove();
     super.beforeMove();
   }
 
   protected void afterMove() {
     super.afterMove();
-    this.knowledge.afterMove();
+    this.brain.afterMove();
   }
 }

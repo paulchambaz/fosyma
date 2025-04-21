@@ -2,41 +2,47 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
-import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class ExploreBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -374637573871453865L;
 
   private int exitValue = 0;
 
-  private Knowledge knowledge;
+  private Brain brain;
 
-  public ExploreBehaviour(Agent agent, Knowledge knowledge) {
+  public ExploreBehaviour(Agent agent, Brain brain) {
     super(agent);
-    this.knowledge = knowledge;
+    this.brain = brain;
   }
 
   @Override
   public void action() {
-    this.knowledge.observe(this.myAgent);
+    brain.mind.setBehaviour("Explore");
+    brain.mind.updateBehaviouralPriorities();
 
-    if (!this.knowledge.hasOpenNode() && this.knowledge.getDesireExplore() != 1) {
-      System.out.println(this.myAgent.getLocalName() + " finished exploring");
+    if (brain.mind.isCollectionPreferred()) {
       this.exitValue = 1;
       return;
     }
 
-    String goal = this.knowledge.getClosestOpenNode();
+    brain.observe(this.myAgent);
+
+    if (!brain.map.hasOpenNode()) {
+      brain.mind.wantsToTalk();
+      this.exitValue = 1;
+      return;
+    }
+
+    String goal = brain.findClosestOpenNode(true);
 
     if (goal == null) {
-      // TODO: start LA RONDE
-      System.out.println(this.myAgent.getLocalName() + " wanted to go to a null node");
-      this.exitValue = 1;
+      goal = brain.findClosestOpenNode(false);
       return;
     }
 
-    this.knowledge.setGoal(goal);
-    System.out.println(this.myAgent.getLocalName() + " wants to go to " + goal);
+    brain.mind.setTargetNode(goal);
+
   }
 
   @Override

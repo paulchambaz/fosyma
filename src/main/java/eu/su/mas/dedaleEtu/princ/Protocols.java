@@ -5,13 +5,12 @@ import jade.core.Agent;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.ACLMessage;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedaleEtu.mas.knowledge.Knowledge;
+import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class Protocols {
+  private static String PROTOCOL_HANDSHAKE = "handshake";
 
-  private static String PROTOCOL_HANDSHAKE = "hs";
-
-  public static Communication handshake(Agent agent, Knowledge knowledge, int timeout, String protocol) {
+  public static Communication handshake(Agent agent, Brain brain, int timeout, String protocol) {
     emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "2");
     emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "1");
 
@@ -92,7 +91,7 @@ public class Protocols {
     }
 
     if (response == null) {
-      if (!knowledge.introvertCanTalk()) {
+      if (!brain.mind.isReadyForSocialInteraction()) {
         return null;
       }
 
@@ -100,7 +99,7 @@ public class Protocols {
           agent, PROTOCOL_HANDSHAKE + "0", null, protocol));
       // after we send a bottle to the sea, we always wait at least one step
       // before we talk again
-      knowledge.introvertSoftReset();
+      brain.mind.initiateSocialCooldown();
 
       filter = MessageTemplate.and(
           MessageTemplate.MatchPerformative(ACLMessage.INFORM),
