@@ -10,11 +10,8 @@ import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.ACLMessage;
-import java.util.List;
-import dataStructures.serializableGraph.SerializableSimpleGraph;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 
-public class ShareMapBehaviour extends OneShotBehaviour {
+public class ShareBrainBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -568863390879327961L;
 
   private int exitValue = 0;
@@ -24,7 +21,7 @@ public class ShareMapBehaviour extends OneShotBehaviour {
   private static int TIMEOUT = 100;
   private static String PROTOCOL_NAME = "sharemap";
 
-  public ShareMapBehaviour(Agent agent, Brain brain) {
+  public ShareBrainBehaviour(Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
   }
@@ -50,19 +47,8 @@ public class ShareMapBehaviour extends OneShotBehaviour {
   }
 
   private void sendBrain(AID friend) {
-    List<String> friendNodes = this.brain.entities.getAgentKnownNodes(friend.getLocalName());
-    brain.log("friend nodes : ", friendNodes);
-    List<String> myNodes = this.brain.entities.getMyself().getKnownNodes();
-    brain.log("my nodes : ", myNodes);
-    this.brain.entities.updateAgentKnownNodes(friend.getLocalName(), myNodes);
-
-    List<String> differentNodes = this.brain.map.getDifferentNodes(friendNodes, myNodes);
-    brain.log("different nodes : ", differentNodes);
-    SerializableSimpleGraph<String, MapAttribute> graph = new SerializableSimpleGraph<>();
-    graph = this.brain.map.getSerializedSubgraphFromNodes(differentNodes);
-
     ACLMessage message = Utils.createACLMessage(
-        this.myAgent, PROTOCOL_NAME, friend, graph);
+        this.myAgent, PROTOCOL_NAME, friend, new SerializableBrain(brain));
     ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
     brain.log("just shared brain with", friend.getLocalName());
   }
@@ -80,16 +66,16 @@ public class ShareMapBehaviour extends OneShotBehaviour {
       return;
     }
 
-    SerializableSimpleGraph mapReceived = null;
+    SerializableBrain brainReceived = null;
     try {
-      mapReceived = (SerializableSimpleGraph) message.getContentObject();
+      brainReceived = (SerializableBrain) message.getContentObject();
     } catch (Exception e) {
       e.printStackTrace();
       return;
     }
 
     brain.log("just received brain from", friend.getLocalName());
-    brain.map.mergeWithReceivedMap(mapReceived);
+    brain.merge(brainReceived);
   }
 
   @Override

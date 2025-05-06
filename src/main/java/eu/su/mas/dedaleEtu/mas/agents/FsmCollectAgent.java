@@ -18,6 +18,9 @@ import eu.su.mas.dedaleEtu.mas.behaviours.LocateSiloBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DropoffBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.PlanExplorationBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.MeetingBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SetMeetingBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.WaitUntilBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -50,6 +53,13 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final String COMMUNICATION_SOLVEDEADLOCK = "Communication solve deadlock";
   private static final String COMMUNICATION_PLANEXPLORATION = "Communication plan exploration";
   private static final String COMMUNICATION_SETMEETINGPOINT = "Communication set meeting point";
+
+  private static final String MEETING = "Meeting";
+  private static final String MEETING_GOTO = "Meeting go to";
+  private static final String MEETING_DEADLOCK = "Meeting deadlock";
+
+  private static final String WAIT_UNTIL_MEETING = "Wait until";
+  private static final String WAIT_COMMUNICATION= "Wait communication";
 
   private static final String END = "End";
 
@@ -95,7 +105,21 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     // communication behaviours
     fsmBehaviour.registerState(new ShareMapBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), COMMUNICATION_SETMEETINGPOINT);
     fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), COMMUNICATION_PLANEXPLORATION);
+
+    // meeting point behaviours
+    fsmBehaviour.registerState(new MeetingBehaviour(this, this.brain), MEETING);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), MEETING_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), MEETING_DEADLOCK);
+
+    fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain, 3000), WAIT_UNTIL_MEETING);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+        {
+          put("follow_me", 1);
+        }
+      }),
+      WAIT_COMMUNICATION);
 
     // end behaviours
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
@@ -107,7 +131,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     // explore transitions
     fsmBehaviour.registerDefaultTransition(EXPLORE, EXPLORE_GOTO);
-    fsmBehaviour.registerTransition(EXPLORE, COLLECT, 1);
+    fsmBehaviour.registerTransition(EXPLORE, MEETING, 1);
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_COMMUNICATION);
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
@@ -117,7 +141,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, COMMUNICATION_SHAREMAP, 1);
     // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, SOLVEDEADLOCK, 2);
     // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, PLANEXPLORE, 3);
-    // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, SETMEETINGPOINT, 4);
+    fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, COMMUNICATION_SETMEETINGPOINT, 4);
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_DEADLOCK, EXPLORE_GOTO);
 
@@ -150,6 +174,23 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     // communication transitions
     fsmBehaviour.registerDefaultTransition(COMMUNICATION_SHAREMAP, COMMUNICATION_PLANEXPLORATION);
     fsmBehaviour.registerDefaultTransition(COMMUNICATION_PLANEXPLORATION, EXPLORE_GOTO);
+
+    // waiting transitions
+    fsmBehaviour.registerDefaultTransition(WAIT_UNTIL_MEETING, WAIT_COMMUNICATION);
+    fsmBehaviour.registerTransition(WAIT_UNTIL_MEETING, COLLECT, 1); // Search for
+
+    fsmBehaviour.registerDefaultTransition(WAIT_COMMUNICATION, WAIT_UNTIL_MEETING);
+    fsmBehaviour.registerTransition(WAIT_COMMUNICATION, COLLECT, 1); // Follow me
+
+    // meetig point transitions
+    fsmBehaviour.registerDefaultTransition(MEETING, MEETING_GOTO);
+    fsmBehaviour.registerTransition(MEETING, EXPLORE, 2);
+
+    fsmBehaviour.registerDefaultTransition(MEETING_GOTO, MEETING_GOTO);
+    fsmBehaviour.registerTransition(MEETING_GOTO, WAIT_UNTIL_MEETING, 1);
+    fsmBehaviour.registerTransition(MEETING_GOTO, MEETING_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(MEETING_DEADLOCK, MEETING_GOTO);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);

@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.knowledge;
 
+import org.graphstream.graph.Graph;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import eu.su.mas.dedale.env.Observation;
+import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class EntityTracker implements Serializable {
   private static final long serialVersionUID = -2390384720937841984L;
@@ -159,6 +161,39 @@ public class EntityTracker implements Serializable {
       golem.setPosition(null);
       brain.notifyVisualization();
     }
+  }
+
+  public synchronized void updateAgentMeetingPoint(String agentName, String meetingPoint){
+    if (this.agents.containsKey(agentName)) {
+      AgentData agent = this.agents.get(agentName);
+      agent.setMeetingPoint(meetingPoint);
+      agent.resetCounter();
+    }
+    brain.notifyVisualization();
+  }
+
+  public synchronized String getAgentMeetingPoint(String agentName){
+    if (! this.agents.containsKey(agentName)) {
+      return null;
+    }
+    AgentData agent = this.agents.get(agentName);
+    return agent.getMeetingPoint();
+  }
+
+  public synchronized void updateAgentKnownNodes(String agentName, List<String> newNodes){
+    if (this.agents.containsKey(agentName)) {
+      AgentData agent = this.agents.get(agentName);
+      agent.updateKnownNodes(newNodes);
+      agent.resetCounter();
+    }
+  }
+
+  public synchronized List<String> getAgentKnownNodes(String agentName){
+    if (! this.agents.containsKey(agentName)) {
+      return null;
+    }
+    AgentData agent = this.agents.get(agentName);
+    return agent.getKnownNodes();
   }
 
   public synchronized void updateAgentPosition(String agentName, String nodeId) {

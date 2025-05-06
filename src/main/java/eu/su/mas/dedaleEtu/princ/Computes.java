@@ -16,6 +16,72 @@ import java.util.stream.Collectors;
 import java.util.HashMap;
 
 public class Computes {
+
+  public static String computeMyMeetingPoint(WorldMap map, double opennessWeight, double distanceWeight, String position){
+    Map<String, double[]> nodeCriteriaValues = calculateNodeCriteriaValues(map, position);
+
+    double[] weights = new double[2];
+    weights[0] = opennessWeight;
+    weights[1] = distanceWeight;
+
+    List<String> nodeIds = new ArrayList<>(nodeCriteriaValues.keySet());
+    double[][] criteriaMatrix = new double[nodeIds.size()][weights.length];
+
+    for (int i = 0; i < nodeIds.size(); i++) {
+      criteriaMatrix[i] = nodeCriteriaValues.get(nodeIds.get(i));
+    }
+    int bestIndex = Computes.solveMinMaxRegret(criteriaMatrix, weights);
+    return nodeIds.get(bestIndex);
+  }
+
+  public static Map<String, double[]> calculateNodeCriteriaValues(WorldMap map, String position) {
+    Map<String, double[]> results = new HashMap<>();
+    Map<String, Double> connectivityMap = calculateNodesConnectivity(map, 3);
+    Map<String, Integer> distancesMap = calculateNodesDistancesToPosition(map, position);
+
+    for (String nodeId : connectivityMap.keySet()) {
+      double[] criteria = new double[2];
+      double connectivity = connectivityMap.get(nodeId);
+      criteria[0] = -connectivity;
+
+      Integer distance = distancesMap.get(nodeId);
+      criteria[1] = (distance != null && distance < Integer.MAX_VALUE) ? distance : Double.MAX_VALUE;
+
+      results.put(nodeId, criteria);
+    }
+
+    return results;
+  }
+
+  public static Map<String, Double> calculateNodesConnectivity(WorldMap map, int order) {
+    Map<String, Double> results = new HashMap<>();
+    Graph graph = map.getGraph();
+
+    graph.nodes().forEach(node -> {
+      String nodeId = node.getId();
+      double connectivity = Computes.calculateNodeConnectivity(map, nodeId, order);
+      results.put(nodeId, connectivity);
+    });
+
+    return results;
+  }
+
+  public static Map<String, Integer> calculateNodesDistancesToPosition(WorldMap map, String position) {
+    Map<String, Integer> results = new HashMap<>();
+    Graph graph = map.getGraph();
+
+    graph.nodes().forEach(node -> {
+      String nodeId = node.getId();
+      
+      List<String> path = map.findShortestPath(nodeId, position, new ArrayList<>());
+      int distancesToPosition = (path != null) ? path.size() : Integer.MAX_VALUE;
+
+      results.put(nodeId, distancesToPosition);
+    });
+
+    return results;
+  }
+
   public static double calculateNodeConnectivity(WorldMap map, String nodeId, int order) {
     if (order <= 0) {
       return 0.0;

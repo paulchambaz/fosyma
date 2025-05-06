@@ -40,6 +40,51 @@ public class WorldMap implements Serializable {
     return this.worldGraph;
   }
 
+    // List<String> diff = diff1.stream().filter(e -> ! diff2.contains(e)).collect(Collectors.toList());
+  public synchronized List<String> getDifferentNodes(List<String> nodes1, List<String> nodes2) {
+    if (nodes1 == null){
+      return nodes2;
+    }
+    if (nodes2 == null){
+      return nodes1;
+    }
+    List<String> diff = nodes1.stream()
+    .filter(e -> ! nodes2.contains(e))
+    .collect(Collectors.toList());
+
+    // List<String> diff2 = nodes2.stream()
+    // .filter(e -> ! nodes1.contains(e))
+    // .collect(Collectors.toList());
+
+    // List<String> diff = diff1.stream().filter(e -> ! diff2.contains(e)).collect(Collectors.toList());
+    return diff;
+  }
+
+  public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializedSubgraphFromNodes(List<String> nodeList) {
+    
+    Map<String, MapAttribute> subGraphNodeAttributes = new HashMap<>();
+    SerializableSimpleGraph<String, MapAttribute> serializableSubgraph = new SerializableSimpleGraph<>();
+
+    for (Map.Entry<String, MapAttribute> entry : this.nodeAttributes.entrySet()) {
+      if (nodeList.contains(entry.getKey())) {
+        serializableSubgraph.addNode(entry.getKey());
+        subGraphNodeAttributes.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    this.worldGraph.edges().forEach(currentEdge -> {
+      Node sourceNode = currentEdge.getSourceNode();
+      Node targetNode = currentEdge.getTargetNode();
+      if (nodeList.contains(sourceNode.getId()) && nodeList.contains(targetNode.getId())) {
+        this.brain.log(sourceNode.getId(), targetNode.getId(), currentEdge.getId());
+        serializableSubgraph.addEdge(currentEdge.getId(), sourceNode.getId(), targetNode.getId());
+        this.brain.log(sourceNode.getId(), targetNode.getId());
+      }
+    });
+
+    return serializableSubgraph;
+  }
+
   public synchronized Map<String, MapAttribute> getNodeAttributes() {
     return this.nodeAttributes;
   }
@@ -59,6 +104,7 @@ public class WorldMap implements Serializable {
   }
 
   public synchronized boolean addNewNode(String id) {
+    this.brain.entities.getMyself().addKnownNode(id);
     if (!this.nodeAttributes.containsKey(id)) {
       addNode(id, MapAttribute.OPEN);
       return true;
