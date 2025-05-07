@@ -11,7 +11,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.CollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DeadlockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CommunicationBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareBrainBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.OpenLockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.PickBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.LocateSiloBehaviour;
@@ -59,7 +59,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final String MEETING_DEADLOCK = "Meeting deadlock";
 
   private static final String WAIT_UNTIL_MEETING = "Wait until";
-  private static final String WAIT_COMMUNICATION= "Wait communication";
+  private static final String WAIT_COMMUNICATION = "Wait communication";
 
   private static final String END = "End";
 
@@ -104,7 +104,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), COLLECT_DEADLOCK_SILO);
 
     // communication behaviours
-    fsmBehaviour.registerState(new ShareMapBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
     fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), COMMUNICATION_SETMEETINGPOINT);
     fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), COMMUNICATION_PLANEXPLORATION);
 
@@ -115,11 +115,11 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain, 3000), WAIT_UNTIL_MEETING);
     fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
-        {
-          put("follow_me", 1);
-        }
-      }),
-      WAIT_COMMUNICATION);
+      {
+        put("follow_me", 1);
+      }
+    }),
+        WAIT_COMMUNICATION);
 
     // end behaviours
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);

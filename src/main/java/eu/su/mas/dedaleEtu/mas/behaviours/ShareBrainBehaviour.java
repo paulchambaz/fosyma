@@ -1,7 +1,12 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.util.ArrayList;
+import java.util.List;
+import dataStructures.serializableGraph.SerializableSimpleGraph;
+import dataStructures.serializableGraph.SerializableNode;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.SerializableBrain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 import eu.su.mas.dedaleEtu.princ.Communication;
@@ -36,7 +41,6 @@ public class ShareBrainBehaviour extends OneShotBehaviour {
     boolean speaker = comms.shouldSpeak();
 
     for (int i = 0; i < 2; i++) {
-      brain.log("CURRENT AGENTS", brain.entities.getAgents().keySet());
       if (speaker) {
         sendBrain(friend);
       } else {
@@ -47,13 +51,31 @@ public class ShareBrainBehaviour extends OneShotBehaviour {
   }
 
   private void sendBrain(AID friend) {
+    List<String> knownNodesByFriend = brain.entities.getAgentKnownNodes(friend.getLocalName());
+    List<String> nodes = brain.map.getNodes();
+
+    List<String> nodesToShare = new ArrayList<>();
+
+    for (String node : nodes) {
+      if (!knownNodesByFriend.contains(node)) {
+        nodesToShare.add(node);
+      }
+    }
+
+    SerializableSimpleGraph<String, MapAttribute> partialGraph = brain.map.getSerializedSubgraphFromNodes(nodesToShare);
+
+    SerializableBrain partialBrain = new SerializableBrain(brain);
+    partialBrain.setGraph(partialGraph);
+
     ACLMessage message = Utils.createACLMessage(
-        this.myAgent, PROTOCOL_NAME, friend, new SerializableBrain(brain));
+        this.myAgent, PROTOCOL_NAME, friend, partialBrain);
     ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
     brain.log("just shared brain with", friend.getLocalName());
   }
 
   private void receiveBrain(AID friend) {
+    String friendName = friend.getLocalName();
+
     MessageTemplate filter = MessageTemplate.and(
         MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -76,6 +98,14 @@ public class ShareBrainBehaviour extends OneShotBehaviour {
 
     brain.log("just received brain from", friend.getLocalName());
     brain.merge(brainReceived);
+
+    SerializableSimpleGraph<String, MapAttribute> receivedGraph = brainReceived.getGraph();
+    List<String> receivedNodes = new ArrayList<>();
+    for (SerializableNode<String, MapAttribute> node : receivedGraph.getAllNodes()) {
+      receivedNodes.add(node.getNodeId());
+    }
+
+    brain.entities.updateAgentKnownNodes(friendName, receivedNodes);
   }
 
   @Override

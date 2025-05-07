@@ -3,12 +3,15 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 import dataStructures.tuple.Couple;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Random;
+import java.util.Set;
+
 import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
 import dataStructures.serializableGraph.SerializableNode;
@@ -40,51 +43,6 @@ public class WorldMap implements Serializable {
     return this.worldGraph;
   }
 
-    // List<String> diff = diff1.stream().filter(e -> ! diff2.contains(e)).collect(Collectors.toList());
-  public synchronized List<String> getDifferentNodes(List<String> nodes1, List<String> nodes2) {
-    if (nodes1 == null){
-      return nodes2;
-    }
-    if (nodes2 == null){
-      return nodes1;
-    }
-    List<String> diff = nodes1.stream()
-    .filter(e -> ! nodes2.contains(e))
-    .collect(Collectors.toList());
-
-    // List<String> diff2 = nodes2.stream()
-    // .filter(e -> ! nodes1.contains(e))
-    // .collect(Collectors.toList());
-
-    // List<String> diff = diff1.stream().filter(e -> ! diff2.contains(e)).collect(Collectors.toList());
-    return diff;
-  }
-
-  public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializedSubgraphFromNodes(List<String> nodeList) {
-    
-    Map<String, MapAttribute> subGraphNodeAttributes = new HashMap<>();
-    SerializableSimpleGraph<String, MapAttribute> serializableSubgraph = new SerializableSimpleGraph<>();
-
-    for (Map.Entry<String, MapAttribute> entry : this.nodeAttributes.entrySet()) {
-      if (nodeList.contains(entry.getKey())) {
-        serializableSubgraph.addNode(entry.getKey());
-        subGraphNodeAttributes.put(entry.getKey(), entry.getValue());
-      }
-    }
-
-    this.worldGraph.edges().forEach(currentEdge -> {
-      Node sourceNode = currentEdge.getSourceNode();
-      Node targetNode = currentEdge.getTargetNode();
-      if (nodeList.contains(sourceNode.getId()) && nodeList.contains(targetNode.getId())) {
-        this.brain.log(sourceNode.getId(), targetNode.getId(), currentEdge.getId());
-        serializableSubgraph.addEdge(currentEdge.getId(), sourceNode.getId(), targetNode.getId());
-        this.brain.log(sourceNode.getId(), targetNode.getId());
-      }
-    });
-
-    return serializableSubgraph;
-  }
-
   public synchronized Map<String, MapAttribute> getNodeAttributes() {
     return this.nodeAttributes;
   }
@@ -104,7 +62,6 @@ public class WorldMap implements Serializable {
   }
 
   public synchronized boolean addNewNode(String id) {
-    this.brain.entities.getMyself().addKnownNode(id);
     if (!this.nodeAttributes.containsKey(id)) {
       addNode(id, MapAttribute.OPEN);
       return true;
@@ -190,6 +147,12 @@ public class WorldMap implements Serializable {
         .collect(Collectors.toList());
   }
 
+  public synchronized List<String> getNodes() {
+    return this.nodeAttributes.entrySet().stream()
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+  }
+
   public synchronized boolean hasOpenNode() {
     return this.nodeAttributes.entrySet().stream()
         .anyMatch(entry -> entry.getValue() == MapAttribute.OPEN);
@@ -238,6 +201,56 @@ public class WorldMap implements Serializable {
   public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializableGraph() {
     serializeTopology();
     return this.serializableGraph;
+  }
+
+  public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializedSubgraphFromNodes(
+      List<String> nodesToKeep) {
+
+    Set<String> allNodes = new HashSet<>();
+    for (Map.Entry<String, MapAttribute> entry : this.nodeAttributes.entrySet()) {
+      allNodes.add(entry.getKey());
+    }
+
+    Set<String> initiallyMarkedForRemoval = new HashSet<>(allNodes);
+    initiallyMarkedForRemoval.removeAll(new HashSet<>(nodesToKeep));
+
+    Set<String> cannotRemove = new HashSet<>();
+    this.worldGraph.edges().forEach(currentEdge -> {
+      String sourceId = currentEdge.getSourceNode().getId();
+      String targetId = currentEdge.getTargetNode().getId();
+
+      boolean sourceInKeep = nodesToKeep.contains(sourceId);
+      boolean targetInKeep = nodesToKeep.contains(targetId);
+
+      if (sourceInKeep && initiallyMarkedForRemoval.contains(targetId)) {
+        cannotRemove.add(targetId);
+      }
+      if (targetInKeep && initiallyMarkedForRemoval.contains(sourceId)) {
+        cannotRemove.add(sourceId);
+      }
+    });
+
+    Set<String> finalNodesToKeep = new HashSet<>(nodesToKeep);
+    finalNodesToKeep.addAll(cannotRemove);
+
+    SerializableSimpleGraph<String, MapAttribute> serializableSubgraph = new SerializableSimpleGraph<>();
+
+    for (Map.Entry<String, MapAttribute> entry : this.nodeAttributes.entrySet()) {
+      if (finalNodesToKeep.contains(entry.getKey())) {
+        serializableSubgraph.addNode(entry.getKey(), entry.getValue());
+      }
+    }
+
+    this.worldGraph.edges().forEach(currentEdge -> {
+      String sourceId = currentEdge.getSourceNode().getId();
+      String targetId = currentEdge.getTargetNode().getId();
+
+      if (finalNodesToKeep.contains(sourceId) && finalNodesToKeep.contains(targetId)) {
+        serializableSubgraph.addEdge(currentEdge.getId(), sourceId, targetId);
+      }
+    });
+
+    return serializableSubgraph;
   }
 
   public synchronized void mergeWithReceivedMap(SerializableSimpleGraph<String, MapAttribute> receivedGraph) {

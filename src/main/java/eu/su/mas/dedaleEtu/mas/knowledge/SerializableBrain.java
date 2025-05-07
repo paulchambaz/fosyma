@@ -25,6 +25,10 @@ public class SerializableBrain implements Serializable {
     this.golem = brain.entities.getGolem();
   }
 
+  public void setGraph(SerializableSimpleGraph<String, MapAttribute> graph) {
+    this.serializableGraph = graph;
+  }
+
   public SerializableSimpleGraph<String, MapAttribute> getGraph() {
     return this.serializableGraph;
   }

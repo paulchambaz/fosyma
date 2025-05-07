@@ -1,14 +1,14 @@
 package eu.su.mas.dedaleEtu.mas.knowledge;
 
-import org.graphstream.graph.Graph;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import eu.su.mas.dedale.env.Observation;
-import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class EntityTracker implements Serializable {
   private static final long serialVersionUID = -2390384720937841984L;
@@ -22,6 +22,8 @@ public class EntityTracker implements Serializable {
   private SiloData silo;
   private GolemData golem;
 
+  private Map<String, Set<String>> agentKnownNodes;
+
   public EntityTracker(Brain brain) {
     this.brain = brain;
     this.myself = null;
@@ -29,6 +31,7 @@ public class EntityTracker implements Serializable {
     this.agents = new HashMap<>();
     this.silo = null;
     this.golem = null;
+    this.agentKnownNodes = new HashMap<>();
   }
 
   public synchronized AgentData getMyself() {
@@ -163,7 +166,7 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public synchronized void updateAgentMeetingPoint(String agentName, String meetingPoint){
+  public synchronized void updateAgentMeetingPoint(String agentName, String meetingPoint) {
     if (this.agents.containsKey(agentName)) {
       AgentData agent = this.agents.get(agentName);
       agent.setMeetingPoint(meetingPoint);
@@ -172,28 +175,30 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public synchronized String getAgentMeetingPoint(String agentName){
-    if (! this.agents.containsKey(agentName)) {
+  public synchronized String getAgentMeetingPoint(String agentName) {
+    if (!this.agents.containsKey(agentName)) {
       return null;
     }
     AgentData agent = this.agents.get(agentName);
     return agent.getMeetingPoint();
   }
 
-  public synchronized void updateAgentKnownNodes(String agentName, List<String> newNodes){
-    if (this.agents.containsKey(agentName)) {
-      AgentData agent = this.agents.get(agentName);
-      agent.updateKnownNodes(newNodes);
-      agent.resetCounter();
+  public synchronized void updateAgentKnownNodes(String agentName, List<String> newNodes) {
+    if (this.agentKnownNodes.containsKey(agentName)) {
+      Set<String> knownNodes = this.agentKnownNodes.get(agentName);
+      knownNodes.addAll(newNodes);
+    } else {
+      Set<String> knownNodes = new HashSet<>(newNodes);
+      this.agentKnownNodes.put(agentName, knownNodes);
     }
   }
 
-  public synchronized List<String> getAgentKnownNodes(String agentName){
-    if (! this.agents.containsKey(agentName)) {
-      return null;
+  public synchronized List<String> getAgentKnownNodes(String agentName) {
+    if (this.agentKnownNodes.containsKey(agentName)) {
+      return new ArrayList<>(this.agentKnownNodes.get(agentName));
+    } else {
+      return new ArrayList<>();
     }
-    AgentData agent = this.agents.get(agentName);
-    return agent.getKnownNodes();
   }
 
   public synchronized void updateAgentPosition(String agentName, String nodeId) {

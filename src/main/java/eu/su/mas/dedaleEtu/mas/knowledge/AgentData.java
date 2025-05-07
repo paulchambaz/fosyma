@@ -3,8 +3,6 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
 import eu.su.mas.dedale.env.Observation;
 
 public class AgentData implements Serializable {
@@ -24,8 +22,6 @@ public class AgentData implements Serializable {
 
   private String meetingPoint;
 
-  private List<String> knownNodes;
-
   public AgentData(String position) {
     this.position = position;
     this.updateCounter = 0;
@@ -35,7 +31,6 @@ public class AgentData implements Serializable {
     this.diamondCapacity = 0;
     this.diamondAmount = 0;
     this.meetingPoint = null;
-    this.knownNodes = new ArrayList<>();
   }
 
   public AgentData(AgentData o) {
@@ -46,14 +41,6 @@ public class AgentData implements Serializable {
     this.goldAmount = o.getGoldAmount();
     this.diamondCapacity = o.getDiamondCapacity();
     this.diamondAmount = o.getDiamondAmount();
-  }
-
-  public void updateKnownNodes(List<String> newNodes) {
-    this.knownNodes.addAll(newNodes);
-  }
-
-  public void addKnownNode(String id){
-    this.knownNodes.add(id);
   }
 
   public String getPosition() {
@@ -92,10 +79,6 @@ public class AgentData implements Serializable {
     return meetingPoint;
   }
 
-  public List<String> getKnownNodes(){
-    return knownNodes;
-  }
-
   public void setPosition(String position) {
     this.position = position;
   }
@@ -130,7 +113,7 @@ public class AgentData implements Serializable {
     this.updateCounter = counter;
   }
 
-  public void setMeetingPoint(String meetingPoint){
+  public void setMeetingPoint(String meetingPoint) {
     this.meetingPoint = meetingPoint;
   }
 

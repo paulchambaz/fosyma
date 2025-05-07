@@ -10,7 +10,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DeadlockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CommunicationBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareBrainBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CollectSiloBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.ArrayList;
@@ -66,7 +66,7 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), COLLECT_GOTO);
 
     // communication behaviours
-    fsmBehaviour.registerState(new ShareMapBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
 
     // end behaviours
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
