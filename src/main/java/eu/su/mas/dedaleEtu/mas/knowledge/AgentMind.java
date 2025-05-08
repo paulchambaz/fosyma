@@ -24,6 +24,8 @@ public class AgentMind implements Serializable {
   private String targetNodeId;
   private Deque<String> pathToTarget;
 
+  private boolean askedMoving;
+
   private final Brain brain;
 
   public AgentMind(Brain brain) {
@@ -34,6 +36,7 @@ public class AgentMind implements Serializable {
     this.stuckCounter = 0;
     this.targetNodeId = "";
     this.pathToTarget = new ArrayDeque<>();
+    this.askedMoving = false;
   }
 
   public synchronized String getBehaviour() {
@@ -144,6 +147,18 @@ public class AgentMind implements Serializable {
 
   public synchronized boolean isStuck() {
     return this.stuckCounter > STUCK_MAX;
+  }
+
+  public synchronized boolean getAskedMoving() {
+    return askedMoving;
+  }
+
+  public synchronized void resetAskedMoving() {
+    this.askedMoving = false;
+  }
+
+  public synchronized void askToMove(){
+    this.askedMoving = true;
   }
 
   public synchronized String getTargetNode() {

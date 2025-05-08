@@ -5,6 +5,7 @@ import java.util.List;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class GoToBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
@@ -31,6 +32,8 @@ public class GoToBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
+    Utils.waitFor(this.myAgent, 300);
+
     brain.mind.setBehaviour("Go To");
 
     if (!this.initialized) {
@@ -38,8 +41,15 @@ public class GoToBehaviour extends OneShotBehaviour {
     }
 
     if (brain.mind.isStuck()) {
-      this.initialized = false;
-      this.exitValue = 2;
+      if (brain.mind.getAskedMoving() == false){
+        brain.mind.askToMove();
+        this.exitValue = 3;
+      }
+      else{
+        this.initialized = false;
+        this.exitValue = 2;
+        brain.mind.resetAskedMoving();
+      }
       return;
     }
 

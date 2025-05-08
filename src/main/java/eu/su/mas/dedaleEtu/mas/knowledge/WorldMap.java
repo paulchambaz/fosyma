@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
+import org.graphstream.algorithm.ConnectedComponents;
 import dataStructures.serializableGraph.SerializableNode;
 import dataStructures.serializableGraph.SerializableSimpleGraph;
 import org.graphstream.algorithm.Dijkstra;
@@ -202,6 +203,13 @@ public class WorldMap implements Serializable {
     serializeTopology();
     return this.serializableGraph;
   }
+
+  // public synchronized Graph getMyConnectedComponent(List<String> occupiedPositions){
+  //   Graph navigableGraph = createNavigableGraph(occupiedPositions);
+  //   ConnectedComponents cc = new ConnectedComponents();
+  //   cc.init(navigableGraph);
+  //   //brain.log(cc.getConnectedComponentOf());
+  // }
 
   public synchronized SerializableSimpleGraph<String, MapAttribute> getSerializedSubgraphFromNodes(
       List<String> nodesToKeep) {

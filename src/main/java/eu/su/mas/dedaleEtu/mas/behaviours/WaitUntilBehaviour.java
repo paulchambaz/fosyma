@@ -20,6 +20,8 @@ public class WaitUntilBehaviour extends OneShotBehaviour {
   private long waitingTime;
   private long checkTime;
 
+  private static String PROTOCOL_NAME = "Ask to Move";
+
   public WaitUntilBehaviour(Agent agent, Brain brain, long waitingTime) {
     super(agent);
     this.brain = brain;
@@ -32,18 +34,19 @@ public class WaitUntilBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour("Wait Until");
 
     this.brain.observe(this.myAgent);
-
-    Utils.waitFor(this.myAgent, this.checkTime);
-    this.waitingTime = this.waitingTime - this.checkTime;
-
-    brain.entities.ageEntities();
     
-    if (this.waitingTime <= this.checkTime){
-      this.exitValue = 1;
+    if (this.waitingTime < 1000000000){
+      this.waitingTime = this.waitingTime - this.checkTime;
+      if (this.waitingTime <= this.checkTime){
+        this.exitValue = 1;
+      }
+      else {
+        this.exitValue = 0;
+      } 
     }
-    else {
-      this.exitValue = 0;
-    } 
+    
+    Utils.waitFor(this.myAgent, this.checkTime);
+    brain.entities.ageEntities();
   }
 
   @Override

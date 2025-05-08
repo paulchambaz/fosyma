@@ -4,6 +4,7 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agents.GateKeeperAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmCollectAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmSiloAgent;
+import eu.su.mas.dedale.mas.agents.dedaleDummyAgents.DummyWumpusShift;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -175,7 +176,7 @@ public class Principal {
     }
 
     createSiloAgent(agentContainer, agentList);
-    // createGolemAgent(agentContainer, agentList);
+    createGolemAgent(agentContainer, agentList);
 
     System.out.println("Agents created...");
     return agentList;
@@ -256,7 +257,8 @@ public class Principal {
           container,
           "Golem",
           // TODO: replace with proper class: DummyWumpus.class.getName(),
-          "eu.su.mas.dedaleEtu.mas.agents.dummies.wumpus.DummyWumpus",
+          // "eu.su.mas.dedaleEtu.mas.agents.dummies.wumpus.DummyWumpus",
+          DummyWumpusShift.class.getName(),
           new Object[] {});
       agentList.add(golemAgent);
       System.out.println("Golem agent was created");

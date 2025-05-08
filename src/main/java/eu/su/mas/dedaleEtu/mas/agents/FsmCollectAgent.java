@@ -21,6 +21,8 @@ import eu.su.mas.dedaleEtu.mas.behaviours.PlanExplorationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.MeetingBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SetMeetingBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.WaitUntilBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.AskToMoveBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.MoveAsideBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -60,6 +62,16 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
   private static final String WAIT_UNTIL_MEETING = "Wait until";
   private static final String WAIT_COMMUNICATION = "Wait communication";
+
+  private static final String ASKMOVE_COMMUNICATION = "Ask Move communication";
+
+  private static final String ASKED_MOVE = "Asked Move";
+  private static final String ASK_MOVE = "Ask Move";
+
+  private static final String MOVEASIDE = "Move Aside";
+  private static final String MOVEASIDE_GOTO = "Move Aside go to";
+  private static final String MOVEASIDE_DEADLOCK = "Move Aside deadlock";
+  private static final String MOVEASIDE_COMMUNICATION = "Move Aside communication";
 
   private static final String END = "End";
 
@@ -113,13 +125,31 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), MEETING_GOTO);
     fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), MEETING_DEADLOCK);
 
+    // waiting behaviours
     fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain, 3000), WAIT_UNTIL_MEETING);
     fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
       {
-        put("follow_me", 1);
+        put("followme", 1);
+        put("move aside", 2);
       }
     }),
         WAIT_COMMUNICATION);
+    
+    fsmBehaviour.registerState(new AskToMoveBehaviour(this, this.brain), ASKED_MOVE);
+    
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("move aside", 1);
+      }
+    }),
+        ASKMOVE_COMMUNICATION);
+    
+    fsmBehaviour.registerState(new AskToMoveBehaviour(this, this.brain), ASK_MOVE);
+    
+    // move aside behaviours
+    fsmBehaviour.registerState(new MoveAsideBehaviour(this, this.brain), MOVEASIDE);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), MOVEASIDE_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), MOVEASIDE_DEADLOCK);
 
     // end behaviours
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
@@ -153,6 +183,11 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_GOTO);
     fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_OPENLOCK, 1);
     fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_DEADLOCK, 2);
+    fsmBehaviour.registerTransition(COLLECT_GOTO, ASKMOVE_COMMUNICATION, 3);
+
+    fsmBehaviour.registerTransition(ASKMOVE_COMMUNICATION, ASK_MOVE, 1);
+
+    fsmBehaviour.registerDefaultTransition(ASK_MOVE, COLLECT_GOTO);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_OPENLOCK, COLLECT_PICK);
 
@@ -181,6 +216,15 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(WAIT_COMMUNICATION, WAIT_UNTIL_MEETING);
     fsmBehaviour.registerTransition(WAIT_COMMUNICATION, COLLECT, 1); // Follow me
+    fsmBehaviour.registerTransition(WAIT_COMMUNICATION, ASKED_MOVE, 2); // Move aside
+    
+    // move aside transitions
+    fsmBehaviour.registerDefaultTransition(ASKED_MOVE, MOVEASIDE);
+    fsmBehaviour.registerDefaultTransition(MOVEASIDE, MOVEASIDE_GOTO);
+    fsmBehaviour.registerTransition(MOVEASIDE_GOTO, WAIT_UNTIL_MEETING, 1);
+    fsmBehaviour.registerTransition(MOVEASIDE_GOTO, MOVEASIDE_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(MOVEASIDE_DEADLOCK, MOVEASIDE_GOTO);
 
     // meetig point transitions
     fsmBehaviour.registerDefaultTransition(MEETING, MEETING_GOTO);

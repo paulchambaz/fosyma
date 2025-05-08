@@ -12,6 +12,9 @@ import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CommunicationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareBrainBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CollectSiloBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.WaitUntilBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.MoveAsideBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.AskToMoveBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +36,16 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
   private static final String COLLECT_GOTO = "Collect Go To";
 
   private static final String COMMUNICATION_SHAREMAP = "Communication share map";
+
+  private static final String WAIT_COLLECTING = "Waiting for collection";
+
+  private static final String MOVEASIDE = "Move Aside";
+  private static final String MOVEASIDE_DEADLOCK = "Move Aside Deadlock";
+  private static final String MOVEASIDE_GOTO = "Move Aside Go To";
+
+  private static final String WAIT_COMMUNICATION = "Communication wait";
+  private static final String ASKED_MOVE = "Asked Move";
+  
 
   private static final String END = "End";
 
@@ -60,6 +73,7 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
           }
         }),
         EXPLORE_COMMUNICATION);
+    
 
     // collect behaviours
     fsmBehaviour.registerState(new CollectSiloBehaviour(this, this.brain), COLLECT_SILO);
@@ -70,6 +84,22 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
 
     // end behaviours
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
+
+    // waiting behaviours
+    fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain, 1000000000), WAIT_COLLECTING);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("move aside", 1);
+      }
+    }),
+    WAIT_COMMUNICATION);
+
+    fsmBehaviour.registerState(new AskToMoveBehaviour(this, this.brain), ASKED_MOVE);
+    
+    // move aside behaviours
+    fsmBehaviour.registerState(new MoveAsideBehaviour(this, this.brain), MOVEASIDE);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), MOVEASIDE_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), MOVEASIDE_DEADLOCK);
 
     // init transitions
     fsmBehaviour.registerDefaultTransition(INIT, EXPLORE);
@@ -92,7 +122,21 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerTransition(COLLECT_SILO, EXPLORE, 2);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_GOTO);
-    fsmBehaviour.registerTransition(COLLECT_GOTO, END, 1);
+    fsmBehaviour.registerTransition(COLLECT_GOTO, WAIT_COLLECTING, 1);
+
+    // waiting transitions
+    fsmBehaviour.registerDefaultTransition(WAIT_COLLECTING, WAIT_COMMUNICATION);
+
+    fsmBehaviour.registerDefaultTransition(WAIT_COMMUNICATION, WAIT_COLLECTING);
+    fsmBehaviour.registerTransition(WAIT_COMMUNICATION, ASKED_MOVE, 1);
+
+    // move aside transitions
+    fsmBehaviour.registerDefaultTransition(ASKED_MOVE, MOVEASIDE);
+    fsmBehaviour.registerDefaultTransition(MOVEASIDE, MOVEASIDE_GOTO);
+    fsmBehaviour.registerTransition(MOVEASIDE_GOTO, WAIT_COLLECTING, 1);
+    fsmBehaviour.registerTransition(MOVEASIDE_GOTO, MOVEASIDE_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(MOVEASIDE_DEADLOCK, MOVEASIDE_GOTO);
 
     // communication transitions
     fsmBehaviour.registerDefaultTransition(COMMUNICATION_SHAREMAP, EXPLORE_GOTO);
