@@ -1,7 +1,7 @@
 [
   {
     "elementName": "gold",
-    "initialLocation": "82",
+    "initialLocation": "0",
     "detectionRadius": 0,
     "quantity": 1000,
     "lockPickingExpertise": 5,

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.princ.Communication;
+import eu.su.mas.dedaleEtu.princ.Protocols;
 
 public class DeadlockBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -374637573871453865L;
@@ -26,6 +28,11 @@ public class DeadlockBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour("Deadlock");
     brain.observe(this.myAgent);
+
+    Communication comms = Protocols.handshake(this.myAgent, brain, 100, "pleasemove", 10);
+    if (comms != null) {
+      return;
+    }
 
     String position = brain.entities.getPosition();
     List<String> occupiedPositions = brain.entities.getOccupiedPositions();

@@ -62,9 +62,10 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new ExploreBehaviour(this, this.brain), EXPLORE);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), EXPLORE_GOTO);
     fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), EXPLORE_DEADLOCK);
-    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, 1, new HashMap<String, Integer>() {
       {
         put("sharemap", 1);
+        put("pleasemove", 2);
       }
     }), EXPLORE_COMM);
     fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), EXPLORE_COMM_SHARE);
@@ -75,7 +76,7 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new CollectSiloBehaviour(this, this.brain), COLLECT_LOCATE);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), COLLECT_GOTO);
     fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain), COLLECT_WAIT);
-    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, 1, new HashMap<String, Integer>() {
       {
         put("sharemap", 1);
         put("pleasemove", 2);
@@ -101,6 +102,7 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_COMM, EXPLORE_GOTO);
     fsmBehaviour.registerTransition(EXPLORE_COMM, EXPLORE_COMM_SHARE, 1);
+    fsmBehaviour.registerTransition(EXPLORE_COMM, EXPLORE_DEADLOCK, 2);
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_SHARE, EXPLORE_COMM_MEETING);
     fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_MEETING, EXPLORE_COMM_PLAN);

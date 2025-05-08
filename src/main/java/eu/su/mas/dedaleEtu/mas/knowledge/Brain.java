@@ -34,7 +34,7 @@ public class Brain implements Serializable {
   }
 
   public synchronized boolean moveTo(Agent agent, String node) {
-    Utils.waitFor(agent, 100);
+    Utils.waitFor(agent, 500);
     try {
       return ((AbstractDedaleAgent) agent).moveTo(new GsLocation(node));
     } catch (Exception e) {

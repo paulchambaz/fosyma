@@ -13,14 +13,16 @@ public class CommunicationBehaviour extends OneShotBehaviour {
   private int exitValue = 0;
 
   private String protocol;
+  private int priority;
   private Map<String, Integer> routes;
 
   private Brain brain;
 
-  public CommunicationBehaviour(Agent agent, Brain brain, Map<String, Integer> routes) {
+  public CommunicationBehaviour(Agent agent, Brain brain, int priority, Map<String, Integer> routes) {
     super(agent);
     this.brain = brain;
     this.routes = routes;
+    this.priority = priority;
 
     for (Map.Entry<String, Integer> entry : routes.entrySet()) {
       if (entry.getValue() == 1) {
@@ -33,7 +35,7 @@ public class CommunicationBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour("Explore Communication");
 
-    Communication comms = Protocols.handshake(this.myAgent, brain, 100, protocol, 1);
+    Communication comms = Protocols.handshake(this.myAgent, brain, 100, protocol, priority);
 
     if (comms == null) {
       this.exitValue = 0;

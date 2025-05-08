@@ -28,6 +28,7 @@ public final class ConfigurationFile {
 
   // The environment is either manually designed, or generated with a specific
   // generator.
+  // public static GeneratorType GENERATOR_TYPE = GeneratorType.MANUAL;
   public static GeneratorType GENERATOR_TYPE = GeneratorType.MANUAL;
 
   // The GateKeeper is in charge of the Platform and of the agents within, do not
@@ -35,7 +36,9 @@ public final class ConfigurationFile {
   public static String DEFAULT_GATEKEEPER_NAME = "GK";
 
   // Give the topology
-  public static String INSTANCE_TOPOLOGY = "resources/topology/map2018-topology";
+  // public static String INSTANCE_TOPOLOGY =
+  // "resources/topology/map2018-topology";
+  public static String INSTANCE_TOPOLOGY = "resources/topology/TinyMap";
 
   // Give the elements available on the map, if any
   // If the environment is loaded but you do not want to define elements on the

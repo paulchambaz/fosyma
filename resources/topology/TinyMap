@@ -1,0 +1,45 @@
+DGS004
+null 0 0
+# Nodes (16 nodes for a 4x4 grid)
+an 0 label:0
+an 1 label:1
+an 2 label:2
+an 3 label:3
+an 4 label:4
+an 5 label:5
+an 6 label:6
+an 7 label:7
+an 8 label:8
+an 9 label:9
+an 10 label:10
+an 11 label:11
+an 12 label:12
+an 13 label:13
+an 14 label:14
+an 15 label:15
+# Edges (horizontal connections)
+ae e0 0 1
+ae e1 1 2
+ae e2 2 3
+ae e3 4 5
+ae e4 5 6
+ae e5 6 7
+ae e6 8 9
+ae e7 9 10
+ae e8 10 11
+ae e9 12 13
+ae e10 13 14
+ae e11 14 15
+# Edges (vertical connections)
+ae e12 0 4
+ae e13 4 8
+ae e14 8 12
+ae e15 1 5
+ae e16 5 9
+ae e17 9 13
+ae e18 2 6
+ae e19 6 10
+ae e20 10 14
+ae e21 3 7
+ae e22 7 11
+ae e23 11 15

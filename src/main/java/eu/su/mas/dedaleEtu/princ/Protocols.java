@@ -62,10 +62,11 @@ public class Protocols {
           return null;
         }
 
-        boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+        boolean withA = shouldCommunicateWith(agent, friendA, friendB, priority, protocolA.priority,
+            protocolB.priority);
         friend = withA ? friendA : friendB;
 
-        speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+        speaker = shouldSpeak(agent, friend, priority, withA ? protocolA.priority : protocolB.priority);
         usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
         ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
@@ -83,10 +84,11 @@ public class Protocols {
           return null;
         }
 
-        boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+        boolean withA = shouldCommunicateWith(agent, friendA, friendB, priority, protocolA.priority,
+            protocolB.priority);
         friend = withA ? friendA : friendB;
 
-        speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+        speaker = shouldSpeak(agent, friend, priority, withA ? protocolA.priority : protocolB.priority);
         usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
         return new Communication(friend, usedProtocol.protocol, speaker);
@@ -149,10 +151,11 @@ public class Protocols {
             return null;
           }
 
-          boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+          boolean withA = shouldCommunicateWith(agent, friendA, friendB, priority, protocolA.priority,
+              protocolB.priority);
           friend = withA ? friendA : friendB;
 
-          speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+          speaker = shouldSpeak(agent, friend, priority, withA ? protocolA.priority : protocolB.priority);
           usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
           ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
@@ -170,10 +173,11 @@ public class Protocols {
             return null;
           }
 
-          boolean withA = friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+          boolean withA = shouldCommunicateWith(agent, friendA, friendB, priority, protocolA.priority,
+              protocolB.priority);
           friend = withA ? friendA : friendB;
 
-          speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
+          speaker = shouldSpeak(agent, friend, priority, withA ? protocolA.priority : protocolB.priority);
           usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
           return new Communication(friend, usedProtocol.protocol, speaker);
@@ -189,7 +193,7 @@ public class Protocols {
           return null;
         }
 
-        speaker = agent.getLocalName().compareTo(friendA.getLocalName()) <= 0;
+        speaker = shouldSpeak(agent, friendA, priority, protocolA.priority);
         usedProtocol = speaker ? new HandshakeData(protocol, priority) : protocolA;
 
         ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
@@ -200,6 +204,23 @@ public class Protocols {
     }
 
     return null;
+  }
+
+  private static boolean shouldCommunicateWith(Agent agent, AID friendA, AID friendB, int myPriority, int priorityA,
+      int priorityB) {
+    if (priorityA != priorityB) {
+      return priorityA > priorityB;
+    }
+
+    return friendA.getLocalName().compareTo(friendB.getLocalName()) <= 0;
+  }
+
+  private static boolean shouldSpeak(Agent agent, AID friend, int myPriority, int friendPriority) {
+    if (myPriority != friendPriority) {
+      return myPriority > friendPriority;
+    }
+
+    return agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
   }
 
   private static class HandshakeData implements Serializable {
