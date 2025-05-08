@@ -32,6 +32,7 @@ public class WaypointCommunicationBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
 
     Communication comms = brain.mind.getCommunication();
     if (comms == null) {

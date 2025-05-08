@@ -29,6 +29,7 @@ public class CoordinationInitBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
 
     String treasureNode = brain.mind.getCoordinationTreasureNode();
     if (treasureNode == null) {

@@ -76,7 +76,7 @@ public class CollectBehaviour extends OneShotBehaviour {
       // brain.log(entry.getKey());
 
       if (treasure.getQuantity() <= 0) {
-        // brain.log("quantity is 0 so skipping that treasure", treasure.getQuantity());
+        brain.log("quantity is 0 so skipping that treasure", treasure.getQuantity());
         continue;
       }
 

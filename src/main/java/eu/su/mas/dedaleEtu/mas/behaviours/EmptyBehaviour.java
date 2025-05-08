@@ -2,7 +2,9 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
+import eu.su.mas.dedaleEtu.mas.knowledge.AgentData;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class EmptyBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -7364592847383945821L;
@@ -21,6 +23,14 @@ public class EmptyBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
+    Utils.waitFor(myAgent, 50);
+
+    if (brain.mind.getMetaTargetNode() != null) {
+      brain.mind.setTargetNode(brain.mind.getMetaTargetNode());
+      this.exitValue = 1;
+    }
+
     this.exitValue = 0;
   }
 

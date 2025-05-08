@@ -38,12 +38,16 @@ public final class ConfigurationFile {
   // Give the topology
   // public static String INSTANCE_TOPOLOGY =
   // "resources/topology/map2018-topology";
-  public static String INSTANCE_TOPOLOGY = "resources/topology/map2018-topology";
+  // public static String INSTANCE_TOPOLOGY =
+  // "resources/topology/map2018-topology";
+  public static String INSTANCE_TOPOLOGY = "resources/topology/TinyMap";
 
   // Give the elements available on the map, if any
   // If the environment is loaded but you do not want to define elements on the
   // map
-  public static String INSTANCE_CONFIGURATION_ELEMENTS = "./resources/treasureHunt/map2019-elementsExam2.json";
+  // public static String INSTANCE_CONFIGURATION_ELEMENTS =
+  // "./resources/treasureHunt/map2019-elementsExam2.json";
+  public static String INSTANCE_CONFIGURATION_ELEMENTS = "./resources/treasureHunt/map2019-elementsExam1.json";
 
   // Size of the generated environment, mandatory
   public static Integer ENVIRONMENT_SIZE = 6;

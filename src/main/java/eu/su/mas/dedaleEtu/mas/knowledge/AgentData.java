@@ -126,11 +126,11 @@ public class AgentData implements Serializable {
   }
 
   public boolean canOpenLock(int requiredStrength) {
-    return expertise.get(Observation.LOCKPICKING) >= requiredStrength;
+    return expertise.getOrDefault(Observation.LOCKPICKING, 0) >= requiredStrength;
   }
 
   public boolean canCarryTreasure(int requiredStrength) {
-    return expertise.get(Observation.STRENGH) >= requiredStrength;
+    return expertise.getOrDefault(Observation.STRENGH, 0) >= requiredStrength;
   }
 
   public void increaseBackpack(int amount) {

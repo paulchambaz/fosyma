@@ -32,6 +32,7 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
 
     brain.mind.updateBehaviouralPriorities();
 

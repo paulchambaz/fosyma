@@ -36,6 +36,7 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
 
     Communication comms = brain.mind.getCommunication();
     if (comms == null) {
@@ -45,7 +46,11 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
 
     String targetPartner = brain.mind.getCoordinationPartner();
     if (targetPartner != null && !comms.getFriend().getLocalName().equals(targetPartner)) {
-      brain.log("Not communicating with coordination partner, expected:", targetPartner);
+      brain.log(
+          "Not communicating with coordination partner, expected:",
+          targetPartner,
+          "got",
+          comms.getFriend().getLocalName());
       this.exitValue = 0;
       return;
     }
@@ -148,6 +153,7 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
       brain.mind.setCoordinationState(CoordinationState.LEADER);
       brain.mind.setMetaTargetNode(myData.treasureNode);
       brain.log("I need help and partner doesn't - I'll be leader");
+      brain.log("I am currently in", brain.entities.getPosition());
       this.exitValue = 1;
       return;
     }
@@ -156,6 +162,7 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
       brain.mind.setCoordinationState(CoordinationState.FOLLOWER);
       brain.mind.setCoordinationTreasureNode(partnerData.treasureNode);
       brain.log("Partner needs help and I don't - I'll be follower");
+      brain.log("I am currently in", brain.entities.getPosition());
       this.exitValue = 2;
       return;
     }
@@ -188,11 +195,13 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
       brain.mind.setCoordinationState(CoordinationState.LEADER);
       brain.mind.setMetaTargetNode(myData.treasureNode);
       brain.log("Both need help - determined I should be leader based on criteria");
+      brain.log("I am currently in", brain.entities.getPosition());
       this.exitValue = 1;
     } else {
       brain.mind.setCoordinationState(CoordinationState.FOLLOWER);
       brain.mind.setCoordinationTreasureNode(partnerData.treasureNode);
       brain.log("Both need help - determined partner should be leader based on criteria");
+      brain.log("I am currently in", brain.entities.getPosition());
       this.exitValue = 2;
     }
   }

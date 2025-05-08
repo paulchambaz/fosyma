@@ -21,6 +21,7 @@ public class RestoreTargetBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
 
     String metaTarget = brain.mind.getMetaTargetNode();
 

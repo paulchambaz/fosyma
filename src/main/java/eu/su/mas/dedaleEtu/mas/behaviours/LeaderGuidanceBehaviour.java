@@ -26,6 +26,7 @@ public class LeaderGuidanceBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    this.brain.observe(this.myAgent);
 
     if (brain.mind.getCoordinationState() != CoordinationState.LEADER) {
       brain.log("Error: Not in leader state");
@@ -55,16 +56,17 @@ public class LeaderGuidanceBehaviour extends OneShotBehaviour {
     List<String> pathToTreasure = brain.map.findShortestPath(
         currentPosition, treasureNode, new ArrayList<>());
 
-    if (pathToTreasure == null || pathToTreasure.isEmpty()) {
+    if (pathToTreasure == null) {
       brain.log("Error: No path found to treasure at", treasureNode);
       resetCoordination();
       this.exitValue = 0;
       return;
     }
+    String waypoint = treasureNode;
+    if (!pathToTreasure.isEmpty()) {
+      waypoint = selectWaypoint(pathToTreasure);
+    }
 
-    brain.mind.setPathToTarget(new ArrayList<>(pathToTreasure));
-
-    String waypoint = selectWaypoint(pathToTreasure);
     brain.log("Selected waypoint", waypoint, "on path to treasure");
 
     brain.mind.setTargetNode(waypoint);

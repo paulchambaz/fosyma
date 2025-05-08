@@ -83,7 +83,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
           {
             put("sharemap", 1);
             put("treasure-coordination", 2);
-            put("pleasemove", 3);
+            put("pleasemove", -1);
           }
         }), EXPLORE_COMM);
     fsmBehaviour.registerState(new ShareBrainBehaviour(EXPLORE_COMM_SHARE, this, this.brain), EXPLORE_COMM_SHARE);
@@ -100,7 +100,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
           {
             put("waypoint-guidance", 1);
             put("arrived", 2);
-            put("pleasemove", 3);
+            put("pleasemove", -1);
           }
         }), FOLLOWER_COMM);
     fsmBehaviour.registerState(new WaypointCommunicationBehaviour(FOLLOWER_COMM_WAYPOINT, this, this.brain),
@@ -118,7 +118,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
         .registerState(new CommunicationBehaviour(END_COMM, this, this.brain, 1, new HashMap<String, Integer>() {
           {
             put("sharemap", 1);
-            put("pleasemove", 2);
+            put("pleasemove", -1);
           }
         }), END_COMM);
     fsmBehaviour.registerState(new ShareBrainBehaviour(END_COMM_SHARE, this, this.brain), END_COMM_SHARE);
@@ -145,7 +145,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(EXPLORE_COMM, EXPLORE_GOTO);
     fsmBehaviour.registerTransition(EXPLORE_COMM, EXPLORE_COMM_SHARE, 1);
     fsmBehaviour.registerTransition(EXPLORE_COMM, CHEST_NEGOTIATION, 2);
-    fsmBehaviour.registerTransition(EXPLORE_COMM, EXPLORE_DEADLOCK, 3);
+    fsmBehaviour.registerTransition(EXPLORE_COMM, EXPLORE_DEADLOCK, -1);
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_SHARE, EXPLORE_COMM_MEETING);
     fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_MEETING, EXPLORE_COMM_PLAN);
@@ -162,6 +162,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM, FOLLOWER);
     fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_COMM_WAYPOINT, 1);
     fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_OPENLOCK, 2);
+    fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_DEADLOCK, -1);
 
     fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM_WAYPOINT, FOLLOWER_GOTO);
 
@@ -189,7 +190,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(END_COMM, END_WAIT);
     fsmBehaviour.registerTransition(END_COMM, END_COMM_SHARE, 1);
-    fsmBehaviour.registerTransition(END_COMM, END_DEADLOCK, 2);
+    fsmBehaviour.registerTransition(END_COMM, END_DEADLOCK, -1);
 
     fsmBehaviour.registerDefaultTransition(END_COMM_SHARE, END_COMM_MEETING);
 

@@ -62,7 +62,8 @@ public class GoToUntilBehaviour extends OneShotBehaviour {
     String foundAgent = Computes.findSearchedAgentInNeighborhood(brain.map, brain.entities, position,
         this.searchingAgents);
     if (foundAgent != null) {
-      brain.log("i found what i was looking for", brain.mind.getTargetNode(), "looking for", this.searchingAgents);
+      // brain.log("i found what i was looking for", brain.mind.getTargetNode(),
+      // "looking for", this.searchingAgents);
       this.exitValue = 3;
       return;
     }

@@ -37,9 +37,16 @@ public class OpenLockBehaviour extends OneShotBehaviour {
       return;
     }
 
-    brain.log(treasure);
-    brain.log(treasure.isLocked());
     if (!treasure.isLocked()) {
+      return;
+    }
+
+    boolean success = ((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType());
+    if (success) {
+      treasure.setLocked(true);
+      this.brain.observe(this.myAgent);
+
+      this.exitValue = 2;
       return;
     }
 
@@ -52,14 +59,6 @@ public class OpenLockBehaviour extends OneShotBehaviour {
       return;
     }
 
-    boolean success = ((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType());
-    if (success) {
-      treasure.setLocked(false);
-      brain.log(treasure);
-      brain.log(treasure.isLocked());
-    }
-
-    this.brain.observe(this.myAgent);
     this.exitValue = 0;
   }
 

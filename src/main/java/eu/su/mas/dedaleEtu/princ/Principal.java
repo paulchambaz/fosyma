@@ -175,15 +175,16 @@ public class Principal {
       createExploreAgent(agentContainer, agent, otherAgentsArray, agentList);
     }
 
-    List<String> siloAgents = Arrays.asList("Silo1", "Silo2");
+    List<String> siloAgents = Arrays.asList("Silo1");
+    // List<String> siloAgents = Arrays.asList("Silo1", "Silo2");
     for (String agent : siloAgents) {
       createSiloAgent(agentContainer, agent, agentList);
     }
 
-    List<String> golemAgents = Arrays.asList("Golem1", "Golem2");
-    for (String agent : golemAgents) {
-      createGolemAgent(agentContainer, agent, agentList);
-    }
+    // List<String> golemAgents = Arrays.asList("Golem1", "Golem2");
+    // for (String agent : golemAgents) {
+    // createGolemAgent(agentContainer, agent, agentList);
+    // }
 
     System.out.println("Agents created...");
     return agentList;

@@ -40,7 +40,12 @@ public class CommunicationBehaviour extends OneShotBehaviour {
     Communication comms = Protocols.handshake(this.myAgent, brain, 100, protocol, priority);
 
     if (comms == null) {
-      this.exitValue = 0;
+      brain.mind.incrementStuckCounter();
+      if (brain.mind.isStuck()) {
+        this.exitValue = -1;
+      } else {
+        this.exitValue = 0;
+      }
       return;
     }
 
