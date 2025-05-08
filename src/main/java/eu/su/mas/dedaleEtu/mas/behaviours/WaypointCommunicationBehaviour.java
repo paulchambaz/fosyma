@@ -112,7 +112,7 @@ public class WaypointCommunicationBehaviour extends OneShotBehaviour {
   }
 
   private static class WaypointData implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 18878L;
     public String waypointNode;
   }
 }

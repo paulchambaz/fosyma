@@ -39,7 +39,6 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
       return;
     }
 
-    // Check if we're talking to the right partner
     String targetPartner = brain.mind.getCoordinationPartner();
     if (targetPartner != null && !comms.getFriend().getLocalName().equals(targetPartner)) {
       brain.log("Not communicating with coordination partner, expected:", targetPartner);
@@ -207,7 +206,7 @@ public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
   }
 
   private static class CoordinationData implements Serializable {
-    private static final long serialVersionUID = 2865831L;
+    private static final long serialVersionUID = 28238665831L;
     public String currentPosition;
     public boolean needsHelp = false;
     public String treasureNode;

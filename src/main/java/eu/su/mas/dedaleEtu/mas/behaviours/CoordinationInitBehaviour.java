@@ -44,7 +44,6 @@ public class CoordinationInitBehaviour extends OneShotBehaviour {
 
     List<String> capableAgents = brain.entities.getAgentsWithLockpickingStrength(requiredStrength);
     if (capableAgents.isEmpty()) {
-      // TODO: this can cause some issues
       brain.log("No capable agents found to help open treasure");
       this.exitValue = 0;
       return;
@@ -82,6 +81,7 @@ public class CoordinationInitBehaviour extends OneShotBehaviour {
       }
     } else {
       brain.mind.setTargetNode(meetingPoint);
+      brain.log("going to meeting point", meetingPoint);
       this.exitValue = 1;
     }
   }

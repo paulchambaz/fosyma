@@ -7,7 +7,6 @@ import jade.lang.acl.MessageTemplate;
 import jade.core.Agent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Communication;
-import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class SetMeetingBehaviour extends OneShotBehaviour {
@@ -32,21 +31,16 @@ public class SetMeetingBehaviour extends OneShotBehaviour {
     Communication comms = brain.mind.getCommunication();
 
     if (comms.shouldSpeak()) {
-      String meetingPoint = brain.entities.getMyself().getMeetingPoint();
-      if (meetingPoint == null) {
-        String currentPosition = brain.entities.getPosition();
-        meetingPoint = Computes.computeMyMeetingPoint(brain.map, 2.0, 1.5, currentPosition);
-      }
-      if (meetingPoint == null) {
-        return;
-      }
-      brain.entities.getMyself().setMeetingPoint(meetingPoint);
+      String meetingPoint = brain.entities.getPosition();
 
       ACLMessage message = Utils.createACLMessage(
           this.myAgent, PROTOCOL_NAME, comms.getFriend(), meetingPoint);
       ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
 
+      brain.entities.updateAgentMeetingPoint(comms.getFriend().getLocalName(),
+          meetingPoint);
     } else {
+
       MessageTemplate filter = MessageTemplate.and(
           MessageTemplate.and(
               MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -67,7 +61,8 @@ public class SetMeetingBehaviour extends OneShotBehaviour {
         return;
       }
 
-      brain.entities.updateAgentMeetingPoint(comms.getFriend().getLocalName(), meetingPoint);
+      brain.entities.updateAgentMeetingPoint(comms.getFriend().getLocalName(),
+          meetingPoint);
     }
   }
 

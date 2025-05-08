@@ -22,11 +22,25 @@ public class SiloData implements Serializable {
     this.meetingPoint = silo.getMeetingPoint();
   }
 
-  public String getPosition() { return position; }
-  public int getUpdateCounter() { return updateCounter; }
-  public String getMeetingPoint() {return meetingPoint; }
+  public String getPosition() {
+    return position;
+  }
 
-  public void setPosition(String position) { this.position = position; }
+  public int getUpdateCounter() {
+    return updateCounter;
+  }
+
+  public String getMeetingPoint() {
+    return meetingPoint;
+  }
+
+  public void setPosition(String position) {
+    this.position = position;
+  }
+
+  public void setMeetingPoint(String meetingPoint) {
+    this.meetingPoint = meetingPoint;
+  }
 
   public void incrementCounter() {
     this.updateCounter++;

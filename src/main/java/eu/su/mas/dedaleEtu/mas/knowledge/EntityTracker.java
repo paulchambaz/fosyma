@@ -171,6 +171,9 @@ public class EntityTracker implements Serializable {
       AgentData agent = this.agents.get(agentName);
       agent.setMeetingPoint(meetingPoint);
       agent.resetCounter();
+    } else if (agentName.startsWith("Silo") && silo != null) {
+      silo.setMeetingPoint(meetingPoint);
+      silo.resetCounter();
     }
     brain.notifyVisualization();
   }

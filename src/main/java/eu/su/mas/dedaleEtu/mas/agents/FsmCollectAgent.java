@@ -281,7 +281,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(CHEST_GOTO_AGENT, CHEST_COMM);
     fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_LOCATE_AGENT, 1);
     fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_DEADLOCK, 2);
-    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_INIT_COMM, 3);
+    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_DEADLOCK, 3);
 
     fsmBehaviour.registerDefaultTransition(CHEST_INIT_COMM, CHEST_LOCATE_AGENT);
     fsmBehaviour.registerTransition(CHEST_INIT_COMM, CHEST_NEGOTIATION, 1);
