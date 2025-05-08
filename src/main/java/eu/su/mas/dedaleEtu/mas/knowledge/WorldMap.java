@@ -107,6 +107,22 @@ public class WorldMap implements Serializable {
     return tempGraph;
   }
 
+  public synchronized Set<String> getNeighborhood(String position) {
+    Set<String> neighborhood = new HashSet<>();
+
+    neighborhood.add(position);
+
+    Node node = this.worldGraph.getNode(position);
+    if (node != null) {
+      node.edges().forEach(edge -> {
+        Node oppositeNode = edge.getOpposite(node);
+        neighborhood.add(oppositeNode.getId());
+      });
+    }
+
+    return neighborhood;
+  }
+
   public synchronized List<String> findShortestPath(String idFrom, String idTo, List<String> occupiedPositions) {
 
     Graph tempGraph = createNavigableGraph(occupiedPositions);

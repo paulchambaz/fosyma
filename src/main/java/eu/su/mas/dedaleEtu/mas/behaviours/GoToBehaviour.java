@@ -1,7 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.Deque;
-import java.util.List;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;

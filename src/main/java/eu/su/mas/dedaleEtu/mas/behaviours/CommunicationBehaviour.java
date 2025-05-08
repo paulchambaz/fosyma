@@ -1,6 +1,5 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-// import java.util.HashMap;
 import java.util.Map;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
@@ -13,6 +12,7 @@ public class CommunicationBehaviour extends OneShotBehaviour {
 
   private int exitValue = 0;
 
+  private String protocol;
   private Map<String, Integer> routes;
 
   private Brain brain;
@@ -21,13 +21,19 @@ public class CommunicationBehaviour extends OneShotBehaviour {
     super(agent);
     this.brain = brain;
     this.routes = routes;
+
+    for (Map.Entry<String, Integer> entry : routes.entrySet()) {
+      if (entry.getValue() == 1) {
+        this.protocol = entry.getKey();
+      }
+    }
   }
 
   @Override
   public void action() {
     brain.mind.setBehaviour("Explore Communication");
 
-    Communication comms = Protocols.handshake(this.myAgent, brain, 100, "sharemap");
+    Communication comms = Protocols.handshake(this.myAgent, brain, 100, protocol, 1);
 
     if (comms == null) {
       this.exitValue = 0;

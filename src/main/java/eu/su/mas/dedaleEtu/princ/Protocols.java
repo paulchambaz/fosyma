@@ -4,20 +4,23 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.ACLMessage;
+
+import java.io.Serializable;
+
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class Protocols {
   private static String PROTOCOL_HANDSHAKE = "handshake";
 
-  public static Communication handshake(Agent agent, Brain brain, int timeout, String protocol) {
+  public static Communication handshake(Agent agent, Brain brain, int timeout, String protocol, int priority) {
     emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "2");
     emptyMessageCue(agent, PROTOCOL_HANDSHAKE + "1");
 
     MessageTemplate filter;
     ACLMessage response;
     AID friendA, friendB, friend;
-    String protocolA, protocolB, usedProtocol;
+    HandshakeData protocolA, protocolB, usedProtocol;
     boolean speaker;
 
     filter = MessageTemplate.and(
@@ -29,14 +32,14 @@ public class Protocols {
     if (response != null) {
       friendA = response.getSender();
       try {
-        protocolA = (String) response.getContentObject();
+        protocolA = (HandshakeData) response.getContentObject();
       } catch (Exception e) {
         e.printStackTrace();
         return null;
       }
 
       ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
-          agent, PROTOCOL_HANDSHAKE + "1", friendA, protocol));
+          agent, PROTOCOL_HANDSHAKE + "1", friendA, new HandshakeData(protocol, priority)));
 
       filter = MessageTemplate.and(
           MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -53,7 +56,7 @@ public class Protocols {
       if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "1")) {
         friendB = response.getSender();
         try {
-          protocolB = (String) response.getContentObject();
+          protocolB = (HandshakeData) response.getContentObject();
         } catch (Exception e) {
           e.printStackTrace();
           return null;
@@ -63,18 +66,18 @@ public class Protocols {
         friend = withA ? friendA : friendB;
 
         speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
-        usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+        usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
         ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
-            agent, PROTOCOL_HANDSHAKE + "2", friend, protocol));
+            agent, PROTOCOL_HANDSHAKE + "2", friend, new HandshakeData(protocol, priority)));
 
-        return new Communication(friend, usedProtocol, speaker);
+        return new Communication(friend, usedProtocol.protocol, speaker);
       }
 
       if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "2")) {
         friendB = response.getSender();
         try {
-          protocolB = (String) response.getContentObject();
+          protocolB = (HandshakeData) response.getContentObject();
         } catch (Exception e) {
           e.printStackTrace();
           return null;
@@ -84,9 +87,9 @@ public class Protocols {
         friend = withA ? friendA : friendB;
 
         speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
-        usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+        usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
-        return new Communication(friend, usedProtocol, speaker);
+        return new Communication(friend, usedProtocol.protocol, speaker);
       }
     }
 
@@ -96,7 +99,7 @@ public class Protocols {
       }
 
       ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
-          agent, PROTOCOL_HANDSHAKE + "0", null, protocol));
+          agent, PROTOCOL_HANDSHAKE + "0", null, new HandshakeData(protocol, priority)));
       // after we send a bottle to the sea, we always wait at least one step
       // before we talk again
       brain.mind.initiateSocialCooldown();
@@ -116,14 +119,14 @@ public class Protocols {
       if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "0")) {
         friendA = response.getSender();
         try {
-          protocolA = (String) response.getContentObject();
+          protocolA = (HandshakeData) response.getContentObject();
         } catch (Exception e) {
           e.printStackTrace();
           return null;
         }
 
         ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
-            agent, PROTOCOL_HANDSHAKE + "2", friendA, protocol));
+            agent, PROTOCOL_HANDSHAKE + "2", friendA, new HandshakeData(protocol, priority)));
 
         filter = MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -140,7 +143,7 @@ public class Protocols {
         if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "1")) {
           friendB = response.getSender();
           try {
-            protocolB = (String) response.getContentObject();
+            protocolB = (HandshakeData) response.getContentObject();
           } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -150,18 +153,18 @@ public class Protocols {
           friend = withA ? friendA : friendB;
 
           speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
-          usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+          usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
           ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
-              agent, PROTOCOL_HANDSHAKE + "2", friend, protocol));
+              agent, PROTOCOL_HANDSHAKE + "2", friend, new HandshakeData(protocol, priority)));
 
-          return new Communication(friend, usedProtocol, speaker);
+          return new Communication(friend, usedProtocol.protocol, speaker);
         }
 
         if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "2")) {
           friendB = response.getSender();
           try {
-            protocolB = (String) response.getContentObject();
+            protocolB = (HandshakeData) response.getContentObject();
           } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -171,32 +174,43 @@ public class Protocols {
           friend = withA ? friendA : friendB;
 
           speaker = agent.getLocalName().compareTo(friend.getLocalName()) <= 0;
-          usedProtocol = speaker ? protocol : (withA ? protocolA : protocolB);
+          usedProtocol = speaker ? new HandshakeData(protocol, priority) : (withA ? protocolA : protocolB);
 
-          return new Communication(friend, usedProtocol, speaker);
+          return new Communication(friend, usedProtocol.protocol, speaker);
         }
       }
 
       if (response.getProtocol().equals(PROTOCOL_HANDSHAKE + "1")) {
         friendA = response.getSender();
         try {
-          protocolA = (String) response.getContentObject();
+          protocolA = (HandshakeData) response.getContentObject();
         } catch (Exception e) {
           e.printStackTrace();
           return null;
         }
 
         speaker = agent.getLocalName().compareTo(friendA.getLocalName()) <= 0;
-        usedProtocol = speaker ? protocol : protocolA;
+        usedProtocol = speaker ? new HandshakeData(protocol, priority) : protocolA;
 
         ((AbstractDedaleAgent) agent).sendMessage(Utils.createACLMessage(
             agent, PROTOCOL_HANDSHAKE + "2", friendA, usedProtocol));
 
-        return new Communication(friendA, usedProtocol, speaker);
+        return new Communication(friendA, usedProtocol.protocol, speaker);
       }
     }
 
     return null;
+  }
+
+  private static class HandshakeData implements Serializable {
+    private static final long serialVersionUID = 1L;
+    public String protocol;
+    public int priority;
+
+    public HandshakeData(String protocol, int priority) {
+      this.protocol = protocol;
+      this.priority = priority;
+    }
   }
 
   private static void emptyMessageCue(Agent agent, String protocol) {

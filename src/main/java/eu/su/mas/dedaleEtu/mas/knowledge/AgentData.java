@@ -126,10 +126,34 @@ public class AgentData implements Serializable {
   }
 
   public boolean canOpenLock(int requiredStrength) {
-    return expertise.getOrDefault(Observation.LOCKPICKING, 0) >= requiredStrength;
+    return expertise.get(Observation.LOCKPICKING) >= requiredStrength;
   }
 
-  public boolean canPickTreasure(int requiredStrength) {
-    return expertise.getOrDefault(Observation.STRENGH, 0) >= requiredStrength;
+  public boolean canCarryTreasure(int requiredStrength) {
+    return expertise.get(Observation.STRENGH) >= requiredStrength;
+  }
+
+  public void increaseBackpack(int amount) {
+    if (treasureType == Observation.GOLD) {
+      this.goldAmount += amount;
+    } else if (treasureType == Observation.DIAMOND) {
+      this.diamondAmount += amount;
+    }
+  }
+
+  public void emptyBackpack() {
+    if (treasureType == Observation.GOLD) {
+      this.goldAmount = 0;
+    } else if (treasureType == Observation.DIAMOND) {
+      this.diamondAmount = 0;
+    }
+  }
+
+  public void setBackpackAmount(Observation treasureType, int amount) {
+    if (treasureType == Observation.GOLD) {
+      this.goldAmount = amount;
+    } else if (treasureType == Observation.DIAMOND) {
+      this.diamondAmount = amount;
+    }
   }
 }

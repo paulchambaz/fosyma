@@ -70,7 +70,7 @@ public class ShareBrainBehaviour extends OneShotBehaviour {
     ACLMessage message = Utils.createACLMessage(
         this.myAgent, PROTOCOL_NAME, friend, partialBrain);
     ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
-    brain.log("just shared brain with", friend.getLocalName());
+    // brain.log("just shared brain with", friend.getLocalName());
   }
 
   private void receiveBrain(AID friend) {
@@ -96,7 +96,7 @@ public class ShareBrainBehaviour extends OneShotBehaviour {
       return;
     }
 
-    brain.log("just received brain from", friend.getLocalName());
+    // brain.log("just received brain from", friend.getLocalName());
     brain.merge(brainReceived);
 
     SerializableSimpleGraph<String, MapAttribute> receivedGraph = brainReceived.getGraph();

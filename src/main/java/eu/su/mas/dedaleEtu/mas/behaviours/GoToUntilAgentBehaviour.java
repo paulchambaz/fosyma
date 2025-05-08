@@ -1,13 +1,15 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
-public class GoToUntilBehaviour extends OneShotBehaviour {
+public class GoToUntilAgentBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
 
   private boolean initialized = false;
@@ -16,10 +18,10 @@ public class GoToUntilBehaviour extends OneShotBehaviour {
   private Brain brain;
   private List<String> searchingAgents;
 
-  public GoToUntilBehaviour(Agent myagent, Brain brain, List<String> searchingAgents) {
+  public GoToUntilAgentBehaviour(Agent myagent, Brain brain) {
     super(myagent);
     this.brain = brain;
-    this.searchingAgents = searchingAgents;
+    this.searchingAgents = new ArrayList<String>(Arrays.asList(brain.mind.getCoordinationPartner()));
   }
 
   private void initialize() {
@@ -60,9 +62,7 @@ public class GoToUntilBehaviour extends OneShotBehaviour {
     String foundAgent = Computes.findSearchedAgentInNeighborhood(brain.map, brain.entities, position,
         this.searchingAgents);
     if (foundAgent != null) {
-      brain.log("i found what i was looking for", brain.mind.getTargetNode(), "looking for", this.searchingAgents);
       this.exitValue = 3;
-      return;
     }
 
     String next = path.removeFirst();

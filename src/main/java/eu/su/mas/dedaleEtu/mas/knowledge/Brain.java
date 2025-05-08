@@ -158,33 +158,64 @@ public class Brain implements Serializable {
   }
 
   private void detectForgottenEntities(Map<String, String> observedAgents) {
+
+    Set<String> neighborhood = map.getNeighborhood(entities.getPosition());
+
+    Map<String, String> observedNeighborhood = new HashMap<>();
+    for (Map.Entry<String, String> entry : observedAgents.entrySet()) {
+      String agentName = entry.getKey();
+      String position = entry.getValue();
+      if (neighborhood.contains(position)) {
+        observedNeighborhood.put(position, agentName);
+      }
+    }
+
+    Map<String, String> expectedNeighborhood = new HashMap<>();
     for (Map.Entry<String, AgentData> entry : entities.getAgents().entrySet()) {
       String agentName = entry.getKey();
       AgentData agentData = entry.getValue();
-      String agentPosition = agentData.getPosition();
+      String position = agentData.getPosition();
 
-      if (agentPosition != null) {
-        if (entities.isAgentMissing(agentName, agentPosition, observedAgents)
-            && agentData.getUpdateCounter() > 10) {
-          System.out.println("Agent lost: " + agentName);
-          entities.loseAgentPosition(agentName);
-        }
+      if (position != null && neighborhood.contains(position)) {
+        expectedNeighborhood.put(position, agentName);
       }
     }
 
     if (entities.getSilo() != null && entities.getSilo().getPosition() != null) {
-      if (entities.isAgentMissing("Silo", entities.getSilo().getPosition(), observedAgents)
-          && entities.getSilo().getUpdateCounter() > 10) {
-        System.out.println("Silo lost");
-        entities.getSilo().setPosition(null);
+      String siloPosition = entities.getSilo().getPosition();
+      if (neighborhood.contains(siloPosition)) {
+        expectedNeighborhood.put(siloPosition, "Silo");
       }
     }
 
     if (entities.getGolem() != null && entities.getGolem().getPosition() != null) {
-      if (entities.isAgentMissing("Golem", entities.getGolem().getPosition(), observedAgents)
-          && entities.getGolem().getUpdateCounter() > 10) {
-        System.out.println("Golem lost");
-        entities.getGolem().setPosition(null);
+      String golemPosition = entities.getGolem().getPosition();
+      if (neighborhood.contains(golemPosition)) {
+        expectedNeighborhood.put(golemPosition, "Golem");
+      }
+    }
+
+    for (Map.Entry<String, String> entry : expectedNeighborhood.entrySet()) {
+      String position = entry.getKey();
+      String expectedAgent = entry.getValue();
+
+      if (!observedNeighborhood.containsKey(position) ||
+          !observedNeighborhood.get(position).equals(expectedAgent)) {
+
+        if (expectedAgent.equals("Silo")) {
+          if (entities.getSilo().getUpdateCounter() > 10) {
+            entities.getSilo().setPosition(null);
+          }
+        } else if (expectedAgent.equals("Golem")) {
+          if (entities.getGolem().getUpdateCounter() > 10) {
+            entities.getGolem().setPosition(null);
+          }
+        } else {
+          AgentData agentData = entities.getAgents().get(expectedAgent);
+          if (agentData != null && agentData.getUpdateCounter() > 10) {
+            entities.loseAgentPosition(expectedAgent);
+          }
+        }
       }
     }
   }
@@ -209,6 +240,26 @@ public class Brain implements Serializable {
           break;
         case DIAMOND:
           entities.setDiamondCapacity(freespace.getRight());
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  public synchronized void updateBackpack(Agent agent) {
+    List<Couple<Observation, Integer>> observationsFreespace = ((AbstractDedaleAgent) agent).getBackPackFreeSpace();
+    AgentData myself = entities.getMyself();
+    int amount = 0;
+    for (Couple<Observation, Integer> freespace : observationsFreespace) {
+      switch (freespace.getLeft()) {
+        case GOLD:
+          amount = myself.getGoldCapacity() - freespace.getRight();
+          myself.setBackpackAmount(Observation.GOLD, amount);
+          break;
+        case DIAMOND:
+          amount = myself.getDiamondCapacity() - freespace.getRight();
+          myself.setBackpackAmount(Observation.DIAMOND, amount);
           break;
         default:
           break;

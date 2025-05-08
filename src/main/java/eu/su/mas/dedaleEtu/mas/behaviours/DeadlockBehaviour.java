@@ -35,7 +35,7 @@ public class DeadlockBehaviour extends OneShotBehaviour {
       }
     } while (true);
 
-    brain.log("i was stuck so im going to", goal);
+    // brain.log("i was stuck so im going to", goal);
     brain.mind.setTargetNode(goal);
     brain.mind.resetStuckCounter();
   }

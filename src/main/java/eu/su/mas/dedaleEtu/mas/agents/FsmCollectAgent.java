@@ -9,6 +9,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.EndBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilAgentBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DeadlockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CommunicationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareBrainBehaviour;
@@ -18,9 +19,14 @@ import eu.su.mas.dedaleEtu.mas.behaviours.LocateSiloBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DropoffBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.PlanExplorationBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.MeetingBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SetMeetingBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.WaitUntilBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationInitBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.TreasureCoordinationNegotiationBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.LeaderGuidanceBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.LeaderWaitBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.RestoreTargetBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.WaypointCommunicationBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.EmptyBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -32,36 +38,63 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
   private Brain brain;
 
-  private static final String INIT = "Init";
+  private static final String INIT = "INIT";
 
-  private static final String EXPLORE = "Explore";
-  private static final String EXPLORE_GOTO = "Explore go to";
-  private static final String EXPLORE_DEADLOCK = "Explore deadlock";
-  private static final String EXPLORE_COMMUNICATION = "Explore communication";
+  private static final String EXPLORE = "EXPLORE";
+  private static final String EXPLORE_GOTO = "EXPLORE_GOTO";
+  private static final String EXPLORE_DEADLOCK = "EXPLORE_DEADLOCK";
+  private static final String EXPLORE_COMM = "EXPLORE_COMM";
+  private static final String EXPLORE_COMM_SHARE = "EXPLORE_COMM_SHARE";
+  private static final String EXPLORE_COMM_MEETING = "EXPLORE_COMM_MEETING";
+  private static final String EXPLORE_COMM_PLAN = "EXPLORE_COMM_PLAN";
 
-  private static final String COLLECT = "Collect";
-  private static final String COLLECT_GOTO = "Collect go to";
-  private static final String COLLECT_DEADLOCK = "Collect deadlock";
-  private static final String COLLECT_OPENLOCK = "Collect open lock";
-  private static final String COLLECT_PICK = "Collect Pick";
-  private static final String COLLECT_LOCATE_SILO = "Collect Locate Silo";
-  private static final String COLLECT_GOTO_UNTIL_SILO = "Collect go to until silo";
-  private static final String COLLECT_DEADLOCK_SILO = "Collect deadlock silo";
-  private static final String COLLECT_DROPOFF = "Collect dropoff";
+  private static final String COLLECT = "COLLECT";
+  private static final String COLLECT_GOTO = "COLLECT_GOTO";
+  private static final String COLLECT_DEADLOCK = "COLLECT_DEADLOCK";
+  private static final String COLLECT_COMM = "COLLECT_COMM";
+  private static final String COLLECT_COMM_SHARE = "COLLECT_COMM_SHARE";
+  private static final String COLLECT_COMM_MEETING = "COLLECT_COMM_MEETING";
+  private static final String COLLECT_OPENLOCK = "COLLECT_OPENLOCK";
+  private static final String COLLECT_PICK = "COLLECT_PICK";
 
-  private static final String COMMUNICATION_SHAREMAP = "Communication share map";
-  private static final String COMMUNICATION_SOLVEDEADLOCK = "Communication solve deadlock";
-  private static final String COMMUNICATION_PLANEXPLORATION = "Communication plan exploration";
-  private static final String COMMUNICATION_SETMEETINGPOINT = "Communication set meeting point";
+  private static final String DROP_LOCATE_SILO = "DROP_LOCATE_SILO";
+  private static final String DROP_GOTO_SILO = "DROP_GOTO_SILO";
+  private static final String DROP_DEADLOCK = "DROP_DEADLOCK";
+  private static final String DROP_COMM = "DROP_COMM";
+  private static final String DROP_COMM_SHARE = "DROP_COMM_SHARE";
+  private static final String DROP_COMM_MEETING = "DROP_COMM_MEETING";
+  private static final String DROP_DROPOFF = "DROP_DROPOFF";
 
-  private static final String MEETING = "Meeting";
-  private static final String MEETING_GOTO = "Meeting go to";
-  private static final String MEETING_DEADLOCK = "Meeting deadlock";
+  private static final String CHEST_LOCATE_AGENT = "CHEST_LOCATE_AGENT";
+  private static final String CHEST_GOTO_AGENT = "CHEST_GOTO_AGENT";
+  private static final String CHEST_DEADLOCK = "CHEST_DEADLOCK";
+  private static final String CHEST_COMM = "CHEST_COMM";
+  private static final String CHEST_COMM_SHARE = "CHEST_COMM_SHARE";
+  private static final String CHEST_COMM_MEETING = "CHEST_COMM_MEETING";
+  private static final String CHEST_INIT_COMM = "CHEST_INIT_COMM";
+  private static final String CHEST_NEGOTIATION = "CHEST_NEGOTIATION";
 
-  private static final String WAIT_UNTIL_MEETING = "Wait until";
-  private static final String WAIT_COMMUNICATION = "Wait communication";
+  private static final String LEADER_COMPUTE_WAYPOINT = "LEADER_COMPUTE_WAYPOINT";
+  private static final String LEADER_COMM = "LEADER_COMM";
+  private static final String LEADER_COMM_WAYPOINT = "LEADER_COMM_WAYPOINT";
+  private static final String LEADER_GOTO = "LEADER_GOTO";
+  private static final String LEADER_DEADLOCK = "LEADER_DEADLOCK";
+  private static final String LEADER_GOTO_DEADLOCK = "LEADER_GOTO_DEADLOCK";
+  private static final String LEADER_RESTORE = "LEADER_RESTORE";
+  private static final String LEADER_WAITFOR = "LEADER_WAITFOR";
+  private static final String LEADER_COMM_ARRIVED = "LEADER_COMM_CHEST";
+  private static final String LEADER_OPENLOCK = "LEADER_OPENLOCK";
 
-  private static final String END = "End";
+  private static final String FOLLOWER = "FOLLOWER";
+  private static final String FOLLOWER_COMM = "FOLLOWER_COMM";
+  private static final String FOLLOWER_COMM_WAYPOINT = "FOLLOWER_COMM_WAYPOINT";
+  private static final String FOLLOWER_GOTO = "FOLLOWER_GOTO";
+  private static final String FOLLOWER_DEADLOCK = "FOLLOWER_DEADLOCK";
+  private static final String FOLLOWER_GOTO_DEADLOCK = "FOLLOWER_GOTO_DEADLOCK";
+  private static final String FOLLOWER_RESTORE = "FOLLOWER_RESTORE";
+  private static final String FOLLOWER_OPENLOCK = "FOLLOWER_OPENLOCK";
+
+  private static final String END = "END";
 
   protected void setup() {
     super.setup();
@@ -70,127 +103,252 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     FSMBehaviour fsmBehaviour = new FSMBehaviour();
 
-    // behaviours
+    // - Behaviours -
 
-    // init behaviour
+    // Init behaviour
     fsmBehaviour.registerFirstState(new InitBehaviour(this, this.brain), INIT);
 
-    // exploration behaviours
+    // Explore behaviours
     fsmBehaviour.registerState(new ExploreBehaviour(this, this.brain), EXPLORE);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), EXPLORE_GOTO);
     fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), EXPLORE_DEADLOCK);
-    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain,
-        new HashMap<String, Integer>() {
-          {
-            put("sharemap", 1);
-            put("solvedeadlock", 2);
-            put("planexploration", 3);
-            put("setmeetingpoint", 4);
-          }
-        }),
-        EXPLORE_COMMUNICATION);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("sharemap", 1);
+        put("treasure-coordination", 2);
+      }
+    }), EXPLORE_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), EXPLORE_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), EXPLORE_COMM_MEETING);
+    fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), EXPLORE_COMM_PLAN);
 
-    // collect behaviours
+    // Collect behaviours
     fsmBehaviour.registerState(new CollectBehaviour(this, this.brain), COLLECT);
     fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), COLLECT_GOTO);
     fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), COLLECT_DEADLOCK);
-    fsmBehaviour.registerState(new OpenLockBehaviour(this, this.brain), COLLECT_OPENLOCK);
-    fsmBehaviour.registerState(new PickBehaviour(this, this.brain), COLLECT_PICK);
-    fsmBehaviour.registerState(new LocateSiloBehaviour(this, this.brain), COLLECT_PICK);
-    fsmBehaviour.registerState(new LocateSiloBehaviour(this, this.brain), COLLECT_LOCATE_SILO);
-    fsmBehaviour.registerState(new GoToUntilBehaviour(this, this.brain, new ArrayList<>(Arrays.asList("Silo"))),
-        COLLECT_GOTO_UNTIL_SILO);
-    fsmBehaviour.registerState(new DropoffBehaviour(this, this.brain), COLLECT_DROPOFF);
-    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), COLLECT_DEADLOCK_SILO);
-
-    // communication behaviours
-    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), COMMUNICATION_SHAREMAP);
-    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), COMMUNICATION_SETMEETINGPOINT);
-    fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), COMMUNICATION_PLANEXPLORATION);
-
-    // meeting point behaviours
-    fsmBehaviour.registerState(new MeetingBehaviour(this, this.brain), MEETING);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), MEETING_GOTO);
-    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), MEETING_DEADLOCK);
-
-    fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain, 3000), WAIT_UNTIL_MEETING);
     fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
       {
-        put("follow_me", 1);
+        put("sharemap", 1);
+        put("treasure-coordination", 2);
       }
-    }),
-        WAIT_COMMUNICATION);
+    }), COLLECT_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), COLLECT_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), COLLECT_COMM_MEETING);
+    fsmBehaviour.registerState(new OpenLockBehaviour(this, this.brain), COLLECT_OPENLOCK);
+    fsmBehaviour.registerState(new PickBehaviour(this, this.brain), COLLECT_PICK);
 
-    // end behaviours
+    // Drop behaviours
+    fsmBehaviour.registerState(new LocateSiloBehaviour(this, this.brain), DROP_LOCATE_SILO);
+    fsmBehaviour.registerState(new GoToUntilBehaviour(this, this.brain, new ArrayList<>(Arrays.asList("Silo"))),
+        DROP_GOTO_SILO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), DROP_DEADLOCK);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("sharemap", 1);
+      }
+    }), DROP_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), DROP_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), DROP_COMM_MEETING);
+    fsmBehaviour.registerState(new DropoffBehaviour(this, this.brain), DROP_DROPOFF);
+
+    // Chest behaviours
+    fsmBehaviour.registerState(new CoordinationInitBehaviour(this, this.brain), CHEST_LOCATE_AGENT);
+    fsmBehaviour.registerState(new GoToUntilAgentBehaviour(this, this.brain), CHEST_GOTO_AGENT);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), CHEST_DEADLOCK);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("sharemap", 1);
+        put("treasure-coordination", 2);
+      }
+    }), CHEST_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), CHEST_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), CHEST_COMM_MEETING);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("treasure-coordination", 1);
+      }
+    }), CHEST_INIT_COMM);
+    fsmBehaviour.registerState(new TreasureCoordinationNegotiationBehaviour(this, this.brain), CHEST_NEGOTIATION);
+
+    // Leader behaviours
+    fsmBehaviour.registerState(new LeaderGuidanceBehaviour(this, this.brain), LEADER_COMPUTE_WAYPOINT);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("waypoint-guidance", 1);
+      }
+    }), LEADER_COMM);
+    fsmBehaviour.registerState(new WaypointCommunicationBehaviour(this, this.brain), LEADER_COMM_WAYPOINT);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), LEADER_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), LEADER_DEADLOCK);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), LEADER_GOTO_DEADLOCK);
+    fsmBehaviour.registerState(new RestoreTargetBehaviour(this, this.brain), LEADER_RESTORE);
+    fsmBehaviour.registerState(new LeaderWaitBehaviour(this, this.brain), LEADER_WAITFOR);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("arrived", 1);
+      }
+    }), LEADER_COMM_ARRIVED);
+    fsmBehaviour.registerState(new OpenLockBehaviour(this, this.brain), LEADER_OPENLOCK);
+
+    // Follower behaviours
+    fsmBehaviour.registerState(new EmptyBehaviour(this, this.brain), FOLLOWER);
+    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, new HashMap<String, Integer>() {
+      {
+        put("waypoint-guidance", 1);
+        put("arrived", 2);
+      }
+    }), FOLLOWER_COMM);
+    fsmBehaviour.registerState(new WaypointCommunicationBehaviour(this, this.brain), FOLLOWER_COMM_WAYPOINT);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), FOLLOWER_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), FOLLOWER_DEADLOCK);
+    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), FOLLOWER_GOTO_DEADLOCK);
+    fsmBehaviour.registerState(new RestoreTargetBehaviour(this, this.brain), FOLLOWER_RESTORE);
+    fsmBehaviour.registerState(new OpenLockBehaviour(this, this.brain), FOLLOWER_OPENLOCK);
+
+    // End behaviour
     fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
 
-    // transitions
+    // - Transitions -
 
-    // init transitions
+    // Init transitions
     fsmBehaviour.registerDefaultTransition(INIT, EXPLORE);
 
-    // explore transitions
+    // Explore transitions
     fsmBehaviour.registerDefaultTransition(EXPLORE, EXPLORE_GOTO);
-    fsmBehaviour.registerTransition(EXPLORE, MEETING, 1);
+    fsmBehaviour.registerTransition(EXPLORE, COLLECT, 1);
 
-    fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_COMMUNICATION);
+    fsmBehaviour.registerDefaultTransition(EXPLORE_GOTO, EXPLORE_COMM);
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE, 1);
     fsmBehaviour.registerTransition(EXPLORE_GOTO, EXPLORE_DEADLOCK, 2);
 
-    fsmBehaviour.registerDefaultTransition(EXPLORE_COMMUNICATION, EXPLORE_GOTO);
-    fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, COMMUNICATION_SHAREMAP, 1);
-    // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, SOLVEDEADLOCK, 2);
-    // fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, PLANEXPLORE, 3);
-    fsmBehaviour.registerTransition(EXPLORE_COMMUNICATION, COMMUNICATION_SETMEETINGPOINT, 4);
+    fsmBehaviour.registerDefaultTransition(EXPLORE_COMM, EXPLORE_GOTO);
+    fsmBehaviour.registerTransition(EXPLORE_COMM, EXPLORE_COMM_SHARE, 1);
+    fsmBehaviour.registerTransition(EXPLORE_COMM, CHEST_NEGOTIATION, 2);
+
+    fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_SHARE, EXPLORE_COMM_MEETING);
+    fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_MEETING, EXPLORE_COMM_PLAN);
+    fsmBehaviour.registerDefaultTransition(EXPLORE_COMM_PLAN, EXPLORE_GOTO);
 
     fsmBehaviour.registerDefaultTransition(EXPLORE_DEADLOCK, EXPLORE_GOTO);
 
-    // collect transitions
+    // Collect transitions
     fsmBehaviour.registerDefaultTransition(COLLECT, COLLECT_GOTO);
     fsmBehaviour.registerTransition(COLLECT, END, 1);
     fsmBehaviour.registerTransition(COLLECT, EXPLORE, 2);
 
-    fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_GOTO);
+    fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_COMM);
     fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_OPENLOCK, 1);
     fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_DEADLOCK, 2);
 
-    fsmBehaviour.registerDefaultTransition(COLLECT_OPENLOCK, COLLECT_PICK);
+    fsmBehaviour.registerDefaultTransition(COLLECT_COMM, COLLECT_GOTO);
+    fsmBehaviour.registerTransition(COLLECT_COMM, COLLECT_COMM_SHARE, 1);
+    fsmBehaviour.registerTransition(COLLECT_COMM, CHEST_NEGOTIATION, 2);
 
-    fsmBehaviour.registerDefaultTransition(COLLECT_PICK, COLLECT_LOCATE_SILO);
-
-    fsmBehaviour.registerDefaultTransition(COLLECT_LOCATE_SILO, COLLECT_GOTO_UNTIL_SILO);
-
-    fsmBehaviour.registerDefaultTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_GOTO_UNTIL_SILO);
-    fsmBehaviour.registerTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_LOCATE_SILO, 1);
-    fsmBehaviour.registerTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_DEADLOCK_SILO, 2);
-    fsmBehaviour.registerTransition(COLLECT_GOTO_UNTIL_SILO, COLLECT_DROPOFF, 3);
-
-    fsmBehaviour.registerDefaultTransition(COLLECT_DROPOFF, COLLECT);
-    fsmBehaviour.registerTransition(COLLECT_DROPOFF, COLLECT_LOCATE_SILO, 1);
+    fsmBehaviour.registerDefaultTransition(COLLECT_COMM_SHARE, COLLECT_COMM_MEETING);
+    fsmBehaviour.registerDefaultTransition(COLLECT_COMM_MEETING, COLLECT_GOTO);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_DEADLOCK, COLLECT_GOTO);
-    fsmBehaviour.registerDefaultTransition(COLLECT_DEADLOCK_SILO, COLLECT_GOTO_UNTIL_SILO);
 
-    // communication transitions
-    fsmBehaviour.registerDefaultTransition(COMMUNICATION_SHAREMAP, COMMUNICATION_PLANEXPLORATION);
-    fsmBehaviour.registerDefaultTransition(COMMUNICATION_PLANEXPLORATION, EXPLORE_GOTO);
+    fsmBehaviour.registerDefaultTransition(COLLECT_OPENLOCK, COLLECT_PICK);
+    fsmBehaviour.registerTransition(COLLECT_OPENLOCK, CHEST_LOCATE_AGENT, 1);
 
-    // waiting transitions
-    fsmBehaviour.registerDefaultTransition(WAIT_UNTIL_MEETING, WAIT_COMMUNICATION);
-    fsmBehaviour.registerTransition(WAIT_UNTIL_MEETING, COLLECT, 1); // Search for
+    fsmBehaviour.registerDefaultTransition(COLLECT_PICK, DROP_LOCATE_SILO);
 
-    fsmBehaviour.registerDefaultTransition(WAIT_COMMUNICATION, WAIT_UNTIL_MEETING);
-    fsmBehaviour.registerTransition(WAIT_COMMUNICATION, COLLECT, 1); // Follow me
+    // Drop transitions
+    fsmBehaviour.registerDefaultTransition(DROP_LOCATE_SILO, DROP_GOTO_SILO);
 
-    // meetig point transitions
-    fsmBehaviour.registerDefaultTransition(MEETING, MEETING_GOTO);
-    fsmBehaviour.registerTransition(MEETING, EXPLORE, 2);
+    fsmBehaviour.registerDefaultTransition(DROP_GOTO_SILO, DROP_COMM);
+    fsmBehaviour.registerTransition(DROP_GOTO_SILO, DROP_LOCATE_SILO, 1);
+    fsmBehaviour.registerTransition(DROP_GOTO_SILO, DROP_DEADLOCK, 2);
+    fsmBehaviour.registerTransition(DROP_GOTO_SILO, DROP_DROPOFF, 3);
 
-    fsmBehaviour.registerDefaultTransition(MEETING_GOTO, MEETING_GOTO);
-    fsmBehaviour.registerTransition(MEETING_GOTO, WAIT_UNTIL_MEETING, 1);
-    fsmBehaviour.registerTransition(MEETING_GOTO, MEETING_DEADLOCK, 2);
+    fsmBehaviour.registerDefaultTransition(DROP_COMM, DROP_GOTO_SILO);
+    fsmBehaviour.registerTransition(DROP_COMM, DROP_COMM_SHARE, 1);
 
-    fsmBehaviour.registerDefaultTransition(MEETING_DEADLOCK, MEETING_GOTO);
+    fsmBehaviour.registerDefaultTransition(DROP_COMM_SHARE, DROP_COMM_MEETING);
+    fsmBehaviour.registerDefaultTransition(DROP_COMM_MEETING, DROP_GOTO_SILO);
+
+    fsmBehaviour.registerDefaultTransition(DROP_DEADLOCK, DROP_GOTO_SILO);
+
+    fsmBehaviour.registerDefaultTransition(DROP_DROPOFF, COLLECT);
+    fsmBehaviour.registerTransition(DROP_DROPOFF, DROP_LOCATE_SILO, 1);
+
+    // Chest coordination transitions
+    fsmBehaviour.registerDefaultTransition(CHEST_LOCATE_AGENT, COLLECT);
+    fsmBehaviour.registerTransition(CHEST_LOCATE_AGENT, CHEST_GOTO_AGENT, 1);
+    fsmBehaviour.registerTransition(CHEST_LOCATE_AGENT, DROP_LOCATE_SILO, 2);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_GOTO_AGENT, CHEST_COMM);
+    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_LOCATE_AGENT, 1);
+    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_DEADLOCK, 2);
+    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_INIT_COMM, 3);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_INIT_COMM, CHEST_LOCATE_AGENT);
+    fsmBehaviour.registerTransition(CHEST_INIT_COMM, CHEST_NEGOTIATION, 1);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_DEADLOCK, CHEST_GOTO_AGENT);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_COMM, CHEST_GOTO_AGENT);
+    fsmBehaviour.registerTransition(CHEST_COMM, CHEST_COMM_SHARE, 1);
+    fsmBehaviour.registerTransition(CHEST_COMM, CHEST_NEGOTIATION, 2);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_COMM_SHARE, CHEST_COMM_MEETING);
+    fsmBehaviour.registerDefaultTransition(CHEST_COMM_MEETING, CHEST_NEGOTIATION);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_NEGOTIATION, COLLECT);
+    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, LEADER_COMPUTE_WAYPOINT, 1);
+    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, FOLLOWER, 2);
+
+    // Leader transitions
+    fsmBehaviour.registerDefaultTransition(LEADER_COMPUTE_WAYPOINT, LEADER_COMM);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_COMM, CHEST_LOCATE_AGENT);
+    fsmBehaviour.registerTransition(LEADER_COMM, LEADER_COMM_WAYPOINT, 1);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_COMM_WAYPOINT, LEADER_GOTO);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_GOTO, LEADER_GOTO);
+    fsmBehaviour.registerTransition(LEADER_GOTO, LEADER_WAITFOR, 1);
+    fsmBehaviour.registerTransition(LEADER_GOTO, LEADER_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_DEADLOCK, LEADER_GOTO_DEADLOCK);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_GOTO_DEADLOCK, LEADER_GOTO_DEADLOCK);
+    fsmBehaviour.registerTransition(LEADER_GOTO_DEADLOCK, LEADER_RESTORE, 1);
+    fsmBehaviour.registerTransition(LEADER_GOTO_DEADLOCK, LEADER_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_RESTORE, LEADER_GOTO);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_WAITFOR, LEADER_WAITFOR);
+    fsmBehaviour.registerTransition(LEADER_WAITFOR, LEADER_COMM_ARRIVED, 1);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_COMM_ARRIVED, CHEST_LOCATE_AGENT);
+    fsmBehaviour.registerTransition(LEADER_COMM_ARRIVED, LEADER_OPENLOCK, 1);
+
+    fsmBehaviour.registerDefaultTransition(LEADER_OPENLOCK, COLLECT_PICK);
+
+    // Follower transitions
+    fsmBehaviour.registerDefaultTransition(FOLLOWER, FOLLOWER_COMM);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM, FOLLOWER);
+    fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_COMM_WAYPOINT, 1);
+    fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_OPENLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM_WAYPOINT, FOLLOWER_GOTO);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_GOTO, FOLLOWER_GOTO);
+    fsmBehaviour.registerTransition(FOLLOWER_GOTO, FOLLOWER_COMM, 1);
+    fsmBehaviour.registerTransition(FOLLOWER_GOTO, FOLLOWER_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_DEADLOCK, FOLLOWER_GOTO_DEADLOCK);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_GOTO_DEADLOCK, FOLLOWER_GOTO_DEADLOCK);
+    fsmBehaviour.registerTransition(FOLLOWER_GOTO_DEADLOCK, FOLLOWER_RESTORE, 1);
+    fsmBehaviour.registerTransition(FOLLOWER_GOTO_DEADLOCK, FOLLOWER_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_RESTORE, FOLLOWER_GOTO);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_OPENLOCK, COLLECT);
 
     List<Behaviour> behaviours = new ArrayList<Behaviour>();
     behaviours.add(fsmBehaviour);

@@ -111,7 +111,7 @@ public class EntityTracker implements Serializable {
   public synchronized void updateTreasureLockpinging(String nodeId, int lockpicking) {
     if (this.treasures.containsKey(nodeId)) {
       TreasureData treasure = this.treasures.get(nodeId);
-      treasure.setLockpicking(lockpicking);
+      treasure.setLockpickStrength(lockpicking);
       treasure.resetCounter();
     }
     brain.notifyVisualization();
@@ -120,7 +120,7 @@ public class EntityTracker implements Serializable {
   public synchronized void updateTreasureStrength(String nodeId, int strength) {
     if (this.treasures.containsKey(nodeId)) {
       TreasureData treasure = this.treasures.get(nodeId);
-      treasure.setStrength(strength);
+      treasure.setCarryStrength(strength);
       treasure.resetCounter();
     }
     brain.notifyVisualization();
@@ -228,7 +228,7 @@ public class EntityTracker implements Serializable {
 
   public synchronized List<String> getAgentsWithCarryingStrength(int requiredStrength) {
     return this.agents.entrySet().stream()
-        .filter(entry -> entry.getValue().canPickTreasure(requiredStrength))
+        .filter(entry -> entry.getValue().canCarryTreasure(requiredStrength))
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
@@ -305,17 +305,23 @@ public class EntityTracker implements Serializable {
       String nodeId = entry.getKey();
       TreasureData receivedTreasure = new TreasureData(entry.getValue());
 
-      if (!this.treasures.containsKey(nodeId)
-          || this.treasures.get(nodeId).getUpdateCounter() > receivedTreasure.getUpdateCounter()) {
+      if (!this.treasures.containsKey(nodeId)) {
         this.treasures.put(nodeId, receivedTreasure);
+      } else {
+        TreasureData currentTreasure = this.treasures.get(nodeId);
+
+        if (receivedTreasure.getQuantity() < currentTreasure.getQuantity()) {
+          this.treasures.put(nodeId, receivedTreasure);
+        } else if (receivedTreasure.getQuantity() == currentTreasure.getQuantity()
+            && currentTreasure.getUpdateCounter() > receivedTreasure.getUpdateCounter()) {
+          this.treasures.put(nodeId, receivedTreasure);
+        }
       }
     }
-
     brain.notifyVisualization();
   }
 
   public synchronized void mergeAgents(Map<String, AgentData> receivedAgents) {
-    brain.log("AGENTS AT START:", this.agents.keySet());
     for (Map.Entry<String, AgentData> entry : receivedAgents.entrySet()) {
       String agentName = entry.getKey();
 
@@ -328,7 +334,6 @@ public class EntityTracker implements Serializable {
       if (!this.agents.containsKey(agentName)
           || this.agents.get(agentName).getUpdateCounter() > receivedAgent.getUpdateCounter()) {
         this.agents.put(agentName, receivedAgent);
-        brain.log("AFTER ADDING", agentName, this.agents.keySet());
       }
     }
 

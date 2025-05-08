@@ -1,14 +1,9 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.core.AID;
 import jade.core.Agent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Communication;
@@ -37,44 +32,44 @@ public class SetMeetingBehaviour extends OneShotBehaviour {
     Communication comms = brain.mind.getCommunication();
 
     if (comms.shouldSpeak()) {
-        String meetingPoint = brain.entities.getMyself().getMeetingPoint();
-        if (meetingPoint ==  null){
-            String currentPosition = brain.entities.getPosition();
-            meetingPoint = Computes.computeMyMeetingPoint(brain.map, 2.0, 1.5, currentPosition);
-        }
-        if (meetingPoint == null) {
-            return;
-        }
-        brain.entities.getMyself().setMeetingPoint(meetingPoint);
+      String meetingPoint = brain.entities.getMyself().getMeetingPoint();
+      if (meetingPoint == null) {
+        String currentPosition = brain.entities.getPosition();
+        meetingPoint = Computes.computeMyMeetingPoint(brain.map, 2.0, 1.5, currentPosition);
+      }
+      if (meetingPoint == null) {
+        return;
+      }
+      brain.entities.getMyself().setMeetingPoint(meetingPoint);
 
-        ACLMessage message = Utils.createACLMessage(
-            this.myAgent, PROTOCOL_NAME, comms.getFriend(), meetingPoint);
-        ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
+      ACLMessage message = Utils.createACLMessage(
+          this.myAgent, PROTOCOL_NAME, comms.getFriend(), meetingPoint);
+      ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
 
     } else {
-        MessageTemplate filter = MessageTemplate.and(
-            MessageTemplate.and(
-                MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                MessageTemplate.MatchProtocol(PROTOCOL_NAME)),
-            MessageTemplate.MatchSender(comms.getFriend()));
+      MessageTemplate filter = MessageTemplate.and(
+          MessageTemplate.and(
+              MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+              MessageTemplate.MatchProtocol(PROTOCOL_NAME)),
+          MessageTemplate.MatchSender(comms.getFriend()));
 
-        ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
+      ACLMessage message = this.myAgent.blockingReceive(filter, TIMEOUT);
 
-        if (message == null) {
-            return;
-        }
+      if (message == null) {
+        return;
+      }
 
-        String meetingPoint = null;
-        try {
-            meetingPoint = (String) message.getContentObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+      String meetingPoint = null;
+      try {
+        meetingPoint = (String) message.getContentObject();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return;
+      }
 
-        brain.entities.updateAgentMeetingPoint(comms.getFriend().getLocalName(), meetingPoint);
+      brain.entities.updateAgentMeetingPoint(comms.getFriend().getLocalName(), meetingPoint);
     }
-}
+  }
 
   @Override
   public int onEnd() {

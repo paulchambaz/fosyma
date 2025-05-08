@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import jade.core.Agent;
-import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.mas.knowledge.WorldMap;
@@ -60,7 +59,7 @@ public class CollectBehaviour extends OneShotBehaviour {
     return this.exitValue;
   }
 
-  public static String findOptimalTreasureNode(WorldMap map, EntityTracker entities, String currentPosition) {
+  public String findOptimalTreasureNode(WorldMap map, EntityTracker entities, String currentPosition) {
     AgentData agent = entities.getMyself();
     Observation agentTreasureType = agent.getTreasureType();
     Map<String, TreasureData> treasures = entities.getTreasures();
@@ -68,22 +67,24 @@ public class CollectBehaviour extends OneShotBehaviour {
     List<String> relevantTreasureNodes = new ArrayList<>();
     Map<String, Integer> treasureQuantities = new HashMap<>();
 
+    // brain.log("here are the treasures i found");
     for (Map.Entry<String, TreasureData> entry : treasures.entrySet()) {
       TreasureData treasure = entry.getValue();
+      // brain.log(entry.getKey());
 
       if (treasure.getQuantity() <= 0) {
+        // brain.log("quantity is 0 so skipping that treasure", treasure.getQuantity());
         continue;
       }
 
       if (treasure.getType() != agentTreasureType) {
+        // brain.log("type is not of my type so skipping that treasure",
+        // treasure.getType());
         continue;
       }
 
-      if (!agent.canPickTreasure(treasure.getPickStrength())) {
-        continue;
-      }
-
-      if (!agent.canPickTreasure(treasure.getLockStrength())) {
+      if (!agent.canCarryTreasure(treasure.getCarryStrength())) {
+        // brain.log("i cant pick that treasure so skip it", treasure.getType());
         continue;
       }
 

@@ -498,8 +498,8 @@ public class BrainVisualization {
           treasure.getValue().getType(),
           treasure.getValue().getQuantity(),
           treasure.getValue().isLocked() ? "true" : "false",
-          treasure.getValue().getLockStrength(),
-          treasure.getValue().getPickStrength())));
+          treasure.getValue().getCarryStrength(),
+          treasure.getValue().getLockpickStrength())));
     }
 
     if (snapshot.myself != null) {

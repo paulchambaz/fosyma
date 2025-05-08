@@ -12,7 +12,6 @@ import eu.su.mas.dedaleEtu.mas.knowledge.WorldMap;
 import eu.su.mas.dedaleEtu.mas.knowledge.EntityTracker;
 import eu.su.mas.dedaleEtu.mas.knowledge.SiloData;
 import eu.su.mas.dedaleEtu.mas.knowledge.TreasureData;
-import eu.su.mas.dedaleEtu.mas.knowledge.AgentData;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class LocateSiloBehaviour extends OneShotBehaviour {
@@ -33,25 +32,17 @@ public class LocateSiloBehaviour extends OneShotBehaviour {
 
     brain.observe(this.myAgent);
 
-    AgentData myself = brain.entities.getMyself();
     SiloData silo = brain.entities.getSilo();
 
     if (silo != null && silo.getPosition() != null) {
-      List<String> occupiedPositions = brain.entities.getOccupiedPositions();
-      List<String> path = brain.map.findShortestPath(myself.getPosition(), silo.getPosition(), occupiedPositions);
-      if (path == null || path.size() == 0) {
-        path = brain.map.findShortestPath(myself.getPosition(), silo.getPosition(), new ArrayList<>());
-      }
-      if (path == null || path.size() == 0) {
-        return;
-      }
-      String goal = path.getLast();
+      String goal = silo.getPosition();
       brain.mind.setTargetNode(goal);
     } else {
       String goal = findOptimalWaitingNode(brain.map, brain.entities, 2.0);
       brain.mind.setTargetNode(goal);
     }
 
+    brain.entities.ageEntities();
   }
 
   @Override

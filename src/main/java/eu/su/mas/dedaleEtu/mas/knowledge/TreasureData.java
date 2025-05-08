@@ -11,18 +11,18 @@ public class TreasureData implements Serializable {
   private int updateCounter; // counter since last update (not Unix timestamp)
   private int quantity; // available quantity
   private boolean isLocked; // lock state (true = locked, false = unlocked)
-  private int lockStrength; // needed strength to open the lock
-  private int pickStrength; // needed strength to carry the treasure
+  private int lockpickStrength; // needed strength to open the lock
+  private int carryStrength; // needed strength to carry the treasure
 
-  public TreasureData(String nodeId, Observation type, int quantity, boolean isLocked, int lockStrength,
-      int pickStrength) {
+  public TreasureData(String nodeId, Observation type, int quantity, boolean isLocked, int lockpickStrength,
+      int carryStrength) {
     this.nodeId = nodeId;
     this.type = type;
     this.updateCounter = 0;
     this.quantity = quantity;
     this.isLocked = isLocked;
-    this.lockStrength = lockStrength;
-    this.pickStrength = pickStrength;
+    this.lockpickStrength = lockpickStrength;
+    this.carryStrength = carryStrength;
   }
 
   public TreasureData(TreasureData o) {
@@ -31,8 +31,8 @@ public class TreasureData implements Serializable {
     this.updateCounter = o.getUpdateCounter();
     this.quantity = o.getQuantity();
     this.isLocked = o.isLocked();
-    this.lockStrength = o.getLockStrength();
-    this.pickStrength = o.getPickStrength();
+    this.lockpickStrength = o.getLockpickStrength();
+    this.carryStrength = o.getCarryStrength();
   }
 
   public String getNodeId() {
@@ -51,12 +51,12 @@ public class TreasureData implements Serializable {
     return isLocked;
   }
 
-  public int getLockStrength() {
-    return lockStrength;
+  public int getLockpickStrength() {
+    return lockpickStrength;
   }
 
-  public int getPickStrength() {
-    return pickStrength;
+  public int getCarryStrength() {
+    return carryStrength;
   }
 
   public int getUpdateCounter() {
@@ -71,12 +71,12 @@ public class TreasureData implements Serializable {
     this.isLocked = locked;
   }
 
-  public void setStrength(int lockstrength) {
-    this.lockStrength = lockstrength;
+  public void setLockpickStrength(int lockpickStrength) {
+    this.lockpickStrength = lockpickStrength;
   }
 
-  public void setLockpicking(int lockpicking) {
-    this.pickStrength = lockpicking;
+  public void setCarryStrength(int carryStrength) {
+    this.carryStrength = carryStrength;
   }
 
   public void setUpdateCounter(int counter) {

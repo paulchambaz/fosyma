@@ -24,6 +24,12 @@ public class AgentMind implements Serializable {
   private String targetNodeId;
   private Deque<String> pathToTarget;
 
+  private String metaTargetNodeId;
+
+  private CoordinationState coordinationState;
+  private String coordinationPartner;
+  private String coordinationTreasureNode;
+
   private final Brain brain;
 
   public AgentMind(Brain brain) {
@@ -34,6 +40,10 @@ public class AgentMind implements Serializable {
     this.stuckCounter = 0;
     this.targetNodeId = "";
     this.pathToTarget = new ArrayDeque<>();
+    this.metaTargetNodeId = "";
+    this.coordinationState = CoordinationState.NONE;
+    this.coordinationPartner = null;
+    this.coordinationTreasureNode = null;
   }
 
   public synchronized String getBehaviour() {
@@ -42,6 +52,7 @@ public class AgentMind implements Serializable {
 
   public synchronized void setBehaviour(String behaviour) {
     this.behaviour = behaviour;
+    // brain.log(behaviour);
     brain.notifyVisualization();
   }
 
@@ -162,5 +173,45 @@ public class AgentMind implements Serializable {
     if (path == null)
       return;
     this.pathToTarget = new ArrayDeque<>(path);
+  }
+
+  public synchronized String getMetaTargetNode() {
+    return this.metaTargetNodeId;
+  }
+
+  public synchronized void setMetaTargetNode(String nodeId) {
+    this.metaTargetNodeId = nodeId;
+    brain.notifyVisualization();
+  }
+
+  public synchronized CoordinationState getCoordinationState() {
+    return this.coordinationState;
+  }
+
+  public synchronized void setCoordinationState(CoordinationState state) {
+    this.coordinationState = state;
+    brain.notifyVisualization();
+  }
+
+  public synchronized String getCoordinationPartner() {
+    return this.coordinationPartner;
+  }
+
+  public synchronized void setCoordinationPartner(String agentName) {
+    this.coordinationPartner = agentName;
+    brain.notifyVisualization();
+  }
+
+  public synchronized String getCoordinationTreasureNode() {
+    return this.coordinationTreasureNode;
+  }
+
+  public synchronized void setCoordinationTreasureNode(String nodeId) {
+    this.coordinationTreasureNode = nodeId;
+    brain.notifyVisualization();
+  }
+
+  public synchronized boolean isCoordinating() {
+    return this.coordinationState != CoordinationState.NONE;
   }
 }

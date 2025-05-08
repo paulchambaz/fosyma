@@ -22,13 +22,17 @@ public class DropoffBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour("Dropoff");
     brain.observe(this.myAgent);
 
+    brain.log("i want to empty my backpack now");
+
     if (((AbstractDedaleAgent) this.myAgent).emptyMyBackPack("Silo")) {
       this.exitValue = 0;
     } else {
       this.exitValue = 1;
     }
 
-    this.brain.observe(this.myAgent);
+    brain.entities.getMyself().emptyBackpack();
+
+    brain.observe(this.myAgent);
   }
 
   @Override

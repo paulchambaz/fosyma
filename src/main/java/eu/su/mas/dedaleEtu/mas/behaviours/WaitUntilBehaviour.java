@@ -1,30 +1,23 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import java.util.List;
-import java.util.Deque;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
-import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class WaitUntilBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
 
-  private boolean initialized = false;
   private int exitValue = 0;
 
   private Brain brain;
-  private List<String> searchingAgents;
 
-  private long waitingTime;
-  private long checkTime;
+  private long waitingTime = 100;
 
-  public WaitUntilBehaviour(Agent agent, Brain brain, long waitingTime) {
+  public WaitUntilBehaviour(Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
-    this.waitingTime = waitingTime;
-    this.checkTime = 100;
+    this.waitingTime = 100;
   }
 
   @Override
@@ -32,18 +25,11 @@ public class WaitUntilBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour("Wait Until");
 
     this.brain.observe(this.myAgent);
+    this.brain.updateBackpack(this.myAgent);
 
-    Utils.waitFor(this.myAgent, this.checkTime);
-    this.waitingTime = this.waitingTime - this.checkTime;
+    Utils.waitFor(this.myAgent, this.waitingTime);
 
     brain.entities.ageEntities();
-    
-    if (this.waitingTime <= this.checkTime){
-      this.exitValue = 1;
-    }
-    else {
-      this.exitValue = 0;
-    } 
   }
 
   @Override
