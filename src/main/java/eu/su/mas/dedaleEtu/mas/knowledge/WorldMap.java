@@ -199,6 +199,19 @@ public class WorldMap implements Serializable {
         .orElse(null);
   }
 
+  public synchronized String findClosestNode(String startPosition, List<String> nodes, List<String> occupiedPositions){
+    return nodes.stream()
+        .map(node -> {
+          List<String> path = findShortestPath(startPosition, node, occupiedPositions);
+          int distance = (path != null) ? path.size() : Integer.MAX_VALUE;
+          return new Couple<>(node, distance);
+        })
+        .min(Comparator.comparing(pair -> pair.getRight()))
+        .map(pair -> pair.getLeft())
+        .orElse(null);
+  }
+
+
   public synchronized List<String> findPathToClosestOpenNode(String startPosition, List<String> occupiedPositions) {
     List<String> openNodes = getOpenNodes();
 

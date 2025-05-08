@@ -16,6 +16,12 @@ public class SiloData implements Serializable {
     this.meetingPoint = "";
   }
 
+  public SiloData(SiloData o) {
+    this.position = o.getPosition();
+    this.updateCounter = o.getUpdateCounter();
+    this.meetingPoint = o.getMeetingPoint();
+  }
+
   public void copy(SiloData silo) {
     this.position = silo.getPosition();
     this.updateCounter = silo.getUpdateCounter();
