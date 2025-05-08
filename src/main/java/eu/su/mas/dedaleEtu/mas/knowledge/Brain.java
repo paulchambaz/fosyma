@@ -69,9 +69,7 @@ public class Brain implements Serializable {
     List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) agent).observe();
 
     updateTopology(position, observations);
-    Map<String, String> observedAgents = processObservations(observations);
-    detectForgottenEntities(observedAgents);
-
+    processObservations(observations);
   }
 
   private void updateTopology(String position, List<Couple<Location, List<Couple<Observation, String>>>> observations) {
@@ -85,9 +83,12 @@ public class Brain implements Serializable {
     }
   }
 
-  private Map<String, String> processObservations(
+  private void processObservations(
       List<Couple<Location, List<Couple<Observation, String>>>> observations) {
+
     Map<String, String> observedAgents = new HashMap<>();
+    Map<String, Observation> observedTreasures = new HashMap<>();
+
     for (Couple<Location, List<Couple<Observation, String>>> entry : observations) {
       String accessibleNode = entry.getLeft().getLocationId();
       for (Couple<Observation, String> observation : entry.getRight()) {
@@ -102,6 +103,7 @@ public class Brain implements Serializable {
           case GOLD:
           case DIAMOND:
             processTreasureObservation(accessibleNode, observeKind, observed);
+            observedTreasures.put(accessibleNode, observeKind);
             break;
 
           case LOCKSTATUS:
@@ -122,7 +124,7 @@ public class Brain implements Serializable {
       }
     }
 
-    return observedAgents;
+    detectForgottenEntities(observedAgents, observedTreasures);
   }
 
   private void processAgentObservation(String agentName, String position, Map<String, String> observedAgents) {
@@ -157,10 +159,10 @@ public class Brain implements Serializable {
     entities.updateTreasureStrength(nodeId, treasureStrength);
   }
 
-  private void detectForgottenEntities(Map<String, String> observedAgents) {
-
+  private void detectForgottenEntities(Map<String, String> observedAgents, Map<String, Observation> observedTreasures) {
     Set<String> neighborhood = map.getNeighborhood(entities.getPosition());
 
+    // Original code for handling agents, silos, and golems
     Map<String, String> observedNeighborhood = new HashMap<>();
     for (Map.Entry<String, String> entry : observedAgents.entrySet()) {
       String agentName = entry.getKey();
@@ -175,7 +177,6 @@ public class Brain implements Serializable {
       String agentName = entry.getKey();
       AgentData agentData = entry.getValue();
       String position = agentData.getPosition();
-
       if (position != null && neighborhood.contains(position)) {
         expectedNeighborhood.put(position, agentName);
       }
@@ -198,10 +199,8 @@ public class Brain implements Serializable {
     for (Map.Entry<String, String> entry : expectedNeighborhood.entrySet()) {
       String position = entry.getKey();
       String expectedAgent = entry.getValue();
-
       if (!observedNeighborhood.containsKey(position) ||
           !observedNeighborhood.get(position).equals(expectedAgent)) {
-
         if (expectedAgent.equals("Silo")) {
           if (entities.getSilo().getUpdateCounter() > 10) {
             entities.getSilo().setPosition(null);
@@ -215,6 +214,35 @@ public class Brain implements Serializable {
           if (agentData != null && agentData.getUpdateCounter() > 10) {
             entities.loseAgentPosition(expectedAgent);
           }
+        }
+      }
+    }
+
+    Map<String, TreasureData> expectedTreasures = new HashMap<>();
+    for (Map.Entry<String, TreasureData> entry : entities.getTreasures().entrySet()) {
+      String nodeId = entry.getKey();
+      TreasureData treasure = entry.getValue();
+      if (neighborhood.contains(nodeId)) {
+        expectedTreasures.put(nodeId, treasure);
+      }
+    }
+
+    for (Map.Entry<String, TreasureData> entry : expectedTreasures.entrySet()) {
+      String nodeId = entry.getKey();
+      TreasureData treasure = entry.getValue();
+
+      if (!observedTreasures.containsKey(nodeId)) {
+        // Increment the update counter
+        treasure.incrementCounter();
+
+        if (treasure.getUpdateCounter() > 10) {
+          entities.loseTreasure(nodeId);
+        }
+      } else {
+        Observation observedType = observedTreasures.get(nodeId);
+        if (observedType != treasure.getType()) {
+          treasure.setType(observedType);
+          treasure.resetCounter();
         }
       }
     }

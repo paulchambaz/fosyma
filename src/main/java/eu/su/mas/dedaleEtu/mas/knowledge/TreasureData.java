@@ -43,6 +43,10 @@ public class TreasureData implements Serializable {
     return type;
   }
 
+  public void setType(Observation type) {
+    this.type = type;
+  }
+
   public int getQuantity() {
     return quantity;
   }

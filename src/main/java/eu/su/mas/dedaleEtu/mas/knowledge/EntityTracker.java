@@ -166,6 +166,13 @@ public class EntityTracker implements Serializable {
     }
   }
 
+  public synchronized void loseTreasure(String nodeId) {
+    if (treasures.containsKey(nodeId)) {
+      treasures.remove(nodeId);
+      brain.notifyVisualization();
+    }
+  }
+
   public synchronized void updateAgentMeetingPoint(String agentName, String meetingPoint) {
     if (this.agents.containsKey(agentName)) {
       AgentData agent = this.agents.get(agentName);
