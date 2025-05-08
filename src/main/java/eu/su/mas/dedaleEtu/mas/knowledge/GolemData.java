@@ -13,6 +13,11 @@ public class GolemData implements Serializable {
     this.updateCounter = 0;
   }
 
+  public GolemData(GolemData o) {
+    this.position = o.getPosition();
+    this.updateCounter = o.getUpdateCounter();
+  }
+
   public void copy(GolemData golem) {
     this.position = golem.getPosition();
     this.updateCounter = golem.getUpdateCounter();

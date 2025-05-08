@@ -19,8 +19,8 @@ public class EntityTracker implements Serializable {
 
   private Map<String, TreasureData> treasures;
   private Map<String, AgentData> agents;
-  private SiloData silo;
-  private GolemData golem;
+  private Map<String, SiloData> silos;
+  private Map<String, GolemData> golems;
 
   private Map<String, Set<String>> agentKnownNodes;
 
@@ -29,8 +29,8 @@ public class EntityTracker implements Serializable {
     this.myself = null;
     this.treasures = new HashMap<>();
     this.agents = new HashMap<>();
-    this.silo = null;
-    this.golem = null;
+    this.silos = new HashMap<>();
+    this.golems = new HashMap<>();
     this.agentKnownNodes = new HashMap<>();
   }
 
@@ -46,12 +46,12 @@ public class EntityTracker implements Serializable {
     return this.agents;
   }
 
-  public synchronized SiloData getSilo() {
-    return this.silo;
+  public synchronized Map<String, SiloData> getSilos() {
+    return this.silos;
   }
 
-  public synchronized GolemData getGolem() {
-    return this.golem;
+  public synchronized Map<String, GolemData> getGolems() {
+    return this.golems;
   }
 
   public synchronized String getPosition() {
@@ -152,18 +152,42 @@ public class EntityTracker implements Serializable {
     }
   }
 
-  public synchronized void loseSiloPosition() {
-    if (silo != null) {
+  public synchronized void loseSiloPosition(String siloName) {
+    if (this.silos.containsKey(siloName)) {
+      SiloData silo = this.silos.get(siloName);
       silo.setPosition(null);
       brain.notifyVisualization();
     }
   }
 
-  public synchronized void loseGolemPosition() {
-    if (golem != null) {
+  public synchronized void loseGolemPosition(String golemName) {
+    if (this.golems.containsKey(golemName)) {
+      GolemData golem = this.golems.get(golemName);
       golem.setPosition(null);
       brain.notifyVisualization();
     }
+  }
+
+  public synchronized SiloData getClosestSilo(){
+    List<String> siloPositions = new ArrayList<>();
+    String closestSiloName = null;
+    SiloData closestSilo = this.silos.get(0);
+    for (SiloData silo : this.silos.values()) {
+      String siloPosition = silo.getPosition();
+      if (siloPosition != null){
+        siloPositions.add(siloPosition);
+      } 
+    }
+    if (!(siloPositions.isEmpty())){
+      closestSiloName = this.brain.findClosestNode(siloPositions, false);
+    }
+    for (SiloData silo : this.silos.values()) {
+      String siloPosition = silo.getPosition();
+      if ((siloPosition == closestSiloName) && siloPosition != null){
+        closestSilo = new SiloData(silo);
+      } 
+    }
+    return closestSilo;
   }
 
   public synchronized void updateAgentMeetingPoint(String agentName, String meetingPoint) {
@@ -171,9 +195,9 @@ public class EntityTracker implements Serializable {
       AgentData agent = this.agents.get(agentName);
       agent.setMeetingPoint(meetingPoint);
       agent.resetCounter();
-    } else if (agentName.startsWith("Silo") && silo != null) {
-      silo.setMeetingPoint(meetingPoint);
-      silo.resetCounter();
+    } else if (agentName.startsWith("Silo") && (this.silos.containsKey(agentName))) {
+      this.silos.get(agentName).setMeetingPoint(meetingPoint);
+      this.silos.get(agentName).resetCounter();
     }
     brain.notifyVisualization();
   }
@@ -262,37 +286,41 @@ public class EntityTracker implements Serializable {
         .orElse(null);
   }
 
-  public synchronized void setSiloPosition(String nodeId) {
-    if (silo == null) {
-      this.silo = new SiloData(nodeId);
+  public synchronized void setSiloPosition(String silo, String nodeId) {
+    if (!(silos.containsKey(silo))) {
+      this.silos.put(silo, new SiloData(nodeId));
     } else {
-      this.silo.setPosition(nodeId);
-      this.silo.resetCounter();
+      this.silos.get(silo).setPosition(nodeId);
+      this.silos.get(silo).resetCounter();
     }
     brain.notifyVisualization();
   }
 
   private void ageSiloData() {
-    if (this.silo != null) {
-      this.silo.incrementCounter();
-      brain.notifyVisualization();
-    }
+    if (!(this.silos.isEmpty())) {
+      for (SiloData entry : this.silos.values()) {
+        entry.incrementCounter();
+        brain.notifyVisualization();
+      }
+    }  
   }
 
-  public synchronized void setGolemPosition(String nodeId) {
-    if (this.golem == null) {
-      this.golem = new GolemData(nodeId);
+  public synchronized void setGolemPosition(String golem, String nodeId) {
+    if (!(golems.containsKey(golem))) {
+      this.golems.put(golem, new GolemData(nodeId));
     } else {
-      this.golem.setPosition(nodeId);
-      this.golem.resetCounter();
+      this.golems.get(golem).setPosition(nodeId);
+      this.golems.get(golem).resetCounter();
     }
     brain.notifyVisualization();
   }
 
   private void ageGolemData() {
-    if (this.golem != null) {
-      this.golem.incrementCounter();
-      brain.notifyVisualization();
+    if (!(this.golems.isEmpty())) {
+      for (GolemData entry : this.golems.values()) {
+        entry.incrementCounter();
+        brain.notifyVisualization();
+      }
     }
   }
 
@@ -328,7 +356,7 @@ public class EntityTracker implements Serializable {
     for (Map.Entry<String, AgentData> entry : receivedAgents.entrySet()) {
       String agentName = entry.getKey();
 
-      if (agentName.equals(brain.name) || agentName.equals("Silo") || agentName.equals("Golem")) {
+      if (agentName.equals(brain.name) || agentName.startsWith("Silo") || agentName.startsWith("Golem")) {
         continue;
       }
 
@@ -343,33 +371,40 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public synchronized void mergeSilo(SiloData receivedSilo) {
-    if (receivedSilo == null) {
+  public synchronized void mergeSilos(Map<String, SiloData> receivedSilos) {
+    if (receivedSilos.isEmpty()){
       return;
     }
+    for (Map.Entry<String, SiloData> entry : receivedSilos.entrySet()) {
+      String siloName = entry.getKey();
 
-    if (brain.name.equals("Silo")) {
-      return;
-    }
+      if (brain.name.startsWith("Silo")) {
+        return;
+      }
 
-    if (this.silo == null) {
-      this.silo = receivedSilo;
-    } else if (this.silo.getUpdateCounter() > receivedSilo.getUpdateCounter()) {
-      this.silo.copy(receivedSilo);
+      SiloData receivedSilo = new SiloData(entry.getValue());
+
+      if (!this.silos.containsKey(siloName)
+          || this.silos.get(siloName).getUpdateCounter() > receivedSilo.getUpdateCounter()) {
+        this.silos.put(siloName, receivedSilo);
+      }
     }
 
     brain.notifyVisualization();
   }
 
-  public synchronized void mergeGolem(GolemData receivedGolem) {
-    if (receivedGolem == null) {
+  public synchronized void mergeGolems(Map<String, GolemData> receivedGolems) {
+    if (receivedGolems.isEmpty()){
       return;
     }
+    for (Map.Entry<String, GolemData> entry : receivedGolems.entrySet()) {
+      String golemName = entry.getKey();
+      GolemData receivedGolem = new GolemData(entry.getValue());
 
-    if (this.golem == null) {
-      this.golem = receivedGolem;
-    } else if (this.golem.getUpdateCounter() > receivedGolem.getUpdateCounter()) {
-      this.golem.copy(receivedGolem);
+      if (!this.golems.containsKey(golemName)
+          || this.golems.get(golemName).getUpdateCounter() > receivedGolem.getUpdateCounter()) {
+        this.golems.put(golemName, receivedGolem);
+      }
     }
 
     brain.notifyVisualization();
@@ -385,15 +420,15 @@ public class EntityTracker implements Serializable {
       }
     }
 
-    if (silo != null) {
+    for (SiloData silo : this.silos.values()) {
       String siloPosition = silo.getPosition();
       if (siloPosition != null) {
         occupiedPositions.add(siloPosition);
       }
     }
 
-    if (golem != null) {
-      String golemPosition = silo.getPosition();
+    for (GolemData golem : this.golems.values()) {
+      String golemPosition = golem.getPosition();
       if (golemPosition != null) {
         occupiedPositions.add(golemPosition);
       }

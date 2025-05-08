@@ -210,8 +210,8 @@ public class BrainVisualization {
     snapshot.pathToTarget = new ArrayList<>(brain.mind.getPathToTarget());
     snapshot.treasures = new HashMap<>(brain.entities.getTreasures());
     snapshot.agents = new HashMap<>(brain.entities.getAgents());
-    snapshot.silo = brain.entities.getSilo();
-    snapshot.golem = brain.entities.getGolem();
+    snapshot.silos = new HashMap<>(brain.entities.getSilos());
+    snapshot.golems = new HashMap<>(brain.entities.getGolems());
     snapshot.behaviour = brain.mind.getBehaviour();
     snapshot.communication = brain.mind.getCommunication();
     snapshot.explorationPriority = brain.mind.getExplorationPriority();
@@ -351,9 +351,21 @@ public class BrainVisualization {
           break;
         }
       }
+      String siloHere = null;
+      for (Map.Entry<String, SiloData> entry : snapshot.silos.entrySet()) {
+        if (nodeId.equals(entry.getValue().getPosition())) {
+          siloHere = entry.getKey();
+          break;
+        }
+      }
+      String golemHere = null;
+      for (Map.Entry<String, GolemData> entry : snapshot.golems.entrySet()) {
+        if (nodeId.equals(entry.getValue().getPosition())) {
+          golemHere = entry.getKey();
+          break;
+        }
+      }
 
-      boolean isSilo = snapshot.silo != null && nodeId.equals(snapshot.silo.getPosition());
-      boolean isGolem = snapshot.golem != null && nodeId.equals(snapshot.golem.getPosition());
       boolean isCurrentPosition = nodeId.equals(snapshot.myself.getPosition());
       boolean isCurrentTarget = nodeId.equals(snapshot.targetNode);
 
@@ -373,10 +385,10 @@ public class BrainVisualization {
         String entityInfo = "";
         if (agentHere != null) {
           entityInfo = agentHere;
-        } else if (isGolem) {
-          entityInfo = "Golem";
-        } else if (isSilo) {
-          entityInfo = "Silo";
+        } else if (golemHere != null) {
+          entityInfo = golemHere;
+        } else if (siloHere != null) {
+          entityInfo = siloHere;
         }
 
         if (hasTreasure) {
@@ -405,25 +417,25 @@ public class BrainVisualization {
         } else {
           node.setAttribute("ui.label", String.format("%s %s", nodeId, agentHere));
         }
-      } else if (isGolem) {
+      } else if (golemHere != null) {
         node.setAttribute("ui.class", "golem");
 
         if (hasTreasure) {
           TreasureData treasure = snapshot.treasures.get(nodeId);
           node.setAttribute("ui.label", String.format(
-              "%s %s - %s (%d)", nodeId, "Golem", treasure.getType(), treasure.getQuantity()));
+              "%s %s - %s (%d)", nodeId, golemHere, treasure.getType(), treasure.getQuantity()));
         } else {
-          node.setAttribute("ui.label", String.format("%s %s", nodeId, "Golem"));
+          node.setAttribute("ui.label", String.format("%s %s", nodeId, golemHere));
         }
-      } else if (isSilo) {
+      } else if (siloHere != null) {
         node.setAttribute("ui.class", "silo");
 
         if (hasTreasure) {
           TreasureData treasure = snapshot.treasures.get(nodeId);
           node.setAttribute("ui.label", String.format(
-              "%s %s - %s (%d)", nodeId, "Silo", treasure.getType(), treasure.getQuantity()));
+              "%s %s - %s (%d)", nodeId, siloHere, treasure.getType(), treasure.getQuantity()));
         } else {
-          node.setAttribute("ui.label", String.format("%s %s", nodeId, "Silo"));
+          node.setAttribute("ui.label", String.format("%s %s", nodeId, siloHere));
         }
       } else if (hasTreasure) {
         node.setAttribute("ui.class", "treasure");
@@ -525,18 +537,20 @@ public class BrainVisualization {
           agent.getValue().getTreasureType())));
     }
 
-    if (snapshot.silo != null) {
+    for (Map.Entry<String, SiloData> silo : snapshot.silos.entrySet()) {
       entities.add(new Label(String.format(
-          "Silo - position: %s, age: %d",
-          snapshot.silo.getPosition(),
-          snapshot.silo.getUpdateCounter())));
+          "%s - position: %s, age: %d",
+          silo.getKey(),
+          silo.getValue().getPosition(),
+          silo.getValue().getUpdateCounter())));
     }
 
-    if (snapshot.golem != null) {
+    for (Map.Entry<String, GolemData> golem : snapshot.golems.entrySet()) {
       entities.add(new Label(String.format(
-          "Golem - position: %s, age: %d",
-          snapshot.golem.getPosition(),
-          snapshot.golem.getUpdateCounter())));
+          "%s - position: %s, age: %d",
+          golem.getKey(),
+          golem.getValue().getPosition(),
+          golem.getValue().getUpdateCounter())));
     }
 
     entitiesSection.getChildren().clear();
@@ -626,8 +640,8 @@ public class BrainVisualization {
     public List<String> pathToTarget;
     public Map<String, TreasureData> treasures;
     public Map<String, AgentData> agents;
-    public SiloData silo;
-    public GolemData golem;
+    public Map<String, SiloData> silos;
+    public Map<String, GolemData> golems;
 
     public Communication communication;
     public String behaviour;

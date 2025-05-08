@@ -175,8 +175,15 @@ public class Principal {
       createExploreAgent(agentContainer, agent, otherAgentsArray, agentList);
     }
 
-    createSiloAgent(agentContainer, agentList);
-    // createGolemAgent(agentContainer, agentList);
+    List<String> siloAgents = Arrays.asList("Silo");
+    for (String agent : siloAgents) {
+      createSiloAgent(agentContainer, agent, agentList);
+    }
+
+    List<String> golemAgents = Arrays.asList("Golem1", "Golem2");
+    for (String agent : golemAgents) {
+      createGolemAgent(agentContainer, agent, agentList);
+    }
 
     System.out.println("Agents created...");
     return agentList;
@@ -232,12 +239,12 @@ public class Principal {
   }
 
   private static void createSiloAgent(
-      ContainerController container,
+      ContainerController container, String agentName,
       List<AgentController> agentList) {
     try {
       AgentController siloAgent = createNewDedaleAgent(
           container,
-          "Silo",
+          agentName,
           FsmSiloAgent.class.getName(),
           new Object[] {});
       agentList.add(siloAgent);
@@ -250,12 +257,12 @@ public class Principal {
   }
 
   private static void createGolemAgent(
-      ContainerController container,
+      ContainerController container, String agentName,
       List<AgentController> agentList) {
     try {
       AgentController golemAgent = createNewDedaleAgent(
           container,
-          "Golem",
+          agentName,
           DummyWumpusAgent.class.getName(),
           new Object[] {});
       agentList.add(golemAgent);

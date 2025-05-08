@@ -48,6 +48,12 @@ public class Brain implements Serializable {
     return map.findClosestOpenNode(position, (excludeOccupied) ? occupiedPositions : new ArrayList<>());
   }
 
+  public synchronized String findClosestNode(List<String> nodes, boolean excludeOccupied) {
+    String position = this.entities.getPosition();
+    List<String> occupiedPositions = this.entities.getOccupiedPositions();
+    return map.findClosestNode(position, nodes, (excludeOccupied) ? occupiedPositions : new ArrayList<>());
+  }
+
   public synchronized void computePathToTarget(boolean excludeOccupied) {
     String position = this.entities.getPosition();
     String target = this.mind.getTargetNode();
@@ -129,9 +135,9 @@ public class Brain implements Serializable {
     observedAgents.put(agentName, position);
 
     if (agentName.startsWith("Silo")) {
-      entities.setSiloPosition(position);
+      entities.setSiloPosition(agentName, position);
     } else if (agentName.startsWith("Golem")) {
-      entities.setGolemPosition(position);
+      entities.setGolemPosition(agentName, position);
     } else {
       entities.updateAgentPosition(agentName, position);
     }
@@ -171,9 +177,9 @@ public class Brain implements Serializable {
     }
 
     Map<String, String> expectedNeighborhood = new HashMap<>();
-    for (Map.Entry<String, AgentData> entry : entities.getAgents().entrySet()) {
-      String agentName = entry.getKey();
-      AgentData agentData = entry.getValue();
+    for (Map.Entry<String, AgentData> agent : entities.getAgents().entrySet()) {
+      String agentName = agent.getKey();
+      AgentData agentData = agent.getValue();
       String position = agentData.getPosition();
 
       if (position != null && neighborhood.contains(position)) {
@@ -181,17 +187,23 @@ public class Brain implements Serializable {
       }
     }
 
-    if (entities.getSilo() != null && entities.getSilo().getPosition() != null) {
-      String siloPosition = entities.getSilo().getPosition();
-      if (neighborhood.contains(siloPosition)) {
-        expectedNeighborhood.put(siloPosition, "Silo");
+    for (Map.Entry<String, SiloData> silo : entities.getSilos().entrySet()) {
+      String siloName = silo.getKey();
+      SiloData siloData = silo.getValue();
+      String position = siloData.getPosition();
+
+      if (position != null && neighborhood.contains(position)) {
+        expectedNeighborhood.put(position, siloName);
       }
     }
 
-    if (entities.getGolem() != null && entities.getGolem().getPosition() != null) {
-      String golemPosition = entities.getGolem().getPosition();
-      if (neighborhood.contains(golemPosition)) {
-        expectedNeighborhood.put(golemPosition, "Golem");
+    for (Map.Entry<String, GolemData> golem : entities.getGolems().entrySet()) {
+      String golemName = golem.getKey();
+      GolemData golemData = golem.getValue();
+      String position = golemData.getPosition();
+
+      if (position != null && neighborhood.contains(position)) {
+        expectedNeighborhood.put(position, golemName);
       }
     }
 
@@ -202,13 +214,15 @@ public class Brain implements Serializable {
       if (!observedNeighborhood.containsKey(position) ||
           !observedNeighborhood.get(position).equals(expectedAgent)) {
 
-        if (expectedAgent.equals("Silo")) {
-          if (entities.getSilo().getUpdateCounter() > 10) {
-            entities.getSilo().setPosition(null);
+        if (expectedAgent.startsWith("Silo")) {
+          SiloData siloData = entities.getSilos().get(expectedAgent);
+          if (siloData != null && siloData.getUpdateCounter() > 10) {
+            siloData.setPosition(null);
           }
-        } else if (expectedAgent.equals("Golem")) {
-          if (entities.getGolem().getUpdateCounter() > 10) {
-            entities.getGolem().setPosition(null);
+        } else if (expectedAgent.startsWith("Golem")) {
+          GolemData golemData = entities.getGolems().get(expectedAgent);
+          if (golemData != null && golemData.getUpdateCounter() > 10) {
+            golemData.setPosition(null);
           }
         } else {
           AgentData agentData = entities.getAgents().get(expectedAgent);
@@ -271,8 +285,8 @@ public class Brain implements Serializable {
     map.mergeWithReceivedMap(serializedBrain.getGraph());
     entities.mergeAgents(serializedBrain.getAgents());
     entities.mergeTreasures(serializedBrain.getTreasures());
-    entities.mergeSilo(serializedBrain.getSilo());
-    entities.mergeGolem(serializedBrain.getGolem());
+    entities.mergeSilos(serializedBrain.getSilos());
+    entities.mergeGolems(serializedBrain.getGolems());
   }
 
   public synchronized void log(Object... args) {

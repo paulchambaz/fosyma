@@ -12,8 +12,8 @@ public class SerializableBrain implements Serializable {
   private SerializableSimpleGraph<String, MapAttribute> serializableGraph;
   private Map<String, AgentData> agents;
   private Map<String, TreasureData> treasures;
-  private SiloData silo;
-  private GolemData golem;
+  private Map<String, SiloData> silos;
+  private Map<String, GolemData> golems;
 
   public SerializableBrain(Brain brain) {
     this.serializableGraph = brain.map.getSerializableGraph();
@@ -21,8 +21,8 @@ public class SerializableBrain implements Serializable {
     this.agents.put(brain.name, brain.entities.getMyself());
 
     this.treasures = new HashMap<>(brain.entities.getTreasures());
-    this.silo = brain.entities.getSilo();
-    this.golem = brain.entities.getGolem();
+    this.silos = new HashMap<>(brain.entities.getSilos());
+    this.golems = new HashMap<>(brain.entities.getGolems());
   }
 
   public void setGraph(SerializableSimpleGraph<String, MapAttribute> graph) {
@@ -41,11 +41,11 @@ public class SerializableBrain implements Serializable {
     return this.treasures;
   }
 
-  public SiloData getSilo() {
-    return this.silo;
+  public Map<String, SiloData> getSilos() {
+    return this.silos;
   }
 
-  public GolemData getGolem() {
-    return this.golem;
+  public Map<String, GolemData> getGolems() {
+    return this.golems;
   }
 }

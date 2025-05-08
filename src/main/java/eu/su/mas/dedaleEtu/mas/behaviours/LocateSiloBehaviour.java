@@ -32,7 +32,7 @@ public class LocateSiloBehaviour extends OneShotBehaviour {
 
     brain.observe(this.myAgent);
 
-    SiloData silo = brain.entities.getSilo();
+    SiloData silo = brain.entities.getClosestSilo();
 
     if (silo != null && silo.getPosition() != null) {
       String goal = silo.getPosition();

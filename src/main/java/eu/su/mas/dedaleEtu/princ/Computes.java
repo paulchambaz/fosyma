@@ -213,14 +213,24 @@ public class Computes {
       }
     }
 
-    SiloData silo = entities.getSilo();
-    if (silo != null && neighborNodeIds.contains(silo.getPosition())) {
-      neighborhoodAgents.add("Silo");
+    Map<String, SiloData> silos = entities.getSilos();
+    for (Map.Entry<String, SiloData> entry : silos.entrySet()) {
+      String siloName = entry.getKey();
+      String siloPosition = entry.getValue().getPosition();
+
+      if (neighborNodeIds.contains(siloPosition)) {
+        neighborhoodAgents.add(siloName);
+      }
     }
 
-    GolemData golem = entities.getGolem();
-    if (golem != null && neighborNodeIds.contains(golem.getPosition())) {
-      neighborhoodAgents.add("Golem");
+    Map<String, GolemData> golems = entities.getGolems();
+    for (Map.Entry<String, GolemData> entry : golems.entrySet()) {
+      String golemName = entry.getKey();
+      String golemPosition = entry.getValue().getPosition();
+
+      if (neighborNodeIds.contains(golemPosition)) {
+        neighborhoodAgents.add(golemName);
+      }
     }
 
     return neighborhoodAgents;

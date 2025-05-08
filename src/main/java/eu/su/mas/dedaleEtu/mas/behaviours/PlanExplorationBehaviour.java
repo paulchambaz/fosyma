@@ -83,8 +83,8 @@ public class PlanExplorationBehaviour extends OneShotBehaviour {
 
     String friendPosition = null;
     if (friendName.equals("Silo")) {
-      if (brain.entities.getSilo() != null) {
-        friendPosition = brain.entities.getSilo().getPosition();
+      if (brain.entities.getClosestSilo() != null) {
+        friendPosition = brain.entities.getClosestSilo().getPosition();
       } else {
         return null;
       }
