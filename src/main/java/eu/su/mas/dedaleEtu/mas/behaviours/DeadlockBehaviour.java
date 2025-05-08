@@ -1,6 +1,10 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.List;
+import java.util.Random;
+
+import org.graphstream.graph.Graph;
+
 import java.util.ArrayList;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
@@ -23,21 +27,56 @@ public class DeadlockBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour("Deadlock");
     brain.observe(this.myAgent);
 
-    String goal;
-    do {
+    String position = brain.entities.getPosition();
+    List<String> occupiedPositions = brain.entities.getOccupiedPositions();
+    int maxDistance = Math.max(brain.mind.getStuckCounter(), 10); // Use at least 10 as minimum distance
+
+    String goal = findNodeWithinDistance(position, occupiedPositions, maxDistance);
+
+    if (goal != null) {
+      brain.mind.setTargetNode(goal);
+      brain.mind.resetStuckCounter();
+    } else {
       goal = brain.findRandomNode();
-
-      String position = brain.entities.getPosition();
-
-      List<String> path = brain.map.findShortestPath(position, goal, new ArrayList<>());
-      if (!path.isEmpty()) {
-        break;
+      if (goal != null) {
+        brain.mind.setTargetNode(goal);
+        brain.mind.resetStuckCounter();
+      } else {
+        this.exitValue = 1;
+        return;
       }
-    } while (true);
+    }
 
-    // brain.log("i was stuck so im going to", goal);
-    brain.mind.setTargetNode(goal);
-    brain.mind.resetStuckCounter();
+    this.exitValue = 0;
+  }
+
+  private String findNodeWithinDistance(String startPosition, List<String> occupiedPositions, int maxDistance) {
+    Graph navigableGraph = brain.map.createNavigableGraph(occupiedPositions);
+
+    List<String> allNodeIds = new ArrayList<>();
+    navigableGraph.nodes().forEach(node -> allNodeIds.add(node.getId()));
+
+    List<String> reachableNodes = new ArrayList<>();
+
+    for (String nodeId : allNodeIds) {
+      if (nodeId.equals(startPosition)) {
+        continue;
+      }
+
+      List<String> path = brain.map.findShortestPath(startPosition, nodeId, occupiedPositions);
+
+      if (path != null && path.size() <= maxDistance) {
+        reachableNodes.add(nodeId);
+      }
+    }
+
+    if (!reachableNodes.isEmpty()) {
+      Random random = new Random();
+      int index = random.nextInt(reachableNodes.size());
+      return reachableNodes.get(index);
+    }
+
+    return null;
   }
 
   @Override
