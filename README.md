@@ -1,35 +1,75 @@
-# Welcome to the Dedale project.
+# Multi-Agent Treasure Hunt System
+
+A cooperative multi-agent system for exploration and treasure collection in unknown environments using JADE platform, developed for the "Fondement des Systèmes Multi-Agents" (FoSyMa) course at Sorbonne University, Master 1 ANDROIDE.
+
+## About the Project
+
+This project implements a cooperative multi-agent system for exploring unknown environments and collecting resources efficiently. Inspired by the classic "Hunt the Wumpus" game, it tackles fundamental challenges in multi-agent systems:
+
+- Exploration of unknown topologies through frontier-based approaches
+- Communication under proximity constraints
+- Coordination for tasks requiring multiple agents
+- Resource collection and management in dynamic environments
+- Handling adversarial entities (Golems)
+
+The implementation uses a sophisticated Finite State Machine (FSM) architecture to manage agent behaviors, with separate strategies for exploration, collection, and coordination roles.
+
+## Key Features
+
+- **Modular Brain Architecture**:
+
+  - AgentMind: Decision-making, behavioral state management
+  - WorldMap: Topological knowledge representation, path planning
+  - EntityTracker: Entity monitoring with aging mechanism for uncertainty
+
+- **Robust Communication**:
+
+  - Three-phase handshake protocol ensuring reliable connections
+  - Incremental knowledge sharing to minimize communication overhead
+  - Priority-based message handling
+
+- **Advanced Algorithms**:
+
+  - Min-Max Regret for balanced multi-criteria decision making
+  - Adaptive deadlock resolution with expanding search radius
+  - Leader-follower coordination for chest opening
+
+- **Specialized Agent Types**:
+
+  - Collector agents (59-state FSM) for resource management
+  - Explorer agents (26-state FSM) for efficient mapping
+  - Silo agents (18-state FSM) for resource storage
 
 ## Usage
 
-To run the program, please run :
+To run the program:
 
 ```sh
 mvn -q compile exec:java -Dexec.mainClass="eu.su.mas.dedaleEtu.princ.Principal" -Dexec.args="{{ ARGS }}"
 ```
 
-Or, if you have `just` :
+Or, if you have `just`:
 
 ```sh
 just run
 ```
 
+## Features
 
-## On dedale
+- **Exploration**: Frontier-based approach with probabilistic territory allocation
+- **Communication**: Three-phase handshake protocol with priority management
+- **Coordination**: Leader-follower dynamics with waypoint guidance
+- **Collection**: Multi-criteria resource selection and backpack management
 
-This project is developed at Sorbonne University, Paris, France. It is used in both research and teaching activities. Considering the later, during the FoSyMa course (from the French “Fondement des Systèmes Multi-Agents”) as a practical application of Multi-Agents Systems (MAS). 
-It allows Master's students to obtain a first-hand experience of some of the nice (and sometimes difficult) characteristics that comes with agents and distributed systems :
- - distribution and asynchronism (system and communication),
- - autonomy, decision and coordination in uncertain and partially observable environments
+## Authors
 
-**Your goal here is "simple", you have to conceive and implement the behaviours of a team of heterogeneous agents that have to explore an unknown environment and coordinate themselves to reach a given goal** :
- - To collect the maximum amount of treasure in a given time frame.
- - To hunt the Golem(s)
- - To patrol an area
- - To pick and deliver packages
- 
-while facing, or not, other teams.
+- [Paul Chambaz](https://www.linkedin.com/in/paul-chambaz-17235a158/)
+- [William Sardon](https://github.com/williamsardon)
 
-This game is initally inspired by the famous "Hunt the Wumpus"  of [Gregory Yob](https://en.wikipedia.org/wiki/Gregory_Yob).
+## Acknowledgements
 
-For more details, see Dedale's website : https://dedale.gitlab.io/
+This project was developed for the "Fondement des Systèmes Multi-Agents" course at Sorbonne University, based on the Dedale platform created for teaching and research purposes.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the LICENSE file for details.
