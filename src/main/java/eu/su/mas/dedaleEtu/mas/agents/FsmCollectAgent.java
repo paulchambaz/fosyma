@@ -155,7 +155,8 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     // Drop behaviours
     fsmBehaviour.registerState(new LocateSiloBehaviour(DROP_LOCATE_SILO, this, this.brain), DROP_LOCATE_SILO);
     fsmBehaviour.registerState(
-        new GoToUntilBehaviour(DROP_GOTO_SILO, this, this.brain, new ArrayList<>(Arrays.asList("Silo"))),
+        new GoToUntilBehaviour(DROP_GOTO_SILO, this, this.brain,
+            new ArrayList<>(Arrays.asList("Silo", "Silo1", "Silo2"))),
         DROP_GOTO_SILO);
     fsmBehaviour.registerState(new DeadlockBehaviour(DROP_DEADLOCK, this, this.brain), DROP_DEADLOCK);
     fsmBehaviour

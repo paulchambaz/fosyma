@@ -45,7 +45,18 @@
   },
   {
     "agentType": "agentTanker",
-    "agentName": "Silo",
+    "agentName": "Silo1",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 10000,
+    "backPackCapacityDiamond": 10000,
+    "detectionRadius": 0,
+    "strengthExpertise": 1,
+    "lockPickingExpertise": 1
+  },
+  {
+    "agentType": "agentTanker",
+    "agentName": "Silo2",
     "communicationRange": 3,
     "initialLocation": "free",
     "backPackCapacityGold": 10000,

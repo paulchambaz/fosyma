@@ -58,6 +58,24 @@ public class Utils {
     }
   }
 
+  public static List<AID> getSilos(Agent agent) {
+    try {
+      SearchConstraints constraints = new SearchConstraints();
+      constraints.setMaxResults(Long.valueOf(-1));
+      AMSAgentDescription[] catalog = AMSService.search(agent, new AMSAgentDescription(), constraints);
+      AID selfID = agent.getAID();
+      return Arrays.stream(catalog)
+          .map(AMSAgentDescription::getName)
+          .filter(aid -> !aid.equals(selfID))
+          .filter(aid -> aid.getLocalName().startsWith("Silo"))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      System.out.println("Problem searching AMS");
+      e.printStackTrace();
+      return new ArrayList<>();
+    }
+  }
+
   public static float lerp(float a, float b, float t) {
     return (1 - t) * a + t * b;
   }

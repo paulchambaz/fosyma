@@ -175,7 +175,7 @@ public class Principal {
       createExploreAgent(agentContainer, agent, otherAgentsArray, agentList);
     }
 
-    List<String> siloAgents = Arrays.asList("Silo");
+    List<String> siloAgents = Arrays.asList("Silo1", "Silo2");
     for (String agent : siloAgents) {
       createSiloAgent(agentContainer, agent, agentList);
     }
