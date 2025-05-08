@@ -1,5 +1,22 @@
 # Welcome to the Dedale project.
 
+## Usage
+
+To run the program, please run :
+
+```sh
+mvn -q compile exec:java -Dexec.mainClass="eu.su.mas.dedaleEtu.princ.Principal" -Dexec.args="{{ ARGS }}"
+```
+
+Or, if you have `just` :
+
+```sh
+just run
+```
+
+
+## On dedale
+
 This project is developed at Sorbonne University, Paris, France. It is used in both research and teaching activities. Considering the later, during the FoSyMa course (from the French “Fondement des Systèmes Multi-Agents”) as a practical application of Multi-Agents Systems (MAS). 
 It allows Master's students to obtain a first-hand experience of some of the nice (and sometimes difficult) characteristics that comes with agents and distributed systems :
  - distribution and asynchronism (system and communication),
