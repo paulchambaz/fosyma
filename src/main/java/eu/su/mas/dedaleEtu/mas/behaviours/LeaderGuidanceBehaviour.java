@@ -9,19 +9,23 @@ import eu.su.mas.dedaleEtu.mas.knowledge.CoordinationState;
 
 public class LeaderGuidanceBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -3284756938273645L;
+
+  private String state;
   private int exitValue = 0;
+
   private Brain brain;
 
   private static final int CHUNK_SIZE = 3;
 
-  public LeaderGuidanceBehaviour(Agent agent, Brain brain) {
+  public LeaderGuidanceBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Leader Guidance");
+    brain.mind.setBehaviour(state);
 
     if (brain.mind.getCoordinationState() != CoordinationState.LEADER) {
       brain.log("Error: Not in leader state");

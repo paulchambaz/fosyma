@@ -17,18 +17,20 @@ import eu.su.mas.dedaleEtu.princ.Computes;
 public class LocateSiloBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -383875837487384313L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
 
-  public LocateSiloBehaviour(Agent agent, Brain brain) {
+  public LocateSiloBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Locate silo");
+    brain.mind.setBehaviour(state);
 
     brain.observe(this.myAgent);
 

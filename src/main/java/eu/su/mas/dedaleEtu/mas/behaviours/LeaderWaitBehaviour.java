@@ -7,19 +7,21 @@ import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class LeaderWaitBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -7364592847383945821L;
-  private int exitValue = 0;
-  private Brain brain;
-  private long checkTime;
 
-  public LeaderWaitBehaviour(Agent agent, Brain brain) {
+  private String state;
+  private int exitValue = 0;
+
+  private Brain brain;
+
+  public LeaderWaitBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
-    this.checkTime = 100;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Leader Wait");
+    brain.mind.setBehaviour(state);
 
     String followerName = brain.mind.getCoordinationPartner();
     if (followerName == null) {
@@ -39,7 +41,7 @@ public class LeaderWaitBehaviour extends OneShotBehaviour {
       return;
     }
 
-    Utils.waitFor(this.myAgent, this.checkTime);
+    Utils.waitFor(this.myAgent, 100);
     brain.entities.ageEntities();
     this.exitValue = 0;
   }

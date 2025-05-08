@@ -12,6 +12,7 @@ import eu.su.mas.dedaleEtu.princ.Utils;
 public class SetMeetingBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -537837587358659414L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
@@ -19,14 +20,15 @@ public class SetMeetingBehaviour extends OneShotBehaviour {
   private static int TIMEOUT = 100;
   private static String PROTOCOL_NAME = "Set Meeting Point";
 
-  public SetMeetingBehaviour(Agent agent, Brain brain) {
+  public SetMeetingBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Set meeting point");
+    brain.mind.setBehaviour(state);
 
     Communication comms = brain.mind.getCommunication();
 

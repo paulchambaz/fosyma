@@ -18,17 +18,20 @@ import eu.su.mas.dedaleEtu.princ.Computes;
 public class ComputeEndPositionBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -98745638789632541L;
 
-  private Brain brain;
+  private String state;
   private int exitValue;
 
-  public ComputeEndPositionBehaviour(Agent agent, Brain brain) {
+  private Brain brain;
+
+  public ComputeEndPositionBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Compute End Position");
+    brain.mind.setBehaviour(state);
 
     brain.mind.updateBehaviouralPriorities();
 

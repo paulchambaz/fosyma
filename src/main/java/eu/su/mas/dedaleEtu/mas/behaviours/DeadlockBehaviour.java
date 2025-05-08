@@ -15,18 +15,20 @@ import eu.su.mas.dedaleEtu.princ.Protocols;
 public class DeadlockBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -374637573871453865L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
 
-  public DeadlockBehaviour(Agent agent, Brain brain) {
+  public DeadlockBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Deadlock");
+    brain.mind.setBehaviour(state);
     brain.observe(this.myAgent);
 
     Communication comms = Protocols.handshake(this.myAgent, brain, 100, "pleasemove", 10);
@@ -36,7 +38,7 @@ public class DeadlockBehaviour extends OneShotBehaviour {
 
     String position = brain.entities.getPosition();
     List<String> occupiedPositions = brain.entities.getOccupiedPositions();
-    int maxDistance = Math.max(brain.mind.getStuckCounter(), 10); // Use at least 10 as minimum distance
+    int maxDistance = Math.max(brain.mind.getStuckCounter(), 5);
 
     String goal = findNodeWithinDistance(position, occupiedPositions, maxDistance);
 

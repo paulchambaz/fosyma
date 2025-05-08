@@ -14,20 +14,24 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 public class WaypointCommunicationBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -383293847329437459L;
+
+  private String state;
   private int exitValue = 0;
+
   private Brain brain;
 
   private static final String WAYPOINT_PROTOCOL = "waypoint-guidance";
   private static final int TIMEOUT = 100;
 
-  public WaypointCommunicationBehaviour(Agent agent, Brain brain) {
+  public WaypointCommunicationBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Waypoint Communication");
+    brain.mind.setBehaviour(state);
 
     Communication comms = brain.mind.getCommunication();
     if (comms == null) {

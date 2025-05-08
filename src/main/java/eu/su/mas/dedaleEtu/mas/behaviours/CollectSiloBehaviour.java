@@ -18,17 +18,20 @@ import eu.su.mas.dedaleEtu.princ.Computes;
 public class CollectSiloBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -374637573871453865L;
 
-  private Brain brain;
+  private String state;
   private int exitValue;
 
-  public CollectSiloBehaviour(Agent agent, Brain brain) {
+  private Brain brain;
+
+  public CollectSiloBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Collect Silo");
+    brain.mind.setBehaviour(state);
 
     brain.mind.updateBehaviouralPriorities();
 

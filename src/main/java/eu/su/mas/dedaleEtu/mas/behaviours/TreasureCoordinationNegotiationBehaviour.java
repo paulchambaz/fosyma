@@ -18,20 +18,24 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 public class TreasureCoordinationNegotiationBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -673824763487238374L;
+
+  private String state;
   private int exitValue = 0;
+
   private Brain brain;
 
   private static final String COORDINATION_PROTOCOL = "treasure-coordination";
   private static final int TIMEOUT = 100;
 
-  public TreasureCoordinationNegotiationBehaviour(Agent agent, Brain brain) {
+  public TreasureCoordinationNegotiationBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Coordination Negotiation");
+    brain.mind.setBehaviour(state);
 
     Communication comms = brain.mind.getCommunication();
     if (comms == null) {

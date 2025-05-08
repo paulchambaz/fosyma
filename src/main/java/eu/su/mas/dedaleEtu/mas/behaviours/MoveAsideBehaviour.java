@@ -1,17 +1,9 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 import jade.core.Agent;
-import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import jade.core.behaviours.OneShotBehaviour;
-import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.mas.knowledge.WorldMap;
-import eu.su.mas.dedaleEtu.mas.knowledge.TreasureData;
-import eu.su.mas.dedale.env.Observation;
-import eu.su.mas.dedaleEtu.mas.knowledge.AgentData;
 import eu.su.mas.dedaleEtu.mas.knowledge.EntityTracker;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
@@ -53,8 +45,9 @@ public class MoveAsideBehaviour extends OneShotBehaviour {
     // get graph without entities on it
     List<String> occupiedPositions = entities.getOccupiedPositions();
     // get connected component of actual agent
-    // ConnectedComponents.ConnectedComponent cc = map.getMyConnectedComponent(occupiedPositions);
-    // Set<org.graphstream.graph.Node> 
+    // ConnectedComponents.ConnectedComponent cc =
+    // map.getMyConnectedComponent(occupiedPositions);
+    // Set<org.graphstream.graph.Node>
     // pick a node in connected component
     // return Computes.computeMyMeetingPoint(cc, 0.5, 2, currentPosition);
     return currentPosition;

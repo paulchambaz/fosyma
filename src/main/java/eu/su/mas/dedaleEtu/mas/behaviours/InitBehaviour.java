@@ -7,15 +7,18 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 public class InitBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -374637573871453865L;
 
+  private String state;
   private Brain brain;
 
-  public InitBehaviour(Agent agent, Brain brain) {
+  public InitBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
+    brain.mind.setBehaviour(state);
     brain.createVisualization();
 
     brain.observe(this.myAgent);

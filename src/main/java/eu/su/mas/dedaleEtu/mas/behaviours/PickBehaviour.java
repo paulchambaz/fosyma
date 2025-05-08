@@ -9,18 +9,20 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 public class PickBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -383953874837483245L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
 
-  public PickBehaviour(Agent agent, Brain brain) {
+  public PickBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Pick");
+    brain.mind.setBehaviour(state);
     brain.observe(this.myAgent);
 
     brain.log("Picking a resource i am at : ", brain.entities.getPosition());

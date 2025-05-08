@@ -12,15 +12,17 @@ import eu.su.mas.dedaleEtu.princ.Computes;
 public class GoToUntilAgentBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
 
-  private boolean initialized = false;
+  private String state;
   private int exitValue = 0;
+  private boolean initialized = false;
 
   private Brain brain;
   private List<String> searchingAgents;
 
-  public GoToUntilAgentBehaviour(Agent myagent, Brain brain) {
+  public GoToUntilAgentBehaviour(String state, Agent myagent, Brain brain) {
     super(myagent);
     this.brain = brain;
+    this.state = state;
     this.searchingAgents = new ArrayList<String>(Arrays.asList(brain.mind.getCoordinationPartner()));
   }
 
@@ -36,7 +38,7 @@ public class GoToUntilAgentBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Go To Until");
+    brain.mind.setBehaviour(state);
 
     if (!this.initialized) {
       initialize();

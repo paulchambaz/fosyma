@@ -8,26 +8,25 @@ import eu.su.mas.dedaleEtu.princ.Utils;
 public class WaitUntilBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
 
-  private long waitingTime = 100;
-
-  public WaitUntilBehaviour(Agent agent, Brain brain) {
+  public WaitUntilBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
-    this.waitingTime = 100;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Wait Until");
+    brain.mind.setBehaviour(state);
 
     this.brain.observe(this.myAgent);
     this.brain.updateBackpack(this.myAgent);
 
-    Utils.waitFor(this.myAgent, this.waitingTime);
+    Utils.waitFor(this.myAgent, 200);
 
     brain.entities.ageEntities();
   }

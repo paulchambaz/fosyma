@@ -56,38 +56,40 @@ public class FsmSiloAgent extends AbstractDedaleAgent {
     // - Behaviours -
 
     // Init behaviour
-    fsmBehaviour.registerFirstState(new InitBehaviour(this, this.brain), INIT);
+    fsmBehaviour.registerFirstState(new InitBehaviour(INIT, this, this.brain), INIT);
 
     // Explore behaviours
-    fsmBehaviour.registerState(new ExploreBehaviour(this, this.brain), EXPLORE);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), EXPLORE_GOTO);
-    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), EXPLORE_DEADLOCK);
-    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, 1, new HashMap<String, Integer>() {
-      {
-        put("sharemap", 1);
-        put("pleasemove", 2);
-      }
-    }), EXPLORE_COMM);
-    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), EXPLORE_COMM_SHARE);
-    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), EXPLORE_COMM_MEETING);
-    fsmBehaviour.registerState(new PlanExplorationBehaviour(this, this.brain), EXPLORE_COMM_PLAN);
+    fsmBehaviour.registerState(new ExploreBehaviour(EXPLORE, this, this.brain), EXPLORE);
+    fsmBehaviour.registerState(new GoToBehaviour(EXPLORE_GOTO, this, this.brain), EXPLORE_GOTO);
+    fsmBehaviour.registerState(new DeadlockBehaviour(EXPLORE_DEADLOCK, this, this.brain), EXPLORE_DEADLOCK);
+    fsmBehaviour
+        .registerState(new CommunicationBehaviour(EXPLORE_COMM, this, this.brain, 1, new HashMap<String, Integer>() {
+          {
+            put("sharemap", 1);
+            put("pleasemove", 2);
+          }
+        }), EXPLORE_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(EXPLORE_COMM_SHARE, this, this.brain), EXPLORE_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(EXPLORE_COMM_MEETING, this, this.brain), EXPLORE_COMM_MEETING);
+    fsmBehaviour.registerState(new PlanExplorationBehaviour(EXPLORE_COMM_PLAN, this, this.brain), EXPLORE_COMM_PLAN);
 
     // Collect behaviours
-    fsmBehaviour.registerState(new CollectSiloBehaviour(this, this.brain), COLLECT_LOCATE);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), COLLECT_GOTO);
-    fsmBehaviour.registerState(new WaitUntilBehaviour(this, this.brain), COLLECT_WAIT);
-    fsmBehaviour.registerState(new CommunicationBehaviour(this, this.brain, 1, new HashMap<String, Integer>() {
-      {
-        put("sharemap", 1);
-        put("pleasemove", 2);
-      }
-    }), COLLECT_COMM);
-    fsmBehaviour.registerState(new ShareBrainBehaviour(this, this.brain), COLLECT_COMM_SHARE);
-    fsmBehaviour.registerState(new SetMeetingBehaviour(this, this.brain), COLLECT_COMM_MEETING);
-    fsmBehaviour.registerState(new DeadlockBehaviour(this, this.brain), COLLECT_DEADLOCK);
-    fsmBehaviour.registerState(new GoToBehaviour(this, this.brain), COLLECT_GOTO_DEADLOCK);
+    fsmBehaviour.registerState(new CollectSiloBehaviour(COLLECT_LOCATE, this, this.brain), COLLECT_LOCATE);
+    fsmBehaviour.registerState(new GoToBehaviour(COLLECT_GOTO, this, this.brain), COLLECT_GOTO);
+    fsmBehaviour.registerState(new WaitUntilBehaviour(COLLECT_WAIT, this, this.brain), COLLECT_WAIT);
+    fsmBehaviour
+        .registerState(new CommunicationBehaviour(COLLECT_COMM, this, this.brain, 1, new HashMap<String, Integer>() {
+          {
+            put("sharemap", 1);
+            put("pleasemove", 2);
+          }
+        }), COLLECT_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(COLLECT_COMM_SHARE, this, this.brain), COLLECT_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(COLLECT_COMM_MEETING, this, this.brain), COLLECT_COMM_MEETING);
+    fsmBehaviour.registerState(new DeadlockBehaviour(COLLECT_DEADLOCK, this, this.brain), COLLECT_DEADLOCK);
+    fsmBehaviour.registerState(new GoToBehaviour(COLLECT_GOTO_DEADLOCK, this, this.brain), COLLECT_GOTO_DEADLOCK);
 
-    fsmBehaviour.registerLastState(new EndBehaviour(this, this.brain), END);
+    fsmBehaviour.registerLastState(new EndBehaviour(END, this, this.brain), END);
 
     // - Transitions -
     fsmBehaviour.registerDefaultTransition(INIT, EXPLORE_GOTO);

@@ -14,17 +14,21 @@ import eu.su.mas.dedale.env.Observation;
 
 public class CoordinationInitBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -5873940328749320578L;
+
+  private String state;
   private int exitValue = 0;
+
   private Brain brain;
 
-  public CoordinationInitBehaviour(Agent agent, Brain brain) {
+  public CoordinationInitBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Coordination Init");
+    brain.mind.setBehaviour(state);
 
     String treasureNode = brain.mind.getCoordinationTreasureNode();
     if (treasureNode == null) {

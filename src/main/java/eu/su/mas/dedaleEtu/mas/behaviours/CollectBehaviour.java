@@ -17,17 +17,20 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 public class CollectBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -374637573871453865L;
 
-  private Brain brain;
+  private String state;
   private int exitValue;
 
-  public CollectBehaviour(Agent agent, Brain brain) {
+  private Brain brain;
+
+  public CollectBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Collect");
+    brain.mind.setBehaviour(state);
     brain.mind.updateBehaviouralPriorities();
 
     if (!brain.mind.isCollectionPreferred() && brain.map.hasOpenNode()) {

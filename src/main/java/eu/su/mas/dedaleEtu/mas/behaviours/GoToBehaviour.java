@@ -8,14 +8,16 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 public class GoToBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
 
+  private String state;
   private boolean initialized = false;
   private int exitValue = 0;
 
   private Brain brain;
 
-  public GoToBehaviour(Agent myagent, Brain brain) {
+  public GoToBehaviour(String state, Agent myagent, Brain brain) {
     super(myagent);
     this.brain = brain;
+    this.state = state;
   }
 
   private void initialize() {
@@ -30,7 +32,7 @@ public class GoToBehaviour extends OneShotBehaviour {
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Go To");
+    brain.mind.setBehaviour(state);
 
     if (!this.initialized) {
       initialize();

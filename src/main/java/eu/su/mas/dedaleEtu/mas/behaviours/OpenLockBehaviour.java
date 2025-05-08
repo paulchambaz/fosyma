@@ -14,18 +14,20 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 public class OpenLockBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -385943593446598313L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
 
-  public OpenLockBehaviour(Agent agent, Brain brain) {
+  public OpenLockBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Open lock");
+    brain.mind.setBehaviour(state);
     brain.observe(this.myAgent);
 
     String position = brain.entities.getPosition();

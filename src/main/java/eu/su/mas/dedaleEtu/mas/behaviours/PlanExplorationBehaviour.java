@@ -18,6 +18,7 @@ import eu.su.mas.dedaleEtu.princ.Utils;
 public class PlanExplorationBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -537837587358659414L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
@@ -25,14 +26,15 @@ public class PlanExplorationBehaviour extends OneShotBehaviour {
   private static int TIMEOUT = 100;
   private static String PROTOCOL_NAME = "plan-exploration";
 
-  public PlanExplorationBehaviour(Agent agent, Brain brain) {
+  public PlanExplorationBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Plan exploration");
+    brain.mind.setBehaviour(state);
 
     Communication comms = brain.mind.getCommunication();
 

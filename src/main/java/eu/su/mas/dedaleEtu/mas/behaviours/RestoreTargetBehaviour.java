@@ -6,17 +6,21 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class RestoreTargetBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -7839428374629384726L;
+
+  private String state;
   private int exitValue = 0;
+
   private Brain brain;
 
-  public RestoreTargetBehaviour(Agent agent, Brain brain) {
+  public RestoreTargetBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Restore Target");
+    brain.mind.setBehaviour(state);
 
     String metaTarget = brain.mind.getMetaTargetNode();
 

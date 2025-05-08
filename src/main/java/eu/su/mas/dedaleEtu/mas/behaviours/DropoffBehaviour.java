@@ -8,18 +8,20 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 public class DropoffBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -383953836736159459L;
 
+  private String state;
   private int exitValue = 0;
 
   private Brain brain;
 
-  public DropoffBehaviour(Agent agent, Brain brain) {
+  public DropoffBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
+    this.state = state;
   }
 
   @Override
   public void action() {
-    brain.mind.setBehaviour("Dropoff");
+    brain.mind.setBehaviour(state);
     brain.observe(this.myAgent);
 
     brain.log("i want to empty my backpack now");
