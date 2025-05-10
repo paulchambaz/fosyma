@@ -84,7 +84,7 @@ public class PlanExplorationBehaviour extends OneShotBehaviour {
     String currentPosition = brain.entities.getPosition();
 
     String friendPosition = null;
-    if (friendName.equals("Silo")) {
+    if (friendName.startsWith("Tank")) {
       if (brain.entities.getClosestSilo() != null) {
         friendPosition = brain.entities.getClosestSilo().getPosition();
       } else {

@@ -26,7 +26,7 @@ public class WaitUntilBehaviour extends OneShotBehaviour {
     this.brain.observe(this.myAgent);
     this.brain.updateBackpack(this.myAgent);
 
-    Utils.waitFor(this.myAgent, 1000);
+    Utils.waitFor(this.myAgent, 500);
 
     brain.entities.ageEntities();
   }

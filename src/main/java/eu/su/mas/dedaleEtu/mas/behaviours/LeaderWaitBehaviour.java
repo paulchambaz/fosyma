@@ -41,7 +41,7 @@ public class LeaderWaitBehaviour extends OneShotBehaviour {
       return;
     }
 
-    Utils.waitFor(this.myAgent, 100);
+    Utils.waitFor(this.myAgent, 400);
     brain.entities.ageEntities();
     this.exitValue = 0;
   }

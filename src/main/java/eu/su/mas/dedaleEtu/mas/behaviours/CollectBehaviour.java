@@ -63,36 +63,54 @@ public class CollectBehaviour extends OneShotBehaviour {
   }
 
   public String findOptimalTreasureNode(WorldMap map, EntityTracker entities, String currentPosition) {
+    brain.log("CHOOSING A TREASURE TO SEEK");
+
     AgentData agent = entities.getMyself();
     Observation agentTreasureType = agent.getTreasureType();
     Map<String, TreasureData> treasures = entities.getTreasures();
 
     List<String> relevantTreasureNodes = new ArrayList<>();
     Map<String, Integer> treasureQuantities = new HashMap<>();
+    Map<String, Boolean> canOpenLock = new HashMap<>();
+    Map<String, Boolean> canCarryTreasure = new HashMap<>();
+
+    // brain.log("Treasure type:", agent.getTreasureType(), "Carry strength:",
+    // agent.getExpertise().get(Observation.STRENGH));
 
     // brain.log("here are the treasures i found");
     for (Map.Entry<String, TreasureData> entry : treasures.entrySet()) {
       TreasureData treasure = entry.getValue();
+      // brain.log("Position:", entry.getKey(), "Quantity:", treasure.getQuantity(),
+      // "Treasure type:", treasure.getType(),
+      // "Carry strength:", treasure.getCarryStrength());
       // brain.log(entry.getKey());
 
       if (treasure.getQuantity() <= 0) {
-        brain.log("quantity is 0 so skipping that treasure", treasure.getQuantity());
+        // brain.log(entry.getKey(), "quantity is 0 so skipping that treasure",
+        // treasure.getQuantity());
         continue;
       }
 
       if (treasure.getType() != agentTreasureType) {
-        // brain.log("type is not of my type so skipping that treasure",
+        // brain.log(entry.getKey(), "type is not of my type so skipping that treasure",
         // treasure.getType());
         continue;
       }
 
-      if (!agent.canCarryTreasure(treasure.getCarryStrength())) {
-        // brain.log("i cant pick that treasure so skip it", treasure.getType());
-        continue;
-      }
+      // if (!agent.canCarryTreasure(treasure.getCarryStrength())) {
+      // // brain.log(entry.getKey(), "i cant pick that treasure so skip it",
+      // // treasure.getType());
+      // continue;
+      // }
 
       relevantTreasureNodes.add(entry.getKey());
       treasureQuantities.put(entry.getKey(), treasure.getQuantity());
+
+      boolean canOpen = !treasure.isLocked() || agent.canOpenLock(treasure.getLockpickStrength());
+      canOpenLock.put(entry.getKey(), canOpen);
+
+      boolean canCarry = !agent.canCarryTreasure(treasure.getCarryStrength());
+      canCarryTreasure.put(entry.getKey(), canCarry);
     }
 
     if (relevantTreasureNodes.isEmpty()) {
@@ -102,17 +120,23 @@ public class CollectBehaviour extends OneShotBehaviour {
     Map<String, Integer> distances = Computes.calculateNodeDistancesToTreasures(map, currentPosition,
         relevantTreasureNodes);
 
-    double[][] criteriaMatrix = new double[relevantTreasureNodes.size()][2];
+    double[][] criteriaMatrix = new double[relevantTreasureNodes.size()][4];
     for (int i = 0; i < relevantTreasureNodes.size(); i++) {
       String nodeId = relevantTreasureNodes.get(i);
       Integer distance = distances.get(nodeId);
       Integer quantity = treasureQuantities.get(nodeId);
+      Boolean canOpen = canOpenLock.get(nodeId);
+      Boolean canCarry = canCarryTreasure.get(nodeId);
+
+      // brain.log(nodeId, distance, quantity, canOpen, canCarry);
 
       criteriaMatrix[i][0] = distance != null ? distance : Double.MAX_VALUE;
       criteriaMatrix[i][1] = -quantity;
+      criteriaMatrix[i][2] = canOpen ? 0.0 : 1.0;
+      criteriaMatrix[i][3] = canCarry ? 0.0 : 1.0;
     }
 
-    double[] weights = { 2.0, 1.0 };
+    double[] weights = { 2.0, 1.0, 4.0, 4.0 };
 
     int bestIndex = Computes.solveMinMaxRegret(criteriaMatrix, weights);
 
