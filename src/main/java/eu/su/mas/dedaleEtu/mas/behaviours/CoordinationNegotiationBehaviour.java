@@ -10,7 +10,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.mas.knowledge.CoordinationState;
-import eu.su.mas.dedaleEtu.mas.knowledge.TreasureData;
 import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.princ.Utils;
 import eu.su.mas.dedaleEtu.princ.Communication;
@@ -74,7 +73,7 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
         return;
       }
 
-      determineRolesAndPositions(myData, partnerData);
+      determineRolesAndPositions(myData, partnerData, comms.getFriend().getLocalName());
 
     } else {
       CoordinationData partnerData = receiveCoordinationData(partnerAID);
@@ -91,7 +90,7 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
       ((AbstractDedaleAgent) this.myAgent).sendMessage(message);
       brain.log("Sent coordination data to", partnerAID.getLocalName());
 
-      determineRolesAndPositions(myData, partnerData);
+      determineRolesAndPositions(myData, partnerData, comms.getFriend().getLocalName());
     }
   }
 
@@ -139,7 +138,7 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
     return data;
   }
 
-  private void determineRolesAndPositions(CoordinationData myData, CoordinationData partnerData) {
+  private void determineRolesAndPositions(CoordinationData myData, CoordinationData partnerData, String partnerName) {
     boolean iNeedHelp = myData.needsHelp;
     boolean partnerNeedsHelp = partnerData.needsHelp;
 
@@ -206,6 +205,9 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
         brain.mind.setMetaTargetNode(treasureNode);
         brain.mind.setTargetNode(treasureNode);
 
+        brain.mind.setCoalitionParent(null);
+        brain.mind.setCoalitionChild(partnerName);
+
         brain.log("I am the leader, heading to treasure at: " + treasureNode);
 
         this.exitValue = 1;
@@ -217,6 +219,8 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
         brain.mind.setTargetNode(treasureNode);
 
         brain.log("I was the manager, now follower, heading to treasure at: " + treasureNode);
+
+        brain.mind.setCoalitionChild(partnerName);
 
         this.exitValue = 3;
       }
@@ -240,6 +244,9 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
         }
 
         this.exitValue = 2;
+
+        brain.mind.setCoalitionParent(partnerName);
+        brain.mind.setCoalitionChild(null);
       } else {
         brain.mind.setCoordinationState(CoordinationState.FOLLOWER);
 
@@ -259,6 +266,9 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
 
         brain.mind.setCoordinationTreasureNode(treasureNode);
 
+        brain.mind.setCoalitionParent(partnerName);
+        brain.mind.setCoalitionChild(null);
+
         this.exitValue = 3;
       }
     }
@@ -272,6 +282,8 @@ public class CoordinationNegotiationBehaviour extends OneShotBehaviour {
     brain.mind.setCoordinationState(CoordinationState.NONE);
     brain.mind.setCoordinationPartner(null);
     brain.mind.setCoordinationTreasureNode(null);
+    brain.mind.setCoalitionMembers(null);
+    brain.mind.setCoalitionMembersPresent(0);
     brain.mind.setMetaTargetNode(null);
   }
 

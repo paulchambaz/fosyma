@@ -20,7 +20,6 @@ import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationNegotiationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.WaitUntilBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.RestoreTargetBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.EmptyBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationLocateAgent;
 import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationLocateAgentLite;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.ArrayList;
@@ -175,6 +174,7 @@ public class FsmExploreAgent extends AbstractDedaleAgent {
     // Manager transitions
     fsmBehaviour.registerDefaultTransition(MANAGER_LOCATE_AGENT, EXPLORE_DEADLOCK);
     fsmBehaviour.registerTransition(MANAGER_LOCATE_AGENT, MANAGER_GOTO_AGENT, 1);
+    fsmBehaviour.registerTransition(MANAGER_LOCATE_AGENT, MANAGER_LOCATE_AGENT, 2);
 
     fsmBehaviour.registerDefaultTransition(MANAGER_GOTO_AGENT, MANAGER_COMM);
     fsmBehaviour.registerTransition(MANAGER_GOTO_AGENT, MANAGER_LOCATE_AGENT, 1);

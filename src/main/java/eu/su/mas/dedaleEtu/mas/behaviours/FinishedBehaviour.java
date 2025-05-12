@@ -7,7 +7,7 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
-public class EmptyBehaviour extends OneShotBehaviour {
+public class FinishedBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -7364592847383945821L;
 
   private String state;
@@ -18,7 +18,7 @@ public class EmptyBehaviour extends OneShotBehaviour {
 
   private Brain brain;
 
-  public EmptyBehaviour(String state, Agent agent, Brain brain) {
+  public FinishedBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
     this.state = state;
@@ -43,7 +43,7 @@ public class EmptyBehaviour extends OneShotBehaviour {
     this.brain.observe(this.myAgent);
 
     brain.log(brain.entities.getMyself().getExpertise().get(Observation.LOCKPICKING));
-    brain.mind.setCoordinationPartner(brain.mind.getCoalitionParent());
+    brain.mind.setCoordinationPartner(brain.mind.getCoalitionChild());
 
     if (counter <= 0) {
       resetCoordination();

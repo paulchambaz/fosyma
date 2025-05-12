@@ -35,6 +35,9 @@ public class AgentMind implements Serializable {
   private List<String> coalitionMembers;
   private int coalitionMembersPresent;
 
+  private String coalitionParent;
+  private String coalitionChild;
+
   private final Brain brain;
 
   public AgentMind(Brain brain) {
@@ -51,6 +54,8 @@ public class AgentMind implements Serializable {
     this.coordinationTreasureNode = null;
     this.coalitionMembers = new ArrayList<>();
     this.coalitionMembersPresent = 0;
+    this.coalitionParent = null;
+    this.coalitionChild = null;
   }
 
   public synchronized String getBehaviour() {
@@ -84,7 +89,7 @@ public class AgentMind implements Serializable {
   }
 
   public synchronized void updateBehaviouralPriorities() {
-    float gradualTransition = 0.0001f;
+    float gradualTransition = 0.01f;
     float accelerateEffect = 0.5f;
     boolean wasCollectionPreferred = isCollectionPreferred();
 
@@ -227,7 +232,11 @@ public class AgentMind implements Serializable {
   }
 
   public synchronized void setCoalitionMembers(List<String> members) {
-    this.coalitionMembers = new ArrayList<>(members);
+    if (members == null) {
+      this.coalitionMembers = new ArrayList<>();
+    } else {
+      this.coalitionMembers = new ArrayList<>(members);
+    }
     brain.notifyVisualization();
   }
 
@@ -243,5 +252,21 @@ public class AgentMind implements Serializable {
   public synchronized void incrementCoalitionMembersPresent() {
     this.coalitionMembersPresent++;
     brain.notifyVisualization();
+  }
+
+  public synchronized String getCoalitionParent() {
+    return this.coalitionParent;
+  }
+
+  public synchronized void setCoalitionParent(String coalitionParent) {
+    this.coalitionParent = coalitionParent;
+  }
+
+  public synchronized String getCoalitionChild() {
+    return this.coalitionChild;
+  }
+
+  public synchronized void setCoalitionChild(String coalitionChild) {
+    this.coalitionChild = coalitionChild;
   }
 }

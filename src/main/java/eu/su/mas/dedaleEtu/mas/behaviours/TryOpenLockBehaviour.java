@@ -6,6 +6,7 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.mas.knowledge.TreasureData;
+import eu.su.mas.dedaleEtu.mas.knowledge.CoordinationState;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class TryOpenLockBehaviour extends OneShotBehaviour {
@@ -26,7 +27,7 @@ public class TryOpenLockBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    counter = 10000;
+    counter = 1000;
 
     this.exitValue = 0;
     this.initialized = true;
@@ -40,27 +41,35 @@ public class TryOpenLockBehaviour extends OneShotBehaviour {
       initialize();
     }
 
-    this.brain.observe(this.myAgent);
-    brain.log(brain.entities.getPosition());
-    brain.log(brain.entities.getMyself().getExpertise().get(Observation.LOCKPICKING));
-
-    TreasureData treasure = brain.entities.getTreasures().get(brain.entities.getMyself().getPosition());
-    brain.log("LOCKPICKING STRENGTH", treasure.getLockpickStrength());
+    brain.mind.setCoordinationPartner(brain.mind.getCoalitionChild());
 
     if (counter <= 0) {
+      resetCoordination();
       initialized = false;
       this.exitValue = 2;
       return;
     }
     counter--;
 
+    this.brain.observe(this.myAgent);
+    brain.log(brain.entities.getPosition());
+    brain.log(brain.entities.getMyself().getExpertise().get(Observation.LOCKPICKING));
+
+    TreasureData treasure = brain.entities.getTreasures().get(brain.entities.getMyself().getPosition());
+    if (treasure == null) {
+      return;
+    }
+    brain.log("LOCKPICKING STRENGTH", treasure.getLockpickStrength());
+
     brain.log("MY TYPE:", brain.entities.getMyself().getTreasureType());
     boolean success = ((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType());
     brain.log("tried to open, result:", success);
     if (success) {
       treasure = brain.entities.getTreasures().get(brain.entities.getMyself().getPosition());
-      treasure.setLocked(true);
+      treasure.setLocked(false);
       this.brain.observe(this.myAgent);
+
+      resetCoordination();
 
       initialized = false;
       this.exitValue = 1;
@@ -70,6 +79,14 @@ public class TryOpenLockBehaviour extends OneShotBehaviour {
     Utils.waitFor(myAgent, 400);
 
     this.exitValue = 0;
+  }
+
+  private void resetCoordination() {
+    brain.mind.setCoordinationState(CoordinationState.NONE);
+    brain.mind.setCoordinationPartner(null);
+    brain.mind.setCoordinationTreasureNode(null);
+    brain.mind.setMetaTargetNode(null);
+    brain.mind.setCoalitionMembers(null);
   }
 
   @Override

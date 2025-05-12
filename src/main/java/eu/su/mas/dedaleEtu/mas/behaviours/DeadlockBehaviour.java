@@ -38,7 +38,7 @@ public class DeadlockBehaviour extends OneShotBehaviour {
 
     String position = brain.entities.getPosition();
     List<String> occupiedPositions = brain.entities.getOccupiedPositions();
-    int maxDistance = Math.max(brain.mind.getStuckCounter(), 5);
+    int maxDistance = Math.max(brain.mind.getStuckCounter(), 15);
 
     String goal = findNodeWithinDistance(position, occupiedPositions, maxDistance);
     brain.log("deadlock going to", goal);

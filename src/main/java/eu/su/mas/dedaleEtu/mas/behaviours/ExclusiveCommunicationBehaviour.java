@@ -37,6 +37,7 @@ public class ExclusiveCommunicationBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    brain.log(brain.entities.getPosition(), brain.mind.getCoordinationPartner());
 
     Communication comms = Protocols.exclusiveHandshake(this.myAgent, brain, 100, protocol, priority,
         brain.mind.getCoordinationPartner());

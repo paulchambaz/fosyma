@@ -23,6 +23,8 @@ public class CoordinationLocateAgentLite extends OneShotBehaviour {
 
   private Brain brain;
 
+  private int counter;
+
   private boolean hasTriedMeetingPoint;
   private boolean hasTriedLastPosition;
   private boolean hasTriedSilo;
@@ -39,6 +41,8 @@ public class CoordinationLocateAgentLite extends OneShotBehaviour {
     hasTriedMeetingPoint = false;
     hasTriedLastPosition = false;
     hasTriedSilo = false;
+
+    counter = 20;
 
     String treasureNode = brain.mind.getCoordinationTreasureNode();
     if (treasureNode == null) {
@@ -120,8 +124,15 @@ public class CoordinationLocateAgentLite extends OneShotBehaviour {
       }
     }
 
-    this.initialized = false;
-    this.exitValue = 0;
+    this.counter--;
+
+    if (counter < 0) {
+      this.initialized = false;
+      this.exitValue = 0;
+    } else {
+      this.initialized = false;
+      this.exitValue = 2;
+    }
   }
 
   private String selectBestAgent(List<String> coalition) {

@@ -36,6 +36,7 @@ public class CommunicationBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
+    brain.log(brain.entities.getPosition());
 
     Communication comms = Protocols.handshake(this.myAgent, brain, 100, protocol, priority);
 
