@@ -42,8 +42,14 @@ public class CoordinationLocateAgent extends OneShotBehaviour {
     hasTriedLastPosition = false;
     hasTriedSilo = false;
 
+    if (isUseless()) {
+      this.exitValue = 0;
+      return;
+    }
+
     String treasureNode = brain.mind.getCoordinationTreasureNode();
     if (treasureNode == null) {
+      this.exitValue = 0;
       return;
     }
 
@@ -134,6 +140,15 @@ public class CoordinationLocateAgent extends OneShotBehaviour {
 
     this.initialized = false;
     this.exitValue = 0;
+  }
+
+  private boolean isUseless() {
+    AgentData myself = brain.entities.getMyself();
+
+    int myLockpickStrength = myself.getExpertise().getOrDefault(Observation.LOCKPICKING, 0);
+    int myCarryStrength = myself.getExpertise().getOrDefault(Observation.STRENGH, 0);
+
+    return (myLockpickStrength == 0 && myCarryStrength == 0);
   }
 
   private List<String> selectCoalition(String treasureNode) {
