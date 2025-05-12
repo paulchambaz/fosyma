@@ -8,7 +8,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class GoToUntilBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = 1233984986594838272L;
+  private static final long serialVersionUID = 1243984936594838282L;
 
   private String state;
   private int exitValue = 0;

@@ -14,7 +14,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class GoToUntilAgentBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = 1233984986594838272L;
+  private static final long serialVersionUID = 1043987986594835272L;
 
   private String state;
   private int exitValue = 0;

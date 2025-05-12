@@ -8,7 +8,7 @@ import eu.su.mas.dedaleEtu.princ.Protocols;
 import eu.su.mas.dedaleEtu.princ.Communication;
 
 public class ExclusiveCommunicationBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -373375987457439285L;
+  private static final long serialVersionUID = -375379987457439205L;
 
   private String state;
   private int exitValue = 0;

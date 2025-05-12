@@ -16,7 +16,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.EntityTracker;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class CollectBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -374637573871453865L;
+  private static final long serialVersionUID = -174647573271457865L;
 
   private String state;
   private int exitValue;

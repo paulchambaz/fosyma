@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class FsmCollectAgent extends AbstractDedaleAgent {
-  private static final long serialVersionUID = -78659868426454587L;
+  private static final long serialVersionUID = -72659865426459587L;
 
   private Brain brain;
 

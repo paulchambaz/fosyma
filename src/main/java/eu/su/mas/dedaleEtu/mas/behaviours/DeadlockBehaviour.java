@@ -13,7 +13,7 @@ import eu.su.mas.dedaleEtu.princ.Communication;
 import eu.su.mas.dedaleEtu.princ.Protocols;
 
 public class DeadlockBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -374637573871453865L;
+  private static final long serialVersionUID = -324667573071453845L;
 
   private String state;
   private int exitValue = 0;

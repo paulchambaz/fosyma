@@ -16,7 +16,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.EntityTracker;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class CollectSiloBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -374637573871453865L;
+  private static final long serialVersionUID = -274631573371453845L;
 
   private String state;
   private int exitValue;

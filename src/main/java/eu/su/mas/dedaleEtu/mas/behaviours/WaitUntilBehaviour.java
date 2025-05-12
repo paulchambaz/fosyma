@@ -6,7 +6,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class WaitUntilBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = 1233984986594838272L;
+  private static final long serialVersionUID = 2235984966594838202L;
 
   private String state;
   private int exitValue = 0;

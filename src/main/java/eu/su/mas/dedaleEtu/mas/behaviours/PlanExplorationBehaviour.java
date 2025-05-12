@@ -16,7 +16,7 @@ import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class PlanExplorationBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -537837587358659414L;
+  private static final long serialVersionUID = -457834586358650414L;
 
   private String state;
   private int exitValue = 0;

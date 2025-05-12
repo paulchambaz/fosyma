@@ -28,7 +28,7 @@ public class DummyWumpusShift2 extends AbstractDedaleAgent {
   /**
    * 
    */
-  private static final long serialVersionUID = 2703609263614775545L;
+  private static final long serialVersionUID = 2103606162614775545L;
 
   /**
    * This method is automatically called when "agent".start() is executed.
@@ -87,7 +87,7 @@ public class DummyWumpusShift2 extends AbstractDedaleAgent {
      * When an agent choose to move
      * 
      */
-    private static final long serialVersionUID = 9088209402507795289L;
+    private static final long serialVersionUID = 9028209402507795289L;
 
     // private Environment realEnv;
     private int waitingTimeBeforeDropOff;

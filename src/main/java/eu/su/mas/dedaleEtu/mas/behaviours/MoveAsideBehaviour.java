@@ -8,7 +8,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.EntityTracker;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class MoveAsideBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -374637573871453865L;
+  private static final long serialVersionUID = -314637503871455865L;
 
   private Brain brain;
   private int exitValue;

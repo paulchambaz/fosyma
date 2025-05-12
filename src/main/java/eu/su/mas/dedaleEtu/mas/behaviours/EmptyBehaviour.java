@@ -9,7 +9,7 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class EmptyBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -7364592847383945821L;
+  private static final long serialVersionUID = -7364292847383945821L;
 
   private String state;
   private boolean initialized = false;

@@ -8,7 +8,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class FinishedBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -7364592847383945821L;
+  private static final long serialVersionUID = -7864532642383945841L;
 
   private String state;
   private boolean initialized = false;

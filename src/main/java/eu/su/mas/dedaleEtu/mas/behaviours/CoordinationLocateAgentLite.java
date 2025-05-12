@@ -15,7 +15,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.EntityTracker;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class CoordinationLocateAgentLite extends OneShotBehaviour {
-  private static final long serialVersionUID = -5873940328749320578L;
+  private static final long serialVersionUID = -547394932874920578L;
 
   private String state;
   private boolean initialized = false;
