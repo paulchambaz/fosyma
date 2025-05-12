@@ -27,7 +27,7 @@ public class TryOpenLockBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    counter = 1000;
+    counter = 100;
 
     this.exitValue = 0;
     this.initialized = true;
@@ -57,6 +57,7 @@ public class TryOpenLockBehaviour extends OneShotBehaviour {
 
     TreasureData treasure = brain.entities.getTreasures().get(brain.entities.getMyself().getPosition());
     if (treasure == null) {
+      this.exitValue = 2;
       return;
     }
     brain.log("LOCKPICKING STRENGTH", treasure.getLockpickStrength());
@@ -70,6 +71,7 @@ public class TryOpenLockBehaviour extends OneShotBehaviour {
       this.brain.observe(this.myAgent);
 
       resetCoordination();
+      counter = 0;
 
       initialized = false;
       this.exitValue = 1;

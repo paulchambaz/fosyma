@@ -296,6 +296,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(COLLECT, COLLECT_GOTO);
     fsmBehaviour.registerTransition(COLLECT, END_LOCATE, 1);
     fsmBehaviour.registerTransition(COLLECT, EXPLORE, 2);
+    fsmBehaviour.registerTransition(COLLECT, DROP_LOCATE_SILO, 3);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_COMM);
     fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_OPENLOCK, 1);

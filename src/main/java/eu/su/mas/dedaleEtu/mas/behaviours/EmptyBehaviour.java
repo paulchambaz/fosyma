@@ -5,6 +5,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.CoordinationState;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class EmptyBehaviour extends OneShotBehaviour {
@@ -25,7 +26,7 @@ public class EmptyBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    counter = 500;
+    counter = 80;
 
     this.exitValue = 0;
     this.initialized = true;
@@ -53,11 +54,14 @@ public class EmptyBehaviour extends OneShotBehaviour {
     }
     counter--;
 
-    Utils.waitFor(myAgent, 400);
-
-    if (brain.mind.getMetaTargetNode() != null) {
-      brain.mind.setTargetNode(brain.mind.getMetaTargetNode());
+    if (((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType())) {
+      ((AbstractDedaleAgent) this.myAgent).pick();
+      this.brain.observe(this.myAgent);
+      resetCoordination();
+      initialized = false;
+      this.exitValue = 1;
     }
+    Utils.waitFor(myAgent, 400);
 
     this.exitValue = 0;
   }

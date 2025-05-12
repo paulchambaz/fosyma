@@ -1,9 +1,14 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.Deque;
+import java.util.List;
+
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.princ.Utils;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 public class GoToBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = 1233984986594838272L;
@@ -52,6 +57,23 @@ public class GoToBehaviour extends OneShotBehaviour {
       this.initialized = false;
       this.exitValue = 1;
       return;
+    }
+
+    try {
+      if (((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType())) {
+        this.brain.observe(this.myAgent);
+        ((AbstractDedaleAgent) this.myAgent).pick();
+      }
+
+      List<AID> silos = Utils.getSilos(this.myAgent);
+      boolean success = false;
+      for (AID silo : silos) {
+        success = ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(silo.getLocalName());
+        if (success) {
+          break;
+        }
+      }
+    } catch (Exception e) {
     }
 
     String next = path.removeFirst();

@@ -3,12 +3,8 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
+import eu.su.mas.dedaleEtu.mas.knowledge.CoordinationState;
 import eu.su.mas.dedaleEtu.mas.knowledge.TreasureData;
-import eu.su.mas.dedaleEtu.mas.knowledge.AgentData;
-
-import java.util.Map;
-
-import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 public class OpenLockBehaviour extends OneShotBehaviour {
@@ -47,12 +43,21 @@ public class OpenLockBehaviour extends OneShotBehaviour {
 
       brain.log("success");
       this.exitValue = 0;
-      return;
-    }
-    brain.log("failure");
+    } else {
+      brain.log("failure");
 
-    brain.mind.setCoordinationTreasureNode(position);
-    this.exitValue = 1;
+      resetCoordination();
+      brain.mind.setCoordinationTreasureNode(position);
+      this.exitValue = 1;
+    }
+  }
+
+  private void resetCoordination() {
+    brain.mind.setCoordinationState(CoordinationState.NONE);
+    brain.mind.setCoordinationPartner(null);
+    brain.mind.setCoordinationTreasureNode(null);
+    brain.mind.setMetaTargetNode(null);
+    brain.mind.setCoalitionMembers(null);
   }
 
   @Override

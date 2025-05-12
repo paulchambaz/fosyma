@@ -34,6 +34,11 @@ public class CollectBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour(state);
     brain.mind.updateBehaviouralPriorities();
 
+    if (brain.entities.getMyself().getCapacity() > 0) {
+      this.exitValue = 3;
+      return;
+    }
+
     if (!brain.mind.isCollectionPreferred() && brain.map.hasOpenNode()) {
       this.exitValue = 2;
       return;

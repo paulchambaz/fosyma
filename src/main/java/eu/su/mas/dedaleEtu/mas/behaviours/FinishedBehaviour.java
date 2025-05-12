@@ -25,7 +25,7 @@ public class FinishedBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
-    counter = 500;
+    counter = 10;
 
     this.exitValue = 0;
     this.initialized = true;
@@ -54,10 +54,6 @@ public class FinishedBehaviour extends OneShotBehaviour {
     counter--;
 
     Utils.waitFor(myAgent, 400);
-
-    if (brain.mind.getMetaTargetNode() != null) {
-      brain.mind.setTargetNode(brain.mind.getMetaTargetNode());
-    }
 
     this.exitValue = 0;
   }
