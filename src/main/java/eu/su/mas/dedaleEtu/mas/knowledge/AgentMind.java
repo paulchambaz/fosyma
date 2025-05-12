@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Deque;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+
 import eu.su.mas.dedaleEtu.princ.Utils;
 import eu.su.mas.dedaleEtu.princ.Communication;
 
@@ -30,6 +32,12 @@ public class AgentMind implements Serializable {
   private String coordinationPartner;
   private String coordinationTreasureNode;
 
+  private List<String> coalitionMembers;
+  private int coalitionMembersPresent;
+
+  private String coalitionParent;
+  private String coalitionChild;
+
   private final Brain brain;
 
   public AgentMind(Brain brain) {
@@ -44,6 +52,10 @@ public class AgentMind implements Serializable {
     this.coordinationState = CoordinationState.NONE;
     this.coordinationPartner = null;
     this.coordinationTreasureNode = null;
+    this.coalitionMembers = new ArrayList<>();
+    this.coalitionMembersPresent = 0;
+    this.coalitionParent = null;
+    this.coalitionChild = null;
   }
 
   public synchronized String getBehaviour() {
@@ -52,7 +64,7 @@ public class AgentMind implements Serializable {
 
   public synchronized void setBehaviour(String behaviour) {
     this.behaviour = behaviour;
-    // brain.log(behaviour);
+    brain.log(behaviour);
     brain.notifyVisualization();
   }
 
@@ -77,7 +89,7 @@ public class AgentMind implements Serializable {
   }
 
   public synchronized void updateBehaviouralPriorities() {
-    float gradualTransition = 0.0001f;
+    float gradualTransition = 0.01f;
     float accelerateEffect = 0.5f;
     boolean wasCollectionPreferred = isCollectionPreferred();
 
@@ -213,5 +225,48 @@ public class AgentMind implements Serializable {
 
   public synchronized boolean isCoordinating() {
     return this.coordinationState != CoordinationState.NONE;
+  }
+
+  public synchronized List<String> getCoalitionMembers() {
+    return this.coalitionMembers;
+  }
+
+  public synchronized void setCoalitionMembers(List<String> members) {
+    if (members == null) {
+      this.coalitionMembers = new ArrayList<>();
+    } else {
+      this.coalitionMembers = new ArrayList<>(members);
+    }
+    brain.notifyVisualization();
+  }
+
+  public synchronized int getCoalitionMembersPresent() {
+    return this.coalitionMembersPresent;
+  }
+
+  public synchronized void setCoalitionMembersPresent(int count) {
+    this.coalitionMembersPresent = count;
+    brain.notifyVisualization();
+  }
+
+  public synchronized void incrementCoalitionMembersPresent() {
+    this.coalitionMembersPresent++;
+    brain.notifyVisualization();
+  }
+
+  public synchronized String getCoalitionParent() {
+    return this.coalitionParent;
+  }
+
+  public synchronized void setCoalitionParent(String coalitionParent) {
+    this.coalitionParent = coalitionParent;
+  }
+
+  public synchronized String getCoalitionChild() {
+    return this.coalitionChild;
+  }
+
+  public synchronized void setCoalitionChild(String coalitionChild) {
+    this.coalitionChild = coalitionChild;
   }
 }

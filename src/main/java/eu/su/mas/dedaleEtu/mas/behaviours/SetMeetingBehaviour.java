@@ -10,7 +10,7 @@ import eu.su.mas.dedaleEtu.princ.Communication;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class SetMeetingBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -537837587358659414L;
+  private static final long serialVersionUID = -132837687358659410L;
 
   private String state;
   private int exitValue = 0;

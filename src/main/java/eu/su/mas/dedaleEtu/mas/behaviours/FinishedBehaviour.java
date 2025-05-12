@@ -5,11 +5,10 @@ import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.CoordinationState;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
-import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
-public class EmptyBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -7364292847383945821L;
+public class FinishedBehaviour extends OneShotBehaviour {
+  private static final long serialVersionUID = -7864532642383945841L;
 
   private String state;
   private boolean initialized = false;
@@ -19,14 +18,14 @@ public class EmptyBehaviour extends OneShotBehaviour {
 
   private Brain brain;
 
-  public EmptyBehaviour(String state, Agent agent, Brain brain) {
+  public FinishedBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
     this.state = state;
   }
 
   private void initialize() {
-    counter = 80;
+    counter = 10;
 
     this.exitValue = 0;
     this.initialized = true;
@@ -44,7 +43,7 @@ public class EmptyBehaviour extends OneShotBehaviour {
     this.brain.observe(this.myAgent);
 
     brain.log(brain.entities.getMyself().getExpertise().get(Observation.LOCKPICKING));
-    brain.mind.setCoordinationPartner(brain.mind.getCoalitionParent());
+    brain.mind.setCoordinationPartner(brain.mind.getCoalitionChild());
 
     if (counter <= 0) {
       resetCoordination();
@@ -54,13 +53,6 @@ public class EmptyBehaviour extends OneShotBehaviour {
     }
     counter--;
 
-    if (((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType())) {
-      ((AbstractDedaleAgent) this.myAgent).pick();
-      this.brain.observe(this.myAgent);
-      resetCoordination();
-      initialized = false;
-      this.exitValue = 1;
-    }
     Utils.waitFor(myAgent, 400);
 
     this.exitValue = 0;

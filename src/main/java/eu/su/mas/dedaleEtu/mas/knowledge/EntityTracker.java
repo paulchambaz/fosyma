@@ -170,7 +170,9 @@ public class EntityTracker implements Serializable {
 
   public synchronized void loseTreasure(String nodeId) {
     if (treasures.containsKey(nodeId)) {
-      treasures.remove(nodeId);
+      TreasureData treasure = treasures.get(nodeId);
+      treasure.setQuantity(0);
+      treasure.resetCounter();
       brain.notifyVisualization();
     }
   }
@@ -202,7 +204,7 @@ public class EntityTracker implements Serializable {
       AgentData agent = this.agents.get(agentName);
       agent.setMeetingPoint(meetingPoint);
       agent.resetCounter();
-    } else if (agentName.startsWith("Silo") && (this.silos.containsKey(agentName))) {
+    } else if (agentName.startsWith("Tank") && (this.silos.containsKey(agentName))) {
       this.silos.get(agentName).setMeetingPoint(meetingPoint);
       this.silos.get(agentName).resetCounter();
     }
@@ -253,9 +255,10 @@ public class EntityTracker implements Serializable {
     brain.notifyVisualization();
   }
 
-  public synchronized List<String> getAgentsWithLockpickingStrength(int requiredStrength) {
+  public synchronized List<String> getAgentsWithStrength(int lockpickStrength, int carryStrength) {
     return this.agents.entrySet().stream()
-        .filter(entry -> entry.getValue().canOpenLock(requiredStrength))
+        .filter(
+            entry -> entry.getValue().canOpenLock(lockpickStrength) || entry.getValue().canCarryTreasure(carryStrength))
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
@@ -363,7 +366,7 @@ public class EntityTracker implements Serializable {
     for (Map.Entry<String, AgentData> entry : receivedAgents.entrySet()) {
       String agentName = entry.getKey();
 
-      if (agentName.equals(brain.name) || agentName.startsWith("Silo") || agentName.startsWith("Golem")) {
+      if (agentName.equals(brain.name) || agentName.startsWith("Tank") || agentName.startsWith("G")) {
         continue;
       }
 
@@ -385,7 +388,7 @@ public class EntityTracker implements Serializable {
     for (Map.Entry<String, SiloData> entry : receivedSilos.entrySet()) {
       String siloName = entry.getKey();
 
-      if (brain.name.startsWith("Silo")) {
+      if (brain.name.startsWith("Tank")) {
         return;
       }
 

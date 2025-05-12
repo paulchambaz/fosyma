@@ -25,16 +25,29 @@ public class PickBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour(state);
     brain.observe(this.myAgent);
 
-    brain.log("Picking a resource i am at : ", brain.entities.getPosition());
-    int amount = ((AbstractDedaleAgent) this.myAgent).pick();
-    brain.log("I picked up a total of", amount);
-    TreasureData treasure = brain.entities.getTreasures().get(brain.entities.getPosition());
-    if (treasure != null && amount > 0) {
-      treasure.decreaseQuantity(amount);
-      brain.entities.getMyself().increaseBackpack(amount);
+    String position = brain.entities.getPosition();
+    TreasureData treasure = brain.entities.getTreasures().get(position);
+
+    if (treasure == null) {
+      this.exitValue = 2;
+      return;
     }
 
-    this.brain.observe(this.myAgent);
+    brain.log("Trying to pick treasure in", position);
+    int amount = ((AbstractDedaleAgent) this.myAgent).pick();
+    if (amount > 0) {
+      treasure.decreaseQuantity(amount);
+      brain.entities.getMyself().increaseBackpack(amount);
+      this.brain.observe(this.myAgent);
+
+      brain.log("success");
+      this.exitValue = 0;
+      return;
+    }
+    brain.log("failure");
+
+    brain.mind.setCoordinationTreasureNode(position);
+    this.exitValue = 1;
   }
 
   @Override

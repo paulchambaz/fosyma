@@ -16,7 +16,7 @@ import eu.su.mas.dedaleEtu.princ.Computes;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class PlanExplorationBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -537837587358659414L;
+  private static final long serialVersionUID = -457834586358650414L;
 
   private String state;
   private int exitValue = 0;
@@ -84,7 +84,7 @@ public class PlanExplorationBehaviour extends OneShotBehaviour {
     String currentPosition = brain.entities.getPosition();
 
     String friendPosition = null;
-    if (friendName.equals("Silo")) {
+    if (friendName.startsWith("Tank")) {
       if (brain.entities.getClosestSilo() != null) {
         friendPosition = brain.entities.getClosestSilo().getPosition();
       } else {

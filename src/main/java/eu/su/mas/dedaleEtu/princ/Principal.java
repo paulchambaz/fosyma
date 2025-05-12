@@ -3,8 +3,10 @@ package eu.su.mas.dedaleEtu.princ;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agents.GateKeeperAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmCollectAgent;
+import eu.su.mas.dedaleEtu.mas.agents.FsmExploreAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmSiloAgent;
-import eu.su.mas.dedaleEtu.mas.agents.DummyWumpusAgent;
+import eu.su.mas.dedaleEtu.mas.agents.DummyWumpusShift;
+import eu.su.mas.dedaleEtu.mas.agents.DummyWumpusShift2;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -164,27 +166,35 @@ public class Principal {
     ContainerController agentContainer = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
     Assert.assertNotNull("This container does not exist", agentContainer);
 
-    // List<String> agents = Arrays.asList("Dante", "Virgilio", "Beatrice",
-    // "Bernardo");
-    List<String> agents = Arrays.asList("Dante", "Virgilio");
+    List<String> collect_agents = Arrays.asList("C1", "C2", "C3", "C4");
+    for (String agent : collect_agents) {
+      List<String> otherAgents = new ArrayList<>(collect_agents);
+      otherAgents.remove(agent);
+      Object[] otherAgentsArray = otherAgents.toArray();
+      createCollectAgent(agentContainer, agent, otherAgentsArray, agentList);
+    }
 
-    for (String agent : agents) {
-      List<String> otherAgents = new ArrayList<>(agents);
+    List<String> explore_agents = Arrays.asList("E1");
+    for (String agent : explore_agents) {
+      List<String> otherAgents = new ArrayList<>(explore_agents);
       otherAgents.remove(agent);
       Object[] otherAgentsArray = otherAgents.toArray();
       createExploreAgent(agentContainer, agent, otherAgentsArray, agentList);
     }
 
-    List<String> siloAgents = Arrays.asList("Silo1");
-    // List<String> siloAgents = Arrays.asList("Silo1", "Silo2");
+    List<String> siloAgents = Arrays.asList("Tank");
     for (String agent : siloAgents) {
       createSiloAgent(agentContainer, agent, agentList);
     }
 
-    // List<String> golemAgents = Arrays.asList("Golem1", "Golem2");
-    // for (String agent : golemAgents) {
-    // createGolemAgent(agentContainer, agent, agentList);
-    // }
+    List<String> golemAgents1 = Arrays.asList("G1");
+    for (String agent : golemAgents1) {
+      createGolemAgent1(agentContainer, agent, agentList);
+    }
+    List<String> golemAgents2 = Arrays.asList("G2");
+    for (String agent : golemAgents2) {
+      createGolemAgent2(agentContainer, agent, agentList);
+    }
 
     System.out.println("Agents created...");
     return agentList;
@@ -222,7 +232,7 @@ public class Principal {
 
   // createExploreAgent creates an explorer agent with the specified name and
   // parameters. Adds the created agents to the provided agent list.
-  private static void createExploreAgent(
+  private static void createCollectAgent(
       ContainerController container, String agentName, Object[] parameters,
       List<AgentController> agentList) {
     try {
@@ -230,6 +240,25 @@ public class Principal {
           container,
           agentName,
           FsmCollectAgent.class.getName(),
+          parameters);
+      agentList.add(agent);
+      System.out.println("Agent " + agentName + " was created");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to create agent: " + agentName);
+    }
+  }
+
+  // createExploreAgent creates an explorer agent with the specified name and
+  // parameters. Adds the created agents to the provided agent list.
+  private static void createExploreAgent(
+      ContainerController container, String agentName, Object[] parameters,
+      List<AgentController> agentList) {
+    try {
+      AgentController agent = createNewDedaleAgent(
+          container,
+          agentName,
+          FsmExploreAgent.class.getName(),
           parameters);
       agentList.add(agent);
       System.out.println("Agent " + agentName + " was created");
@@ -257,14 +286,31 @@ public class Principal {
 
   }
 
-  private static void createGolemAgent(
+  private static void createGolemAgent1(
       ContainerController container, String agentName,
       List<AgentController> agentList) {
     try {
       AgentController golemAgent = createNewDedaleAgent(
           container,
           agentName,
-          DummyWumpusAgent.class.getName(),
+          DummyWumpusShift.class.getName(),
+          new Object[] {});
+      agentList.add(golemAgent);
+      System.out.println("Golem agent was created");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to create agent: Golem");
+    }
+  }
+
+  private static void createGolemAgent2(
+      ContainerController container, String agentName,
+      List<AgentController> agentList) {
+    try {
+      AgentController golemAgent = createNewDedaleAgent(
+          container,
+          agentName,
+          DummyWumpusShift2.class.getName(),
           new Object[] {});
       agentList.add(golemAgent);
       System.out.println("Golem agent was created");

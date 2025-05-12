@@ -13,7 +13,7 @@ import eu.su.mas.dedaleEtu.princ.Communication;
 import eu.su.mas.dedaleEtu.princ.Protocols;
 
 public class DeadlockBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -374637573871453865L;
+  private static final long serialVersionUID = -324667573071453845L;
 
   private String state;
   private int exitValue = 0;
@@ -38,9 +38,10 @@ public class DeadlockBehaviour extends OneShotBehaviour {
 
     String position = brain.entities.getPosition();
     List<String> occupiedPositions = brain.entities.getOccupiedPositions();
-    int maxDistance = Math.max(brain.mind.getStuckCounter(), 5);
+    int maxDistance = Math.max(brain.mind.getStuckCounter(), 15);
 
     String goal = findNodeWithinDistance(position, occupiedPositions, maxDistance);
+    brain.log("deadlock going to", goal);
 
     if (goal != null) {
       brain.mind.setTargetNode(goal);
@@ -50,9 +51,6 @@ public class DeadlockBehaviour extends OneShotBehaviour {
       if (goal != null) {
         brain.mind.setTargetNode(goal);
         brain.mind.resetStuckCounter();
-      } else {
-        this.exitValue = 1;
-        return;
       }
     }
 

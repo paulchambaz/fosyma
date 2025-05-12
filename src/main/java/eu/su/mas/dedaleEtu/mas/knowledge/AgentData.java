@@ -156,4 +156,13 @@ public class AgentData implements Serializable {
       this.diamondAmount = amount;
     }
   }
+
+  public int getCapacity() {
+    if (treasureType == Observation.GOLD) {
+      return this.goldAmount;
+    } else if (treasureType == Observation.DIAMOND) {
+      return this.diamondAmount;
+    }
+    return 0;
+  }
 }

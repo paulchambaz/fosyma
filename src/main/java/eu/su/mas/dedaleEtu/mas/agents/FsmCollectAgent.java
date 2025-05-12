@@ -12,6 +12,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.GoToBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilAgentBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DeadlockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.CommunicationBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExclusiveCommunicationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ComputeEndPositionBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareBrainBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.OpenLockBehaviour;
@@ -21,14 +22,14 @@ import eu.su.mas.dedaleEtu.mas.behaviours.GoToUntilBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.DropoffBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.PlanExplorationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SetMeetingBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationInitBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.TreasureCoordinationNegotiationBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationLocateAgent;
+import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationLocateAgentLite;
+import eu.su.mas.dedaleEtu.mas.behaviours.CoordinationNegotiationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.WaitUntilBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.LeaderGuidanceBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.LeaderWaitBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.RestoreTargetBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.WaypointCommunicationBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.EmptyBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.FinishedBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.TryOpenLockBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class FsmCollectAgent extends AbstractDedaleAgent {
-  private static final long serialVersionUID = -78659868426454587L;
+  private static final long serialVersionUID = -72659865426459587L;
 
   private Brain brain;
 
@@ -73,30 +74,30 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
   private static final String CHEST_COMM = "CHEST_COMM";
   private static final String CHEST_COMM_SHARE = "CHEST_COMM_SHARE";
   private static final String CHEST_COMM_MEETING = "CHEST_COMM_MEETING";
-  private static final String CHEST_INIT_COMM = "CHEST_INIT_COMM";
   private static final String CHEST_NEGOTIATION = "CHEST_NEGOTIATION";
 
-  private static final String LEADER_COMPUTE_WAYPOINT = "LEADER_COMPUTE_WAYPOINT";
-  private static final String LEADER_COMM = "LEADER_COMM";
-  private static final String LEADER_COMM_WAYPOINT = "LEADER_COMM_WAYPOINT";
   private static final String LEADER_GOTO = "LEADER_GOTO";
   private static final String LEADER_DEADLOCK = "LEADER_DEADLOCK";
   private static final String LEADER_GOTO_DEADLOCK = "LEADER_GOTO_DEADLOCK";
   private static final String LEADER_RESTORE = "LEADER_RESTORE";
-  private static final String LEADER_WAITFOR = "LEADER_WAITFOR";
-  private static final String LEADER_COMM_ARRIVED = "LEADER_COMM_CHEST";
   private static final String LEADER_OPENLOCK = "LEADER_OPENLOCK";
-  private static final String LEADER_TRY_OPENLOCK = "LEADER_TRY_OPENLOCK";
+  private static final String LEADER_COMM = "LEADER_COMM";
 
-  private static final String FOLLOWER = "FOLLOWER";
-  private static final String FOLLOWER_COMM = "FOLLOWER_COMM";
-  private static final String FOLLOWER_COMM_WAYPOINT = "FOLLOWER_COMM_WAYPOINT";
+  private static final String MANAGER_LOCATE_AGENT = "MANAGER_LOCATE_AGENT";
+  private static final String MANAGER_GOTO_AGENT = "MANAGER_GOTO_AGENT";
+  private static final String MANAGER_DEADLOCK = "MANAGER_DEADLOCK";
+  private static final String MANAGER_COMM = "MANAGER_COMM";
+  private static final String MANAGER_COMM_SHARE = "MANAGER_COMM_SHARE";
+  private static final String MANAGER_COMM_MEETING = "MANAGER_COMM_MEETING";
+
   private static final String FOLLOWER_GOTO = "FOLLOWER_GOTO";
   private static final String FOLLOWER_DEADLOCK = "FOLLOWER_DEADLOCK";
   private static final String FOLLOWER_GOTO_DEADLOCK = "FOLLOWER_GOTO_DEADLOCK";
   private static final String FOLLOWER_RESTORE = "FOLLOWER_RESTORE";
-  private static final String FOLLOWER_OPENLOCK = "FOLLOWER_OPENLOCK";
-  private static final String FOLLOWER_TRY_OPENLOCK = "FOLLOWER_TRY_OPENLOCK";
+  private static final String FOLLOWER_ARRIVED = "FOLLOWER_ARRIVED";
+  private static final String FOLLOWER_COMM = "FOLLOWER_COMM";
+  private static final String FOLLOWER_FINISHED = "FOLLOWER_FINISHED";
+  private static final String FOLLOWER_FINISHED_COMM = "FOLLOWER_FINISHED";
 
   private static final String END_LOCATE = "END_LOCATE";
   private static final String END_GOTO = "END_GOTO";
@@ -158,13 +159,14 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new LocateSiloBehaviour(DROP_LOCATE_SILO, this, this.brain), DROP_LOCATE_SILO);
     fsmBehaviour.registerState(
         new GoToUntilBehaviour(DROP_GOTO_SILO, this, this.brain,
-            new ArrayList<>(Arrays.asList("Silo", "Silo1", "Silo2"))),
+            new ArrayList<>(Arrays.asList("Tank", "Silo", "Silo1", "Silo2"))),
         DROP_GOTO_SILO);
     fsmBehaviour.registerState(new DeadlockBehaviour(DROP_DEADLOCK, this, this.brain), DROP_DEADLOCK);
     fsmBehaviour
         .registerState(new CommunicationBehaviour(DROP_COMM, this, this.brain, 1, new HashMap<String, Integer>() {
           {
             put("sharemap", 1);
+            put("treasure-coordination", 2);
             put("pleasemove", -1);
           }
         }), DROP_COMM);
@@ -173,75 +175,81 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new DropoffBehaviour(DROP_DROPOFF, this, this.brain), DROP_DROPOFF);
 
     // Chest behaviours
-    fsmBehaviour.registerState(new CoordinationInitBehaviour(CHEST_LOCATE_AGENT, this, this.brain), CHEST_LOCATE_AGENT);
+    fsmBehaviour.registerState(new CoordinationLocateAgent(CHEST_LOCATE_AGENT, this, this.brain), CHEST_LOCATE_AGENT);
     fsmBehaviour.registerState(new GoToUntilAgentBehaviour(CHEST_GOTO_AGENT, this, this.brain), CHEST_GOTO_AGENT);
     fsmBehaviour.registerState(new DeadlockBehaviour(CHEST_DEADLOCK, this, this.brain), CHEST_DEADLOCK);
     fsmBehaviour
-        .registerState(new CommunicationBehaviour(CHEST_COMM, this, this.brain, 1, new HashMap<String, Integer>() {
-          {
-            put("sharemap", 1);
-            put("treasure-coordination", 2);
-            put("pleasemove", -1);
-          }
-        }), CHEST_COMM);
+        .registerState(
+            new ExclusiveCommunicationBehaviour(CHEST_COMM, this, this.brain, 3, new HashMap<String, Integer>() {
+              {
+                put("treasure-coordination", 1);
+                put("sharemap", 2);
+                put("pleasemove", -1);
+              }
+            }), CHEST_COMM);
     fsmBehaviour.registerState(new ShareBrainBehaviour(CHEST_COMM_SHARE, this, this.brain), CHEST_COMM_SHARE);
     fsmBehaviour.registerState(new SetMeetingBehaviour(CHEST_COMM_MEETING, this, this.brain), CHEST_COMM_MEETING);
-    fsmBehaviour
-        .registerState(new CommunicationBehaviour(CHEST_INIT_COMM, this, this.brain, 2, new HashMap<String, Integer>() {
-          {
-            put("treasure-coordination", 1);
-            put("pleasemove", -1);
-          }
-        }), CHEST_INIT_COMM);
-    fsmBehaviour.registerState(new TreasureCoordinationNegotiationBehaviour(CHEST_NEGOTIATION, this, this.brain),
+    fsmBehaviour.registerState(new CoordinationNegotiationBehaviour(CHEST_NEGOTIATION, this, this.brain),
         CHEST_NEGOTIATION);
 
     // Leader behaviours
-    fsmBehaviour.registerState(new LeaderGuidanceBehaviour(LEADER_COMPUTE_WAYPOINT, this, this.brain),
-        LEADER_COMPUTE_WAYPOINT);
-    fsmBehaviour
-        .registerState(new CommunicationBehaviour(LEADER_COMM, this, this.brain, 4, new HashMap<String, Integer>() {
-          {
-            put("waypoint-guidance", 1);
-            put("pleasemove", -1);
-          }
-        }), LEADER_COMM);
-    fsmBehaviour.registerState(new WaypointCommunicationBehaviour(LEADER_COMM_WAYPOINT, this, this.brain),
-        LEADER_COMM_WAYPOINT);
     fsmBehaviour.registerState(new GoToBehaviour(LEADER_GOTO, this, this.brain), LEADER_GOTO);
     fsmBehaviour.registerState(new DeadlockBehaviour(LEADER_DEADLOCK, this, this.brain), LEADER_DEADLOCK);
     fsmBehaviour.registerState(new GoToBehaviour(LEADER_GOTO_DEADLOCK, this, this.brain), LEADER_GOTO_DEADLOCK);
     fsmBehaviour.registerState(new RestoreTargetBehaviour(LEADER_RESTORE, this, this.brain), LEADER_RESTORE);
-    fsmBehaviour.registerState(new LeaderWaitBehaviour(LEADER_WAITFOR, this, this.brain), LEADER_WAITFOR);
-    fsmBehaviour.registerState(
-        new CommunicationBehaviour(LEADER_COMM_ARRIVED, this, this.brain, 5, new HashMap<String, Integer>() {
-          {
-            put("arrived", 1);
-            put("pleasemove", -1);
-          }
-        }), LEADER_COMM_ARRIVED);
-    fsmBehaviour.registerState(new OpenLockBehaviour(LEADER_OPENLOCK, this, this.brain), LEADER_OPENLOCK);
-    fsmBehaviour.registerState(new OpenLockBehaviour(LEADER_TRY_OPENLOCK, this, this.brain), LEADER_TRY_OPENLOCK);
+    fsmBehaviour.registerState(new TryOpenLockBehaviour(LEADER_OPENLOCK, this, this.brain), LEADER_OPENLOCK);
+    fsmBehaviour
+        .registerState(
+            new ExclusiveCommunicationBehaviour(LEADER_COMM, this, this.brain, 8, new HashMap<String, Integer>() {
+              {
+                put("finished", 1);
+              }
+            }), LEADER_COMM);
+
+    // Manager behaviours
+    fsmBehaviour.registerState(new CoordinationLocateAgentLite(MANAGER_LOCATE_AGENT, this, this.brain),
+        MANAGER_LOCATE_AGENT);
+    fsmBehaviour.registerState(new GoToUntilAgentBehaviour(MANAGER_GOTO_AGENT, this, this.brain),
+        MANAGER_GOTO_AGENT);
+    fsmBehaviour.registerState(new DeadlockBehaviour(MANAGER_DEADLOCK, this, this.brain),
+        MANAGER_DEADLOCK);
+    fsmBehaviour
+        .registerState(
+            new ExclusiveCommunicationBehaviour(MANAGER_COMM, this, this.brain, 3, new HashMap<String, Integer>() {
+              {
+                put("treasure-coordination", 1);
+                put("sharemap", 2);
+                put("pleasemove", -1);
+              }
+            }), MANAGER_COMM);
+    fsmBehaviour.registerState(new ShareBrainBehaviour(MANAGER_COMM_SHARE, this, this.brain), MANAGER_COMM_SHARE);
+    fsmBehaviour.registerState(new SetMeetingBehaviour(MANAGER_COMM_MEETING, this, this.brain), MANAGER_COMM_MEETING);
 
     // Follower behaviours
-    fsmBehaviour.registerState(new EmptyBehaviour(FOLLOWER, this, this.brain), FOLLOWER);
-    fsmBehaviour
-        .registerState(new CommunicationBehaviour(FOLLOWER_COMM, this, this.brain, 3, new HashMap<String, Integer>() {
-          {
-            put("waypoint-guidance", 1);
-            put("arrived", 2);
-            put("pleasemove", -1);
-          }
-        }), FOLLOWER_COMM);
-    fsmBehaviour.registerState(new WaypointCommunicationBehaviour(FOLLOWER_COMM_WAYPOINT, this, this.brain),
-        FOLLOWER_COMM_WAYPOINT);
     fsmBehaviour.registerState(new GoToBehaviour(FOLLOWER_GOTO, this, this.brain), FOLLOWER_GOTO);
     fsmBehaviour.registerState(new DeadlockBehaviour(FOLLOWER_DEADLOCK, this, this.brain), FOLLOWER_DEADLOCK);
     fsmBehaviour.registerState(new GoToBehaviour(FOLLOWER_GOTO_DEADLOCK, this, this.brain), FOLLOWER_GOTO_DEADLOCK);
     fsmBehaviour.registerState(new RestoreTargetBehaviour(FOLLOWER_RESTORE, this, this.brain), FOLLOWER_RESTORE);
-    fsmBehaviour.registerState(new OpenLockBehaviour(FOLLOWER_OPENLOCK, this, this.brain), FOLLOWER_OPENLOCK);
-    fsmBehaviour.registerState(new OpenLockBehaviour(FOLLOWER_TRY_OPENLOCK, this, this.brain), FOLLOWER_TRY_OPENLOCK);
+    fsmBehaviour.registerState(new EmptyBehaviour(FOLLOWER_ARRIVED, this, this.brain), FOLLOWER_ARRIVED);
+    fsmBehaviour
+        .registerState(
+            new ExclusiveCommunicationBehaviour(FOLLOWER_COMM, this, this.brain, 8, new HashMap<String, Integer>() {
+              {
+                put("finished", 1);
+              }
+            }), FOLLOWER_COMM);
+    fsmBehaviour.registerState(new FinishedBehaviour(FOLLOWER_FINISHED, this, this.brain), FOLLOWER_FINISHED);
 
+    fsmBehaviour
+        .registerState(
+            new ExclusiveCommunicationBehaviour(FOLLOWER_FINISHED_COMM, this, this.brain, 8,
+                new HashMap<String, Integer>() {
+                  {
+                    put("finished", 1);
+                  }
+                }),
+            FOLLOWER_FINISHED_COMM);
+    // End behaviour
     fsmBehaviour.registerState(new ComputeEndPositionBehaviour(END_LOCATE, this, this.brain), END_LOCATE);
     fsmBehaviour.registerState(new GoToBehaviour(END_GOTO, this, this.brain), END_GOTO);
     fsmBehaviour.registerState(new WaitUntilBehaviour(END_WAIT, this, this.brain), END_WAIT);
@@ -249,6 +257,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
         .registerState(new CommunicationBehaviour(END_COMM, this, this.brain, 1, new HashMap<String, Integer>() {
           {
             put("sharemap", 1);
+            put("treasure-coordination", 2);
             put("pleasemove", -1);
           }
         }), END_COMM);
@@ -257,7 +266,6 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerState(new DeadlockBehaviour(END_DEADLOCK, this, this.brain), END_DEADLOCK);
     fsmBehaviour.registerState(new GoToBehaviour(END_GOTO_DEADLOCK, this, this.brain), END_GOTO_DEADLOCK);
 
-    // End behaviour
     fsmBehaviour.registerLastState(new EndBehaviour(END, this, this.brain), END);
 
     // - Transitions -
@@ -288,6 +296,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerDefaultTransition(COLLECT, COLLECT_GOTO);
     fsmBehaviour.registerTransition(COLLECT, END_LOCATE, 1);
     fsmBehaviour.registerTransition(COLLECT, EXPLORE, 2);
+    fsmBehaviour.registerTransition(COLLECT, DROP_LOCATE_SILO, 3);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_GOTO, COLLECT_COMM);
     fsmBehaviour.registerTransition(COLLECT_GOTO, COLLECT_OPENLOCK, 1);
@@ -305,8 +314,10 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(COLLECT_OPENLOCK, COLLECT_PICK);
     fsmBehaviour.registerTransition(COLLECT_OPENLOCK, CHEST_LOCATE_AGENT, 1);
+    fsmBehaviour.registerTransition(COLLECT_OPENLOCK, COLLECT, 2);
 
     fsmBehaviour.registerDefaultTransition(COLLECT_PICK, DROP_LOCATE_SILO);
+    fsmBehaviour.registerTransition(COLLECT_PICK, COLLECT, 2);
 
     // Drop transitions
     fsmBehaviour.registerDefaultTransition(DROP_LOCATE_SILO, DROP_GOTO_SILO);
@@ -329,47 +340,33 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
     fsmBehaviour.registerTransition(DROP_DROPOFF, DROP_LOCATE_SILO, 1);
 
     // Chest coordination transitions
-    fsmBehaviour.registerDefaultTransition(CHEST_LOCATE_AGENT, COLLECT);
+    fsmBehaviour.registerDefaultTransition(CHEST_LOCATE_AGENT, COLLECT_DEADLOCK);
     fsmBehaviour.registerTransition(CHEST_LOCATE_AGENT, CHEST_GOTO_AGENT, 1);
-    fsmBehaviour.registerTransition(CHEST_LOCATE_AGENT, DROP_LOCATE_SILO, 2);
 
     fsmBehaviour.registerDefaultTransition(CHEST_GOTO_AGENT, CHEST_COMM);
-    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_INIT_COMM, 1);
+    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_LOCATE_AGENT, 1);
     fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_DEADLOCK, 2);
-    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_INIT_COMM, 3);
-
-    fsmBehaviour.registerDefaultTransition(CHEST_INIT_COMM, CHEST_LOCATE_AGENT);
-    fsmBehaviour.registerTransition(CHEST_INIT_COMM, CHEST_NEGOTIATION, 1);
-    fsmBehaviour.registerTransition(CHEST_INIT_COMM, CHEST_DEADLOCK, -1);
+    fsmBehaviour.registerTransition(CHEST_GOTO_AGENT, CHEST_COMM, 3);
 
     fsmBehaviour.registerDefaultTransition(CHEST_DEADLOCK, CHEST_GOTO_AGENT);
 
     fsmBehaviour.registerDefaultTransition(CHEST_COMM, CHEST_GOTO_AGENT);
-    fsmBehaviour.registerTransition(CHEST_COMM, CHEST_COMM_SHARE, 1);
-    fsmBehaviour.registerTransition(CHEST_COMM, CHEST_NEGOTIATION, 2);
+    fsmBehaviour.registerTransition(CHEST_COMM, CHEST_NEGOTIATION, 1);
+    fsmBehaviour.registerTransition(CHEST_COMM, CHEST_COMM_SHARE, 2);
     fsmBehaviour.registerTransition(CHEST_COMM, CHEST_DEADLOCK, -1);
 
     fsmBehaviour.registerDefaultTransition(CHEST_COMM_SHARE, CHEST_COMM_MEETING);
-    fsmBehaviour.registerDefaultTransition(CHEST_COMM_MEETING, CHEST_NEGOTIATION);
 
-    fsmBehaviour.registerDefaultTransition(CHEST_NEGOTIATION, COLLECT);
-    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, LEADER_COMPUTE_WAYPOINT, 1);
-    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, FOLLOWER, 2);
+    fsmBehaviour.registerDefaultTransition(CHEST_COMM_MEETING, CHEST_GOTO_AGENT);
+
+    fsmBehaviour.registerDefaultTransition(CHEST_NEGOTIATION, CHEST_LOCATE_AGENT);
+    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, LEADER_GOTO, 1);
+    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, MANAGER_LOCATE_AGENT, 2);
+    fsmBehaviour.registerTransition(CHEST_NEGOTIATION, FOLLOWER_GOTO, 3);
 
     // Leader transitions
-    fsmBehaviour.registerDefaultTransition(LEADER_COMPUTE_WAYPOINT, LEADER_TRY_OPENLOCK);
-
-    fsmBehaviour.registerDefaultTransition(LEADER_TRY_OPENLOCK, LEADER_COMM);
-    fsmBehaviour.registerTransition(LEADER_TRY_OPENLOCK, COLLECT_PICK, 2);
-
-    fsmBehaviour.registerDefaultTransition(LEADER_COMM, LEADER_COMM);
-    fsmBehaviour.registerTransition(LEADER_COMM, LEADER_COMM_WAYPOINT, 1);
-    fsmBehaviour.registerTransition(LEADER_COMM, LEADER_DEADLOCK, -1);
-
-    fsmBehaviour.registerDefaultTransition(LEADER_COMM_WAYPOINT, LEADER_GOTO);
-
     fsmBehaviour.registerDefaultTransition(LEADER_GOTO, LEADER_GOTO);
-    fsmBehaviour.registerTransition(LEADER_GOTO, LEADER_WAITFOR, 1);
+    fsmBehaviour.registerTransition(LEADER_GOTO, LEADER_OPENLOCK, 1);
     fsmBehaviour.registerTransition(LEADER_GOTO, LEADER_DEADLOCK, 2);
 
     fsmBehaviour.registerDefaultTransition(LEADER_DEADLOCK, LEADER_GOTO_DEADLOCK);
@@ -380,32 +377,41 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(LEADER_RESTORE, LEADER_GOTO);
 
-    fsmBehaviour.registerDefaultTransition(LEADER_WAITFOR, LEADER_TRY_OPENLOCK);
-    fsmBehaviour.registerTransition(LEADER_WAITFOR, LEADER_COMM_ARRIVED, 1);
+    fsmBehaviour.registerDefaultTransition(LEADER_OPENLOCK, LEADER_OPENLOCK);
+    fsmBehaviour.registerTransition(LEADER_OPENLOCK, LEADER_COMM, 1);
+    fsmBehaviour.registerTransition(LEADER_OPENLOCK, CHEST_LOCATE_AGENT, 2);
 
-    fsmBehaviour.registerDefaultTransition(LEADER_TRY_OPENLOCK, LEADER_WAITFOR);
+    fsmBehaviour.registerDefaultTransition(LEADER_COMM, COLLECT_PICK);
+    fsmBehaviour.registerTransition(LEADER_COMM, COLLECT_PICK, 1);
 
-    fsmBehaviour.registerDefaultTransition(LEADER_COMM_ARRIVED, CHEST_LOCATE_AGENT);
-    fsmBehaviour.registerTransition(LEADER_COMM_ARRIVED, LEADER_OPENLOCK, 1);
+    // Manager transitions
+    fsmBehaviour.registerDefaultTransition(MANAGER_LOCATE_AGENT, COLLECT_DEADLOCK);
+    fsmBehaviour.registerTransition(MANAGER_LOCATE_AGENT, MANAGER_GOTO_AGENT, 1);
+    fsmBehaviour.registerTransition(MANAGER_LOCATE_AGENT, MANAGER_LOCATE_AGENT, 2);
 
-    fsmBehaviour.registerDefaultTransition(LEADER_OPENLOCK, COLLECT_PICK);
+    fsmBehaviour.registerDefaultTransition(MANAGER_GOTO_AGENT, MANAGER_COMM);
+    fsmBehaviour.registerTransition(MANAGER_GOTO_AGENT, MANAGER_LOCATE_AGENT, 1);
+    fsmBehaviour.registerTransition(MANAGER_GOTO_AGENT, MANAGER_DEADLOCK, 2);
+    fsmBehaviour.registerTransition(MANAGER_GOTO_AGENT, MANAGER_COMM, 3);
+
+    fsmBehaviour.registerDefaultTransition(MANAGER_DEADLOCK, MANAGER_GOTO_AGENT);
+
+    fsmBehaviour.registerDefaultTransition(MANAGER_COMM, MANAGER_GOTO_AGENT);
+    fsmBehaviour.registerTransition(MANAGER_COMM, CHEST_NEGOTIATION, 1);
+    fsmBehaviour.registerTransition(MANAGER_COMM, MANAGER_COMM_SHARE, 2);
+    fsmBehaviour.registerTransition(MANAGER_COMM, MANAGER_DEADLOCK, -1);
+
+    fsmBehaviour.registerDefaultTransition(MANAGER_COMM_SHARE, MANAGER_COMM_MEETING);
+
+    fsmBehaviour.registerDefaultTransition(MANAGER_COMM_MEETING, MANAGER_GOTO_AGENT);
 
     // Follower transitions
-    fsmBehaviour.registerDefaultTransition(FOLLOWER, FOLLOWER_TRY_OPENLOCK);
-    fsmBehaviour.registerTransition(FOLLOWER, FOLLOWER_GOTO, 1);
-
-    fsmBehaviour.registerDefaultTransition(FOLLOWER_TRY_OPENLOCK, FOLLOWER_COMM);
-    fsmBehaviour.registerTransition(FOLLOWER_TRY_OPENLOCK, COLLECT, 2);
-
-    fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM, FOLLOWER);
-    fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_COMM_WAYPOINT, 1);
-    fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_OPENLOCK, 2);
-
-    fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM_WAYPOINT, FOLLOWER_GOTO);
-
     fsmBehaviour.registerDefaultTransition(FOLLOWER_GOTO, FOLLOWER_GOTO);
-    fsmBehaviour.registerTransition(FOLLOWER_GOTO, FOLLOWER_COMM, 1);
+    fsmBehaviour.registerTransition(FOLLOWER_GOTO, FOLLOWER_ARRIVED, 1);
     fsmBehaviour.registerTransition(FOLLOWER_GOTO, FOLLOWER_DEADLOCK, 2);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_ARRIVED, FOLLOWER_ARRIVED);
+    fsmBehaviour.registerTransition(FOLLOWER_ARRIVED, FOLLOWER_FINISHED, 1);
 
     fsmBehaviour.registerDefaultTransition(FOLLOWER_DEADLOCK, FOLLOWER_GOTO_DEADLOCK);
 
@@ -415,9 +421,16 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(FOLLOWER_RESTORE, FOLLOWER_GOTO);
 
-    fsmBehaviour.registerDefaultTransition(FOLLOWER_OPENLOCK, COLLECT);
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_COMM, FOLLOWER_ARRIVED);
+    fsmBehaviour.registerTransition(FOLLOWER_COMM, FOLLOWER_FINISHED, 1);
 
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_FINISHED, FOLLOWER_FINISHED_COMM);
+
+    fsmBehaviour.registerDefaultTransition(FOLLOWER_FINISHED_COMM, COLLECT);
+
+    // End transitions
     fsmBehaviour.registerDefaultTransition(END_LOCATE, END_GOTO);
+    fsmBehaviour.registerTransition(END_LOCATE, DROP_LOCATE_SILO, 1);
 
     fsmBehaviour.registerDefaultTransition(END_GOTO, END_GOTO);
     fsmBehaviour.registerTransition(END_GOTO, END_WAIT, 1);
@@ -427,6 +440,7 @@ public class FsmCollectAgent extends AbstractDedaleAgent {
 
     fsmBehaviour.registerDefaultTransition(END_COMM, END_WAIT);
     fsmBehaviour.registerTransition(END_COMM, END_COMM_SHARE, 1);
+    fsmBehaviour.registerTransition(END_COMM, CHEST_NEGOTIATION, 2);
     fsmBehaviour.registerTransition(END_COMM, END_DEADLOCK, -1);
 
     fsmBehaviour.registerDefaultTransition(END_COMM_SHARE, END_COMM_MEETING);

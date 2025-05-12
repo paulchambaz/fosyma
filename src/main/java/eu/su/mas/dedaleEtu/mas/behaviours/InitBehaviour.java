@@ -5,7 +5,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 
 public class InitBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -374637573871453865L;
+  private static final long serialVersionUID = -3746237553871487865L;
 
   private String state;
   private Brain brain;

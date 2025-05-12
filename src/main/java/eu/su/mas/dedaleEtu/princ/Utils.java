@@ -67,7 +67,7 @@ public class Utils {
       return Arrays.stream(catalog)
           .map(AMSAgentDescription::getName)
           .filter(aid -> !aid.equals(selfID))
-          .filter(aid -> aid.getLocalName().startsWith("Silo"))
+          .filter(aid -> aid.getLocalName().startsWith("Tank"))
           .collect(Collectors.toList());
     } catch (Exception e) {
       System.out.println("Problem searching AMS");

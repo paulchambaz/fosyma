@@ -6,7 +6,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
 public class WaitUntilBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = 1233984986594838272L;
+  private static final long serialVersionUID = 2235984966594838202L;
 
   private String state;
   private int exitValue = 0;
@@ -26,7 +26,7 @@ public class WaitUntilBehaviour extends OneShotBehaviour {
     this.brain.observe(this.myAgent);
     this.brain.updateBackpack(this.myAgent);
 
-    Utils.waitFor(this.myAgent, 1000);
+    Utils.waitFor(this.myAgent, 500);
 
     brain.entities.ageEntities();
   }

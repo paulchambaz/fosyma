@@ -1,0 +1,90 @@
+[
+  {
+    "elementName": "diamonds",
+    "initialLocation": "58",
+    "detectionRadius": 0,
+    "quantity": 80,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "M35",
+    "detectionRadius": 0,
+    "quantity": 40,
+    "lockPickingExpertise": 2,
+    "strengthExpertise": 3
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "70",
+    "detectionRadius": 0,
+    "quantity": 25,
+    "lockPickingExpertise": 3,
+    "strengthExpertise": 2
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "10",
+    "detectionRadius": 0,
+    "quantity": 10,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  },
+  {
+    "elementName": "diamonds",
+    "initialLocation": "h40",
+    "detectionRadius": 0,
+    "quantity": 45,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "90",
+    "detectionRadius": 0,
+    "quantity": 25,
+    "lockPickingExpertise": 2,
+    "strengthExpertise": 3
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "M10",
+    "detectionRadius": 0,
+    "quantity": 15,
+    "lockPickingExpertise": 2,
+    "strengthExpertise": 3
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "h1",
+    "detectionRadius": 0,
+    "quantity": 102,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "95",
+    "detectionRadius": 0,
+    "quantity": 20,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "5",
+    "detectionRadius": 0,
+    "quantity": 25,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  },
+  {
+    "elementName": "gold",
+    "initialLocation": "44",
+    "detectionRadius": 0,
+    "quantity": 15,
+    "lockPickingExpertise": 10,
+    "strengthExpertise": 10
+  }
+]

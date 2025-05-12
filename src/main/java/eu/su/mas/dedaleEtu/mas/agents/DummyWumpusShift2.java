@@ -23,12 +23,12 @@ import jade.core.behaviours.TickerBehaviour;
  * @author hc
  *
  */
-public class DummyWumpusAgent extends AbstractDedaleAgent {
+public class DummyWumpusShift2 extends AbstractDedaleAgent {
 
   /**
    * 
    */
-  private static final long serialVersionUID = 2503605263614575545L;
+  private static final long serialVersionUID = 2103606162614775545L;
 
   /**
    * This method is automatically called when "agent".start() is executed.
@@ -77,18 +77,17 @@ public class DummyWumpusAgent extends AbstractDedaleAgent {
 
   public class RandomShiftBehaviour extends TickerBehaviour {
 
-    private int maxShiftDistance = 6;
+    private int maxShiftDistance = 10;
     private int minShiftDistance = 2;
 
-    private boolean pause = false;
+    private boolean pause = true;
 
     private Random r;
-/home/williamsardon/dev/java/fosyma/src/main/java/eu/su/mas/dedaleEtu/mas/agents/DummyWumpusShift2.java
     /**
      * When an agent choose to move
      * 
      */
-    private static final long serialVersionUID = 9087208402507795289L;
+    private static final long serialVersionUID = 9028209402507795289L;
 
     // private Environment realEnv;
     private int waitingTimeBeforeDropOff;
@@ -96,7 +95,7 @@ public class DummyWumpusAgent extends AbstractDedaleAgent {
     private boolean grabbed;
 
     public RandomShiftBehaviour(final AbstractDedaleAgent myagent) {
-      super(myagent, 500);
+      super(myagent, 1000);
       r = new Random();
       waitingTimeBeforeDropOff = minShiftDistance + r.nextInt(maxShiftDistance);
       currentWaitingTimeBeforeDromOff = 0;
@@ -160,7 +159,7 @@ public class DummyWumpusAgent extends AbstractDedaleAgent {
                   // this.myAgent).getMyTreasureType());
                   // System.out.println("My current backpack capacity is:"+ ((AbstractDedaleAgent)
                   // this.myAgent).getBackPackFreeSpace());
-                  // ((AbstractDedaleAgent)this.myAgent).openLock(Observation.GOLD);
+                  ((AbstractDedaleAgent) this.myAgent).openLock(Observation.GOLD);
                   int valGrabbed = ((AbstractDedaleAgent) this.myAgent).pick();
                   // System.out.println("The agent grabbed :"+valGrabbed);
 
@@ -178,7 +177,9 @@ public class DummyWumpusAgent extends AbstractDedaleAgent {
                   // System.out.println("My current backpack capacity is:"+ ((AbstractDedaleAgent)
                   // this.myAgent).getBackPackFreeSpace()); //System.out.println("The agent
                   // grabbed :"+((mas.abstractAgent)this.myAgent).pick());
+                  ((AbstractDedaleAgent) this.myAgent).openLock(Observation.DIAMOND);
                   int valdiamGrabbed = ((AbstractDedaleAgent) this.myAgent).pick();
+
                   // System.out.println("The agent grabbed :"+valdiamGrabbed);
                   System.out.println("the remaining backpack capacity is: "
                       + ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());

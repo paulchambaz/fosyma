@@ -3,14 +3,18 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import java.util.Deque;
+
+import jade.core.AID;
 import jade.core.Agent;
+import eu.su.mas.dedaleEtu.princ.Utils;
 import jade.core.behaviours.OneShotBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Computes;
 
 public class GoToUntilAgentBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = 1233984986594838272L;
+  private static final long serialVersionUID = 1043987986594835272L;
 
   private String state;
   private int exitValue = 0;
@@ -27,6 +31,9 @@ public class GoToUntilAgentBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
+
+    brain.log("running the initialization");
+
     brain.computePathToTarget(true);
     if (this.brain.mind.getPathToTarget().isEmpty()) {
       brain.computePathToTarget(false);
@@ -52,12 +59,48 @@ public class GoToUntilAgentBehaviour extends OneShotBehaviour {
 
     this.brain.observe(this.myAgent);
 
+    try {
+      if (((AbstractDedaleAgent) this.myAgent).openLock(brain.entities.getMyself().getTreasureType())) {
+        this.brain.observe(this.myAgent);
+        ((AbstractDedaleAgent) this.myAgent).pick();
+      }
+      List<AID> silos = Utils.getSilos(this.myAgent);
+      boolean success = false;
+      for (AID silo : silos) {
+        success = ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(silo.getLocalName());
+        if (success) {
+          break;
+        }
+      }
+    } catch (Exception e) {
+    }
+
     Deque<String> path = this.brain.mind.getPathToTarget();
     if (path.isEmpty()) {
-      brain.mind.wantsToTalk();
-      this.initialized = false;
-      this.exitValue = 1;
-      return;
+      brain.log("meta target node:", brain.mind.getMetaTargetNode());
+      brain.log("target node:", brain.mind.getTargetNode());
+
+      brain.log("we are in:", brain.entities.getPosition());
+      if (brain.mind.getMetaTargetNode() != brain.mind.getTargetNode()) {
+        brain.mind.setTargetNode(brain.mind.getMetaTargetNode());
+        initialize();
+        path = this.brain.mind.getPathToTarget();
+
+        brain.log("path to", brain.mind.getTargetNode(), "is", path);
+
+        if (path.isEmpty()) {
+          brain.mind.wantsToTalk();
+          this.initialized = false;
+          this.exitValue = 1;
+          return;
+        }
+      } else {
+        brain.mind.wantsToTalk();
+        this.initialized = false;
+        this.exitValue = 1;
+        return;
+      }
+
     }
 
     String position = brain.entities.getPosition();

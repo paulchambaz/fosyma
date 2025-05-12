@@ -23,12 +23,12 @@ import jade.core.behaviours.TickerBehaviour;
  * @author hc
  *
  */
-public class DummyWumpusAgent extends AbstractDedaleAgent {
+public class DummyWumpusShift extends AbstractDedaleAgent {
 
   /**
    * 
    */
-  private static final long serialVersionUID = 2503605263614575545L;
+  private static final long serialVersionUID = 2203609163614775545L;
 
   /**
    * This method is automatically called when "agent".start() is executed.
@@ -83,12 +83,12 @@ public class DummyWumpusAgent extends AbstractDedaleAgent {
     private boolean pause = false;
 
     private Random r;
-/home/williamsardon/dev/java/fosyma/src/main/java/eu/su/mas/dedaleEtu/mas/agents/DummyWumpusShift2.java
+
     /**
      * When an agent choose to move
      * 
      */
-    private static final long serialVersionUID = 9087208402507795289L;
+    private static final long serialVersionUID = 9077209302507795289L;
 
     // private Environment realEnv;
     private int waitingTimeBeforeDropOff;
@@ -96,7 +96,7 @@ public class DummyWumpusAgent extends AbstractDedaleAgent {
     private boolean grabbed;
 
     public RandomShiftBehaviour(final AbstractDedaleAgent myagent) {
-      super(myagent, 500);
+      super(myagent, 1000);
       r = new Random();
       waitingTimeBeforeDropOff = minShiftDistance + r.nextInt(maxShiftDistance);
       currentWaitingTimeBeforeDromOff = 0;

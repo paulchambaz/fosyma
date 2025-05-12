@@ -107,6 +107,12 @@ public class WorldMap implements Serializable {
     return tempGraph;
   }
 
+  public synchronized List<String> getAdjacentNodes(String nodeId) {
+    Set<String> neighborhood = getNeighborhood(nodeId);
+    neighborhood.remove(nodeId);
+    return new ArrayList<>(neighborhood);
+  }
+
   public synchronized Set<String> getNeighborhood(String position) {
     Set<String> neighborhood = new HashSet<>();
 
@@ -124,8 +130,12 @@ public class WorldMap implements Serializable {
   }
 
   public synchronized List<String> findShortestPath(String idFrom, String idTo, List<String> occupiedPositions) {
+    List<String> filteredOccupiedPositions = new ArrayList<>(occupiedPositions);
 
-    Graph tempGraph = createNavigableGraph(occupiedPositions);
+    filteredOccupiedPositions.remove(idFrom);
+    filteredOccupiedPositions.remove(idTo);
+
+    Graph tempGraph = createNavigableGraph(filteredOccupiedPositions);
     Node from = tempGraph.getNode(idFrom);
     if (from == null) {
       return null;
@@ -199,7 +209,7 @@ public class WorldMap implements Serializable {
         .orElse(null);
   }
 
-  public synchronized String findClosestNode(String startPosition, List<String> nodes, List<String> occupiedPositions){
+  public synchronized String findClosestNode(String startPosition, List<String> nodes, List<String> occupiedPositions) {
     return nodes.stream()
         .map(node -> {
           List<String> path = findShortestPath(startPosition, node, occupiedPositions);
@@ -210,7 +220,6 @@ public class WorldMap implements Serializable {
         .map(pair -> pair.getLeft())
         .orElse(null);
   }
-
 
   public synchronized List<String> findPathToClosestOpenNode(String startPosition, List<String> occupiedPositions) {
     List<String> openNodes = getOpenNodes();
