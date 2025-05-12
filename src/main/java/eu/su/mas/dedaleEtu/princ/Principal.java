@@ -5,7 +5,8 @@ import eu.su.mas.dedale.mas.agents.GateKeeperAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmCollectAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmExploreAgent;
 import eu.su.mas.dedaleEtu.mas.agents.FsmSiloAgent;
-import eu.su.mas.dedaleEtu.mas.agents.DummyWumpusAgent;
+import eu.su.mas.dedaleEtu.mas.agents.DummyWumpusShift;
+import eu.su.mas.dedaleEtu.mas.agents.DummyWumpusShift2;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -186,9 +187,13 @@ public class Principal {
       createSiloAgent(agentContainer, agent, agentList);
     }
 
-    // List<String> golemAgents = Arrays.asList("G1", "G2");
-    // for (String agent : golemAgents) {
-    // createGolemAgent(agentContainer, agent, agentList);
+    // List<String> golemAgents1 = Arrays.asList("G1");
+    // for (String agent : golemAgents1) {
+    // createGolemAgent1(agentContainer, agent, agentList);
+    // }
+    // List<String> golemAgents2 = Arrays.asList("G2");
+    // for (String agent : golemAgents2) {
+    // createGolemAgent2(agentContainer, agent, agentList);
     // }
 
     System.out.println("Agents created...");
@@ -281,14 +286,31 @@ public class Principal {
 
   }
 
-  private static void createGolemAgent(
+  private static void createGolemAgent1(
       ContainerController container, String agentName,
       List<AgentController> agentList) {
     try {
       AgentController golemAgent = createNewDedaleAgent(
           container,
           agentName,
-          DummyWumpusAgent.class.getName(),
+          DummyWumpusShift.class.getName(),
+          new Object[] {});
+      agentList.add(golemAgent);
+      System.out.println("Golem agent was created");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Failed to create agent: Golem");
+    }
+  }
+
+  private static void createGolemAgent2(
+      ContainerController container, String agentName,
+      List<AgentController> agentList) {
+    try {
+      AgentController golemAgent = createNewDedaleAgent(
+          container,
+          agentName,
+          DummyWumpusShift2.class.getName(),
           new Object[] {});
       agentList.add(golemAgent);
       System.out.println("Golem agent was created");

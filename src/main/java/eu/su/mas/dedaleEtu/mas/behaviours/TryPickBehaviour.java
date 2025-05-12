@@ -2,12 +2,12 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
-import eu.su.mas.dedale.env.Observation;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Utils;
 
-public class EmptyBehaviour extends OneShotBehaviour {
-  private static final long serialVersionUID = -7364592847383945821L;
+public class TryPickBehaviour extends OneShotBehaviour {
+  private static final long serialVersionUID = -7376583127383945821L;
 
   private String state;
   private boolean initialized = false;
@@ -17,14 +17,14 @@ public class EmptyBehaviour extends OneShotBehaviour {
 
   private Brain brain;
 
-  public EmptyBehaviour(String state, Agent agent, Brain brain) {
+  public TryPickBehaviour(String state, Agent agent, Brain brain) {
     super(agent);
     this.brain = brain;
     this.state = state;
   }
 
   private void initialize() {
-    counter = 5000;
+    counter = 20;
 
     this.exitValue = 0;
     this.initialized = true;
@@ -35,26 +35,30 @@ public class EmptyBehaviour extends OneShotBehaviour {
     brain.mind.setBehaviour(state);
     brain.log(brain.entities.getPosition());
 
-    if (!this.initialized) {
+    if (!initialized) {
       initialize();
     }
 
     this.brain.observe(this.myAgent);
 
-    brain.log(brain.entities.getMyself().getExpertise().get(Observation.LOCKPICKING));
-
     if (counter <= 0) {
       initialized = false;
-      this.exitValue = 1;
+      this.exitValue = 2;
       return;
     }
     counter--;
 
-    Utils.waitFor(myAgent, 400);
+    int amount = ((AbstractDedaleAgent) this.myAgent).pick();
+    brain.log("tried to pick, result:", amount);
+    if (amount > 0) {
+      this.brain.observe(this.myAgent);
 
-    if (brain.mind.getMetaTargetNode() != null) {
-      brain.mind.setTargetNode(brain.mind.getMetaTargetNode());
+      initialized = false;
+      this.exitValue = 1;
+      return;
     }
+
+    Utils.waitFor(myAgent, 400);
 
     this.exitValue = 0;
   }

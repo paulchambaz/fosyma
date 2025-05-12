@@ -7,7 +7,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.Brain;
 import eu.su.mas.dedaleEtu.princ.Protocols;
 import eu.su.mas.dedaleEtu.princ.Communication;
 
-public class CommunicationBehaviour extends OneShotBehaviour {
+public class ExclusiveCommunicationBehaviour extends OneShotBehaviour {
   private static final long serialVersionUID = -373375987457439285L;
 
   private String state;
@@ -19,7 +19,8 @@ public class CommunicationBehaviour extends OneShotBehaviour {
 
   private Brain brain;
 
-  public CommunicationBehaviour(String state, Agent agent, Brain brain, int priority, Map<String, Integer> routes) {
+  public ExclusiveCommunicationBehaviour(String state, Agent agent, Brain brain, int priority,
+      Map<String, Integer> routes) {
     super(agent);
     this.brain = brain;
     this.routes = routes;
@@ -37,7 +38,8 @@ public class CommunicationBehaviour extends OneShotBehaviour {
   public void action() {
     brain.mind.setBehaviour(state);
 
-    Communication comms = Protocols.handshake(this.myAgent, brain, 100, protocol, priority);
+    Communication comms = Protocols.exclusiveHandshake(this.myAgent, brain, 100, protocol, priority,
+        brain.mind.getCoordinationPartner());
 
     if (comms == null) {
       brain.mind.incrementStuckCounter();
@@ -48,8 +50,6 @@ public class CommunicationBehaviour extends OneShotBehaviour {
       }
       return;
     }
-
-    brain.log(comms.getFriend().getLocalName(), comms.getProtocol());
 
     if (!this.routes.containsKey(comms.getProtocol())) {
       this.exitValue = 0;

@@ -27,6 +27,9 @@ public class GoToUntilAgentBehaviour extends OneShotBehaviour {
   }
 
   private void initialize() {
+
+    brain.log("running the initialization");
+
     brain.computePathToTarget(true);
     if (this.brain.mind.getPathToTarget().isEmpty()) {
       brain.computePathToTarget(false);
@@ -54,10 +57,30 @@ public class GoToUntilAgentBehaviour extends OneShotBehaviour {
 
     Deque<String> path = this.brain.mind.getPathToTarget();
     if (path.isEmpty()) {
-      brain.mind.wantsToTalk();
-      this.initialized = false;
-      this.exitValue = 1;
-      return;
+      brain.log("meta target node:", brain.mind.getMetaTargetNode());
+      brain.log("target node:", brain.mind.getTargetNode());
+
+      brain.log("we are in:", brain.entities.getPosition());
+      if (brain.mind.getMetaTargetNode() != brain.mind.getTargetNode()) {
+        brain.mind.setTargetNode(brain.mind.getMetaTargetNode());
+        initialize();
+        path = this.brain.mind.getPathToTarget();
+
+        brain.log("path to", brain.mind.getTargetNode(), "is", path);
+
+        if (path.isEmpty()) {
+          brain.mind.wantsToTalk();
+          this.initialized = false;
+          this.exitValue = 1;
+          return;
+        }
+      } else {
+        brain.mind.wantsToTalk();
+        this.initialized = false;
+        this.exitValue = 1;
+        return;
+      }
+
     }
 
     String position = brain.entities.getPosition();

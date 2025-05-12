@@ -41,6 +41,7 @@ public class DeadlockBehaviour extends OneShotBehaviour {
     int maxDistance = Math.max(brain.mind.getStuckCounter(), 5);
 
     String goal = findNodeWithinDistance(position, occupiedPositions, maxDistance);
+    brain.log("deadlock going to", goal);
 
     if (goal != null) {
       brain.mind.setTargetNode(goal);
@@ -50,9 +51,6 @@ public class DeadlockBehaviour extends OneShotBehaviour {
       if (goal != null) {
         brain.mind.setTargetNode(goal);
         brain.mind.resetStuckCounter();
-      } else {
-        this.exitValue = 1;
-        return;
       }
     }
 

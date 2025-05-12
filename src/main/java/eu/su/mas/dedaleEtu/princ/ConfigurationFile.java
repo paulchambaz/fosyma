@@ -44,7 +44,7 @@ public final class ConfigurationFile {
   // map
   // public static String INSTANCE_CONFIGURATION_ELEMENTS =
   // "./resources/treasureHunt/map2019-elementsExam1.json";
-  public static String INSTANCE_CONFIGURATION_ELEMENTS = "resources/treasureHunt/map2025-elements.json";
+  public static String INSTANCE_CONFIGURATION_ELEMENTS = "resources/treasureHunt/map2025-elements-hard.json";
 
   // Size of the generated environment, mandatory
   public static Integer ENVIRONMENT_SIZE = 6;

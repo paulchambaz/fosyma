@@ -3,7 +3,9 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.graphstream.graph.Graph;
 
@@ -32,21 +34,20 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
   @Override
   public void action() {
     brain.mind.setBehaviour(state);
-    this.brain.observe(this.myAgent);
-
-    brain.mind.updateBehaviouralPriorities();
-
-    if (brain.map.hasOpenNode()) {
-      this.exitValue = 2;
-      return;
-    }
 
     brain.observe(this.myAgent);
+
+    if (brain.entities.getMyself().getCapacity() > 0) {
+      this.exitValue = 1;
+      return;
+    }
 
     String goal = findOptimalEndPosition(brain.map, brain.entities, 3.0, 1.5);
 
     brain.log("computed final position at", goal);
     brain.mind.setTargetNode(goal);
+
+    this.exitValue = 0;
   }
 
   @Override
@@ -54,17 +55,32 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
     return this.exitValue;
   }
 
-  public static String findOptimalEndPosition(WorldMap map, EntityTracker entities, double opennessWeight,
+  public String findOptimalEndPosition(WorldMap map, EntityTracker entities, double opennessWeight,
       double balancedDistanceWeight) {
+
+    Set<String> treasureLocations = new HashSet<String>(entities.getTreasures().keySet());
+
     Map<String, double[]> nodeCriteriaValues = calculateNodeEndPositionCriteria(map, entities);
+
+    Map<String, double[]> filteredCriteriaValues = new HashMap<>();
+    for (Map.Entry<String, double[]> entry : nodeCriteriaValues.entrySet()) {
+      if (!treasureLocations.contains(entry.getKey())) {
+        filteredCriteriaValues.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    if (filteredCriteriaValues.isEmpty()) {
+      brain.log("Warning: All potential end positions contain treasures. Using fallback logic.");
+      filteredCriteriaValues = nodeCriteriaValues;
+    }
 
     double[] weights = calculateEndPositionWeights(entities, opennessWeight, balancedDistanceWeight);
 
-    List<String> nodeIds = new ArrayList<>(nodeCriteriaValues.keySet());
+    List<String> nodeIds = new ArrayList<>(filteredCriteriaValues.keySet());
     double[][] criteriaMatrix = new double[nodeIds.size()][weights.length];
 
     for (int i = 0; i < nodeIds.size(); i++) {
-      criteriaMatrix[i] = nodeCriteriaValues.get(nodeIds.get(i));
+      criteriaMatrix[i] = filteredCriteriaValues.get(nodeIds.get(i));
     }
 
     int bestIndex = Computes.solveMinMaxRegret(criteriaMatrix, weights);
@@ -81,19 +97,13 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
 
     List<String> treasureLocations = new ArrayList<>(entities.getTreasures().keySet());
     for (String nodeId : connectivityMap.keySet()) {
-      // Three criteria: connectivity, balanced distance, and individual treasure
-      // distances
       double[] criteria = new double[2 + treasureLocations.size()];
 
-      // Connectivity (higher is better, so we negate for minimization)
       double connectivity = connectivityMap.get(nodeId);
       criteria[0] = -connectivity;
 
-      // Balanced distance score (already optimized for being not too close, not too
-      // far)
       criteria[1] = balancedDistanceMap.get(nodeId);
 
-      // Individual distances to each treasure
       Map<String, Integer> distances = distancesMap.get(nodeId);
       for (int i = 0; i < treasureLocations.size(); i++) {
         String treasureLocation = treasureLocations.get(i);
@@ -108,7 +118,6 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
     return results;
   }
 
-  // Calculates nth-order connectivity for each node in the graph.
   public static Map<String, Double> calculateNodesConnectivity(WorldMap map, int order) {
     Map<String, Double> results = new HashMap<>();
     Graph graph = map.getGraph();
@@ -122,7 +131,6 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
     return results;
   }
 
-  // Computes shortest path distances from each node to each treasure.
   public static Map<String, Map<String, Integer>> calculateNodesDistancesToTreasures(WorldMap map,
       EntityTracker entities) {
     Map<String, Map<String, Integer>> results = new HashMap<>();
@@ -141,14 +149,11 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
     return results;
   }
 
-  // Calculate a balanced distance score - nodes that are neither too close nor
-  // too far from treasures
   public static Map<String, Double> calculateBalancedDistances(Map<String, Map<String, Integer>> distancesMap,
       EntityTracker entities) {
     Map<String, Double> results = new HashMap<>();
     Map<String, TreasureData> treasures = entities.getTreasures();
 
-    // First, determine the ideal distance range
     int maxDistance = 0;
     for (Map<String, Integer> distances : distancesMap.values()) {
       for (Integer dist : distances.values()) {
@@ -158,7 +163,6 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
       }
     }
 
-    // Ideal distance is around 40-60% of max distance (not too close, not too far)
     double idealLowerBound = maxDistance * 0.4;
     double idealUpperBound = maxDistance * 0.6;
 
@@ -170,16 +174,12 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
       for (String treasureLocation : treasures.keySet()) {
         Integer distance = distances.get(treasureLocation);
         if (distance != null && distance < Integer.MAX_VALUE) {
-          // Calculate how far this distance is from the ideal range
           double distanceScore;
           if (distance < idealLowerBound) {
-            // Too close - penalize based on how close
             distanceScore = (idealLowerBound - distance) / idealLowerBound;
           } else if (distance > idealUpperBound) {
-            // Too far - penalize based on how far
             distanceScore = (distance - idealUpperBound) / (maxDistance - idealUpperBound);
           } else {
-            // Within ideal range - perfect score
             distanceScore = 0;
           }
           balanceScore += distanceScore;
@@ -198,10 +198,9 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
     Map<String, TreasureData> treasures = entities.getTreasures();
     int numTreasures = treasures.size();
 
-    // Weights for: openness, balanced distance, individual treasure distances
     double[] weights = new double[numTreasures + 2];
-    weights[0] = opennessWeight; // Weight for connectivity/openness
-    weights[1] = balancedDistanceWeight; // Weight for balanced distance
+    weights[0] = opennessWeight;
+    weights[1] = balancedDistanceWeight;
 
     int maxQuantity = 0;
     for (TreasureData treasure : treasures.values()) {
@@ -210,11 +209,8 @@ public class ComputeEndPositionBehaviour extends OneShotBehaviour {
 
     double epsilon = 0.01;
 
-    // Add weights for individual treasure distances (inverse of quantity)
     int index = 2;
     for (TreasureData treasure : treasures.values()) {
-      // Lower weight for higher quantity treasures (since we want to be farther from
-      // valuable treasures)
       double normalizedWeight = maxQuantity > 0 ? 1.0 - ((double) treasure.getQuantity() / maxQuantity) + epsilon
           : epsilon;
       weights[index] = Math.max(normalizedWeight, epsilon);
